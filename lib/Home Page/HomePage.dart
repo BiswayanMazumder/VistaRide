@@ -37,6 +37,7 @@ class _HomePageState extends State<HomePage> {
 
   // Function to get the current location using Geolocator
   Future<void> _getCurrentLocation() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
     // Check if the user has granted location permission
     LocationPermission permission = await Geolocator.requestPermission();
 
@@ -77,7 +78,8 @@ class _HomePageState extends State<HomePage> {
         infoWindow: InfoWindow(title: 'Your Location'),
       ));
     });
-
+    prefs.setDouble('location longitude', position.longitude);
+    prefs.setDouble('location latitude', position.latitude);
     // Move the camera to the user's current location
     mapController.animateCamera(
       CameraUpdate.newLatLng(_currentLocation),
@@ -104,6 +106,7 @@ class _HomePageState extends State<HomePage> {
 
   // Function to search for a location
   Future<void> _searchLocation(String location) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
     // Use geocoding to convert the location name to latitude and longitude
     try {
       List<Location> locations = await locationFromAddress(location);
@@ -289,8 +292,9 @@ class _HomePageState extends State<HomePage> {
                         }
                         final SharedPreferences prefs = await SharedPreferences.getInstance();
                         prefs.setString('location', locationName);
+
                         if (kDebugMode) {
-                          print(prefs.getString('location'));
+                          print(prefs.getDouble('location longitude'));
                         }
                         Navigator.push(context, MaterialPageRoute(builder: (context) => Pickupandroplocation(),));
                       },

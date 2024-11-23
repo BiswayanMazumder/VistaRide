@@ -7,7 +7,9 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
+import 'package:google_places_flutter/model/prediction.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vistaride/Cab%20Selection%20Page/cabcategoryselectpage.dart';
 import 'package:vistaride/Environment%20Files/.env.dart';
 
 class Pickupandroplocation extends StatefulWidget {
@@ -20,7 +22,7 @@ class Pickupandroplocation extends StatefulWidget {
 class _PickupandroplocationState extends State<Pickupandroplocation> {
   String? location = '';
   late GoogleMapController mapController;
-  LatLng _currentLocation = LatLng(22.7199572, -88.4663679);
+  LatLng _currentLocation = LatLng(22.7199572, -88.4663679);  // Default location
   Set<Marker> _markers = {};
   String locationName = '';
   final TextEditingController _locationController = TextEditingController();
@@ -39,6 +41,7 @@ class _PickupandroplocationState extends State<Pickupandroplocation> {
     initialisesharedpref();
   }
 
+  // Fetch current location
   Future<void> _getCurrentLocation() async {
     LocationPermission permission = await Geolocator.requestPermission();
 
@@ -78,15 +81,69 @@ class _PickupandroplocationState extends State<Pickupandroplocation> {
     );
   }
 
-  void _onMapCreated(GoogleMapController controller) {
-    mapController = controller;
-  }
-
+  // Initialize shared preferences
   Future<void> initialisesharedpref() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       location = prefs.getString('location');
     });
+  }
+
+  // Handle map creation
+  void _onMapCreated(GoogleMapController controller) {
+    mapController = controller;
+  }
+
+  // Handle the item click from Google Places API
+  Future<void> _onPlaceSelected(Prediction prediction) async {
+    setState(() {
+      _destinationController.text = prediction.description!;
+    });
+
+    // Save the dropoff location to shared preferences
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('dropoff', prediction.description!);
+
+    // Get latitude and longitude for dropoff address
+    List<Location> locations = await locationFromAddress(prediction.description!);
+
+    if (locations.isNotEmpty) {
+      double latitude = locations[0].latitude;
+      double longitude = locations[0].longitude;
+
+      // Save the dropoff coordinates in shared preferences
+      prefs.setString('dropofflatitude', latitude.toString());
+      prefs.setString('dropofflongitude', longitude.toString());
+
+      if (kDebugMode) {
+        print('Dropoff Latitude: $latitude');
+        print('Dropoff Longitude: $longitude');
+      }
+      Navigator.push(context,MaterialPageRoute(builder: (context) => CabSelectAndPrice(),));
+      // Update the map and markers
+      LatLng newLocation = LatLng(latitude, longitude);
+      setState(() {
+        _currentLocation = newLocation;  // Update the current location to dropoff
+        _markers.add(Marker(
+          markerId: MarkerId('dropoff'),
+          position: newLocation,
+          infoWindow: InfoWindow(title: prediction.description),
+        ));
+      });
+
+      // Move the camera to the dropoff location
+      mapController.animateCamera(
+        CameraUpdate.newLatLng(newLocation),
+      );
+
+      // Optionally navigate to the next screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const CabSelectAndPrice()),
+      );
+    } else {
+      print("Could not find coordinates for the selected place.");
+    }
   }
 
   @override
@@ -116,37 +173,32 @@ class _PickupandroplocationState extends State<Pickupandroplocation> {
             children: [
               Container(
                 height: 150,
-                width: MediaQuery.sizeOf(context).width,
+                width: MediaQuery.of(context).size.width,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2), // Shadow color with opacity
-                      offset: Offset(4, 4), // Position of the shadow
-                      blurRadius: 0.5, // How blurry the shadow is
-                      spreadRadius: 0.5, // How much the shadow spreads
+                      color: Colors.black.withOpacity(0.2),
+                      offset: const Offset(4, 4),
+                      blurRadius: 0.5,
+                      spreadRadius: 0.5,
                     ),
                   ],
                 ),
                 child: Column(
                   children: [
-                    const SizedBox(
-                      height: 20,
-                    ),
+                    const SizedBox(height: 20),
                     Row(
                       children: [
                         const CircleAvatar(
                           radius: 5,
                           backgroundColor: Colors.green,
                         ),
-                        const SizedBox(
-                          width: 20,
-                        ),
+                        const SizedBox(width: 20),
                         Expanded(
                           child: Container(
                             height: 50,
-                            width: MediaQuery.sizeOf(context).width,
                             decoration: BoxDecoration(
                               borderRadius: const BorderRadius.all(Radius.circular(10)),
                               border: Border.all(width: 0.5, color: Colors.grey),
@@ -157,7 +209,7 @@ class _PickupandroplocationState extends State<Pickupandroplocation> {
                                 child: Text(
                                   location!,
                                   overflow: TextOverflow.ellipsis,
-                                  maxLines: 1, // Ensure the text does not exceed one line
+                                  maxLines: 1,
                                   style: GoogleFonts.poppins(
                                     color: Colors.black,
                                     fontWeight: FontWeight.w500,
@@ -166,21 +218,17 @@ class _PickupandroplocationState extends State<Pickupandroplocation> {
                               ),
                             ),
                           ),
-                        )
+                        ),
                       ],
                     ),
-                    const SizedBox(
-                      height: 20,
-                    ),
+                    const SizedBox(height: 20),
                     Row(
                       children: [
                         const CircleAvatar(
                           radius: 8,
                           backgroundColor: Colors.red,
                         ),
-                        const SizedBox(
-                          width: 10,
-                        ),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: Container(
                             height: 50,
@@ -189,63 +237,24 @@ class _PickupandroplocationState extends State<Pickupandroplocation> {
                               borderRadius: const BorderRadius.all(Radius.circular(10)),
                             ),
                             child: Column(
-                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 GooglePlaceAutoCompleteTextField(
                                   textEditingController: _destinationController,
-                                  googleAPIKey: Environment.GoogleMapsAPI, // Use your actual Google API Key
+                                  googleAPIKey: Environment.GoogleMapsAPI,
                                   inputDecoration: InputDecoration(
                                     hintText: '  Search Destination',
                                     hintStyle: GoogleFonts.poppins(
                                       color: Colors.grey,
                                       fontWeight: FontWeight.w300,
                                     ),
-                                    // Ensure no border is applied to the text field
-                                    border: InputBorder.none, // No border
-                                    focusedBorder: InputBorder.none, // No border when focused
-                                    enabledBorder: InputBorder.none, // No border when enabled
-                                    disabledBorder: InputBorder.none, // No border when disabled
-                                    filled: false, // Ensure no background color
+                                    border: InputBorder.none,
                                   ),
-                                  itemClick: (prediction) async {
-                                    // Set the selected place's description in the TextField
-                                    setState(() {
-                                      _destinationController.text = prediction.description!;
-                                    });
-                                    final SharedPreferences prefs = await SharedPreferences.getInstance();
-                                    prefs.setString('dropoff', _destinationController.text);
-                                    if (kDebugMode) {
-                                      print(prefs.getString('dropoff'));
-                                    }
-                                    // Fetch location coordinates when a suggestion is selected
-                                    List<Location> locations = await locationFromAddress(
-                                      prediction.description!,
-                                    );
-                                    if (locations.isNotEmpty) {
-                                      LatLng newLocation = LatLng(
-                                        locations[0].latitude,
-                                        locations[0].longitude,
-                                      );
-
-                                      setState(() {
-                                        _currentLocation = newLocation;
-                                        _markers.add(Marker(
-                                          markerId: MarkerId(prediction.description!),
-                                          position: newLocation,
-                                          infoWindow: InfoWindow(title: prediction.description),
-                                        ));
-                                      });
-
-                                      mapController.animateCamera(
-                                        CameraUpdate.newLatLng(newLocation),
-                                      );
-                                    }
-                                  },
+                                  itemClick: _onPlaceSelected,
                                 ),
                               ],
                             ),
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ],
