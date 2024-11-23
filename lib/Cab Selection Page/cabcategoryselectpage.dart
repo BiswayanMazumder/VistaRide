@@ -124,12 +124,39 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
     'https://olawebcdn.com/images/v1/cabs/sl/ic_kp.png'
   ];
   List cabcategorynames = ['Mini', 'Prime', 'SUV', 'Non AC Taxi'];
-  List cabcategorydescription = ['Highly Discounted fare', 'Spacious sedans, top drivers', 'Spacious SUVs', ''];
-  List cabpricesmultiplier=[36,40,65,15];
+  List cabcategorydescription = [
+    'Highly Discounted fare',
+    'Spacious sedans, top drivers',
+    'Spacious SUVs',
+    ''
+  ];
+  List cabpricesmultiplier = [36, 40, 65, 15];
   int _selectedindex = 0;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: Container(
+        width: MediaQuery.sizeOf(context).width,
+        height: 80,
+        color: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 30,right: 30),
+          child: Align(
+            alignment: Alignment.center,  // Aligns the inner container at the top-left
+            child: Container(
+              width: MediaQuery.sizeOf(context).width,
+              height: 50,
+              decoration: const BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.all(Radius.circular(10))
+              ),
+              child: Center(
+                child: Text('Book ${cabcategorynames[_selectedindex]}',style: GoogleFonts.poppins(color: Colors.white,fontWeight: FontWeight.w600),),
+              ),
+            ),
+          ),
+        ),
+      ),
       body: Stack(
         children: [
           GoogleMap(
@@ -154,12 +181,12 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
             },
           ),
           Positioned(
-              bottom: 0,
-              child: Container(
+            bottom: 0,
+            child: Container(
                 width: MediaQuery.sizeOf(context).width,
                 color: Colors.white,
                 height: 300,
-                child:ListView.builder(
+                child: ListView.builder(
                   itemCount: carcategoryimages.length,
                   itemBuilder: (context, index) {
                     return Column(
@@ -167,43 +194,81 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.only(left: 20,bottom: 50),
-                          child: Row(
-                            children: [
-                              Image(image: NetworkImage(carcategoryimages[index])),
-                              const SizedBox(
-                                width: 20,
-                              ),
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                          padding: const EdgeInsets.only(left: 20, bottom: 20,right: 20),
+                          child: Container(
+                            decoration: _selectedindex == index
+                                ? BoxDecoration(
+                                    // If false, use the default BoxDecoration
+                                    borderRadius: const BorderRadius.all(
+                                        Radius.circular(10)),
+                                    color: Colors.white,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.2),
+                                        offset: const Offset(4, 4),
+                                        blurRadius: 2,
+                                        spreadRadius: 2,
+                                      ),
+                                    ],
+                                  ) // If true, use 'decoration'
+                                : BoxDecoration(),
+                            child: InkWell(
+                              onTap: () {
+                                setState(() {
+                                  _selectedindex = index;
+                                });
+                                if (kDebugMode) {
+                                  print(_selectedindex);
+                                }
+                              },
+                              child: Row(
                                 children: [
-                                  Text(cabcategorynames[index],style: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.w600
-                                  ),),
-                                  Text(cabcategorydescription[index],style: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.w300,
-                                    color: Colors.grey,
-                                    fontSize: 11
-                                  ),),
+                                  const SizedBox(
+                                    width: 20,
+                                  ),
+                                  Image(
+                                      image: NetworkImage(
+                                          carcategoryimages[index])),
+                                  const SizedBox(
+                                    width: 20,
+                                  ),
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        cabcategorynames[index],
+                                        style: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w600),
+                                      ),
+                                      Text(
+                                        cabcategorydescription[index],
+                                        style: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w300,
+                                            color: Colors.grey,
+                                            fontSize: 11),
+                                      ),
+                                    ],
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    '₹${(double.parse(DistanceTravel.replaceAll(RegExp(r'[^0-9.]'), '')).floor() * cabpricesmultiplier[index])}',
+                                    style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                  const SizedBox(
+                                    width: 20,
+                                  )
                                 ],
                               ),
-                              const Spacer(),
-                              Text(
-                                '₹${(double.parse(DistanceTravel.replaceAll(RegExp(r'[^0-9.]'), '')).floor() * cabpricesmultiplier[index])}',
-                                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                              ),
-                              const SizedBox(
-                                width: 20,
-                              )
-                            ],
+                            ),
                           ),
                         )
                       ],
                     );
-                  },)
-              ),
-            
+                  },
+                )),
           )
         ],
       ),
