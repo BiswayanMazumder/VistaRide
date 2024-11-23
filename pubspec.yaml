@@ -47,6 +47,8 @@ dependencies:
   google_places_flutter: ^2.0.9
   geolocator: ^7.0.3
   flutter_cache_manager: ^3.3.1
+  http: ^1.2.0
+  shared_preferences: ^2.2.3
 #  location: ^5.0.1
 dev_dependencies:
   flutter_test:

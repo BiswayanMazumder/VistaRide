@@ -1,12 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vistaride/Destination%20Set%20Page/pickupanddroplocationset.dart';
 import 'package:vistaride/Login%20Pages/loginpage.dart'; // Import geocoding package
-
+import 'package:vistaride/Environment%20Files/.env.dart';
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -55,6 +58,7 @@ class _HomePageState extends State<HomePage> {
     // Check if placemarks are returned and update the location name
     if (placemarks.isNotEmpty) {
       Placemark placemark = placemarks[0]; // Take the first placemark from the list
+
       setState(() {
         locationName =
         '${placemark.street}, ${placemark.thoroughfare}, ${placemark.subLocality}, '
@@ -278,28 +282,42 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                     ),
-                    Container(
-                      height: 50,
-                      decoration:  BoxDecoration(
-                        color: Colors.grey.shade300,
-                        border: Border.all(
-                          color: Colors.grey
-                        ),
-                        borderRadius: const BorderRadius.all(Radius.circular(10)),
-                      ),
-                      child: TextField(
-                        decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.search,color: Colors.green,),
-                          hintText: 'Search Destination',
-                          hintStyle: GoogleFonts.poppins(
-                            color: Colors.black,
-                            fontWeight: FontWeight.w600
+                    InkWell(
+                      onTap: ()async{
+                        if (kDebugMode) {
+                          print('Clicked');
+                        }
+                        final SharedPreferences prefs = await SharedPreferences.getInstance();
+                        prefs.setString('location', locationName);
+                        if (kDebugMode) {
+                          print(prefs.getString('location'));
+                        }
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => Pickupandroplocation(),));
+                      },
+                      child: Container(
+                        height: 50,
+                        decoration:  BoxDecoration(
+                          color: Colors.grey.shade300,
+                          border: Border.all(
+                            color: Colors.grey
                           ),
-                          // hintText: 'Search for a location',
-                          border: InputBorder.none, // Removes the bottom underline
-                          contentPadding: const EdgeInsets.symmetric(
-                              vertical: 15, horizontal: 10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
+                        child:  Row(
+                          children: [
+                            const SizedBox(
+                              width: 20,
+                            ),
+                            const Icon(Icons.search,color: Colors.green,),
+                            const SizedBox(
+                              width: 20,
+                            ),
+                            Text('Search for a destination',style: GoogleFonts.poppins(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600
+                            ),)
+                          ],
+                        )
                       ),
                     )
                   ],
