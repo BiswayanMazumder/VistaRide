@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart'; // Import geocoding package
+import 'package:geocoding/geocoding.dart';
+import 'package:vistaride/Login%20Pages/loginpage.dart'; // Import geocoding package
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -220,8 +221,14 @@ class _HomePageState extends State<HomePage> {
             left: MediaQuery.sizeOf(context).width - 50,
             child: Row(
               children: [
-                CircleAvatar(
-                  backgroundImage: NetworkImage(profilepic),
+                InkWell(
+                  onTap: ()async{
+                   await _auth.signOut();
+                    Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => LoginPage(),));
+                  },
+                  child: CircleAvatar(
+                    backgroundImage: NetworkImage(profilepic),
+                  ),
                 ),
               ],
             ),
