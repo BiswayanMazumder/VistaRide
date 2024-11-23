@@ -207,6 +207,50 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           Positioned(
+              top: 100,
+              left: 75,
+              child: InkWell(
+            onTap: ()async{
+              if (kDebugMode) {
+                print('Clicked');
+              }
+              final SharedPreferences prefs = await SharedPreferences.getInstance();
+              prefs.setString('location', locationName);
+
+              if (kDebugMode) {
+                print(prefs.getDouble('location longitude'));
+              }
+              Navigator.push(context, MaterialPageRoute(builder: (context) => Pickupandroplocation(),));
+            },
+            child: Container(
+                height: 50,
+                width: MediaQuery.sizeOf(context).width - 140,
+                decoration:  BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(
+                      color: Colors.white
+                  ),
+                  borderRadius: const BorderRadius.all(Radius.circular(50)),
+                ),
+                child:  Row(
+                  children: [
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    const Icon(Icons.search,color: Colors.green,),
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    Text('Search for a destination',style: GoogleFonts.poppins(
+                        color: Colors.grey,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w400
+                    ),)
+                  ],
+                )
+            ),
+          )),
+          Positioned(
             top: 48,
             left: 20,
             child: Row(
@@ -240,96 +284,58 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
-          Positioned(
-              bottom: 0,
-              child: Container(
-            width: MediaQuery.sizeOf(context).width,
-            color: Colors.white,
-            height: 300,
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 20,right: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      height: 100,
-                      child: Expanded(
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: carcategoryimages.length,
-                          itemBuilder: (context, index) {
-                            return Row(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 30,bottom: 0),
-                                  child: InkWell(
-                                    onTap: (){
-                                      setState(() {
-                                        _selectedindex=index;
-                                      });
-                                    },
-                                    child: Column(
-                                      children: [
-                                        Image(image: NetworkImage(carcategoryimages[index]),height: 60,width: 60,),
-                                        Text(cabcategorynames[index],style: GoogleFonts.poppins(
-                                          fontWeight: _selectedindex==index?FontWeight.bold:FontWeight.w400,
-                                        ),)
-                                      ],
-                                    ),
-                                  ),
-                                )
-                              ],
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    InkWell(
-                      onTap: ()async{
-                        if (kDebugMode) {
-                          print('Clicked');
-                        }
-                        final SharedPreferences prefs = await SharedPreferences.getInstance();
-                        prefs.setString('location', locationName);
-
-                        if (kDebugMode) {
-                          print(prefs.getDouble('location longitude'));
-                        }
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => Pickupandroplocation(),));
-                      },
-                      child: Container(
-                        height: 50,
-                        decoration:  BoxDecoration(
-                          color: Colors.grey.shade300,
-                          border: Border.all(
-                            color: Colors.grey
-                          ),
-                          borderRadius: const BorderRadius.all(Radius.circular(10)),
-                        ),
-                        child:  Row(
-                          children: [
-                            const SizedBox(
-                              width: 20,
-                            ),
-                            const Icon(Icons.search,color: Colors.green,),
-                            const SizedBox(
-                              width: 20,
-                            ),
-                            Text('Search for a destination',style: GoogleFonts.poppins(
-                              color: Colors.black,
-                              fontWeight: FontWeight.w600
-                            ),)
-                          ],
-                        )
-                      ),
-                    )
-                  ],
-                ),
-              ),
-            )
-              ),
-          ),
+          // Positioned(
+          //     bottom: 0,
+          //     child: Container(
+          //   width: MediaQuery.sizeOf(context).width,
+          //   color: Colors.white,
+          //   height: 300,
+          //   child: SingleChildScrollView(
+          //     child: Padding(
+          //       padding: const EdgeInsets.only(left: 20,right: 20),
+          //       child: Column(
+          //         crossAxisAlignment: CrossAxisAlignment.start,
+          //         children: [
+          //           SizedBox(
+          //             height: 100,
+          //             child: Expanded(
+          //               child: ListView.builder(
+          //                 scrollDirection: Axis.horizontal,
+          //                 itemCount: carcategoryimages.length,
+          //                 itemBuilder: (context, index) {
+          //                   return Row(
+          //                     children: [
+          //                       Padding(
+          //                         padding: const EdgeInsets.only(right: 30,bottom: 0),
+          //                         child: InkWell(
+          //                           onTap: (){
+          //                             setState(() {
+          //                               _selectedindex=index;
+          //                             });
+          //                           },
+          //                           child: Column(
+          //                             children: [
+          //                               Image(image: NetworkImage(carcategoryimages[index]),height: 60,width: 60,),
+          //                               Text(cabcategorynames[index],style: GoogleFonts.poppins(
+          //                                 fontWeight: _selectedindex==index?FontWeight.bold:FontWeight.w400,
+          //                               ),)
+          //                             ],
+          //                           ),
+          //                         ),
+          //                       )
+          //                     ],
+          //                   );
+          //                 },
+          //               ),
+          //             ),
+          //           ),
+          //
+          //         ],
+          //       ),
+          //     ),
+          //   )
+          //     ),
+          // ),
           Positioned(
             bottom: 20,
             right: 20,
