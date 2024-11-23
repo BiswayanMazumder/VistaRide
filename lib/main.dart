@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:vistaride/HomePage.dart';
+import 'package:vistaride/Home%20Page/HomePage.dart';
 import 'package:vistaride/Login%20Pages/loginpage.dart';
 
 import 'firebase_options.dart';

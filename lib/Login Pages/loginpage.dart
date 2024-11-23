@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:vistaride/HomePage.dart';
+import 'package:vistaride/Home%20Page/HomePage.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
