@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart'; // Import geocoding package
@@ -14,7 +15,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late GoogleMapController mapController;
-  LatLng _currentLocation = LatLng(22.7199572, -88.4663679); // Default location (initial)
+  LatLng _currentLocation = LatLng(22.7199572, -88.4663679);
   Set<Marker> _markers = {};
   String locationName = ''; // Store the name of the location
   final TextEditingController _locationcontroller = TextEditingController();
@@ -23,7 +24,6 @@ class _HomePageState extends State<HomePage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String profilepic = '';
-
   @override
   void initState() {
     super.initState();
@@ -131,7 +131,19 @@ class _HomePageState extends State<HomePage> {
       );
     }
   }
-
+  List carcategoryimages=[
+    'https://olawebcdn.com/images/v1/cabs/sl/ic_mini.png',
+    'https://olawebcdn.com/images/v1/cabs/sl/ic_prime.png',
+    'https://olawebcdn.com/images/v1/cabs/sl/ic_suv.png',
+    'https://olawebcdn.com/images/v1/cabs/sl/ic_kp.png'
+  ];
+  List cabcategorynames=[
+    'Mini',
+    'Prime',
+    'SUV',
+    'Non AC Taxi'
+  ];
+  int _selectedindex=0;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -215,9 +227,85 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           Positioned(
+              bottom: 0,
+              child: Container(
+            width: MediaQuery.sizeOf(context).width,
+            color: Colors.white,
+            height: 300,
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 20,right: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      height: 100,
+                      child: Expanded(
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: carcategoryimages.length,
+                          itemBuilder: (context, index) {
+                            return Row(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 30,bottom: 0),
+                                  child: InkWell(
+                                    onTap: (){
+                                      setState(() {
+                                        _selectedindex=index;
+                                      });
+                                    },
+                                    child: Column(
+                                      children: [
+                                        Image(image: NetworkImage(carcategoryimages[index]),height: 60,width: 60,),
+                                        Text(cabcategorynames[index],style: GoogleFonts.poppins(
+                                          fontWeight: _selectedindex==index?FontWeight.bold:FontWeight.w400,
+                                        ),)
+                                      ],
+                                    ),
+                                  ),
+                                )
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    Container(
+                      height: 50,
+                      decoration:  BoxDecoration(
+                        color: Colors.grey.shade300,
+                        border: Border.all(
+                          color: Colors.grey
+                        ),
+                        borderRadius: const BorderRadius.all(Radius.circular(10)),
+                      ),
+                      child: TextField(
+                        decoration: InputDecoration(
+                          prefixIcon: const Icon(Icons.search,color: Colors.green,),
+                          hintText: 'Search Destination',
+                          hintStyle: GoogleFonts.poppins(
+                            color: Colors.black,
+                            fontWeight: FontWeight.w600
+                          ),
+                          // hintText: 'Search for a location',
+                          border: InputBorder.none, // Removes the bottom underline
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 15, horizontal: 10),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            )
+              ),
+          ),
+          Positioned(
             bottom: 20,
             right: 20,
             child: FloatingActionButton(
+              shape: OutlineInputBorder(borderRadius: BorderRadius.circular(50),borderSide: BorderSide.none),
               onPressed: _getCurrentLocation,
               backgroundColor: Colors.white,
               child: const Icon(Icons.my_location, color: Colors.black),
