@@ -239,6 +239,7 @@ class _PickupandroplocationState extends State<Pickupandroplocation> {
                             child: Column(
                               children: [
                                 GooglePlaceAutoCompleteTextField(
+
                                   textEditingController: _destinationController,
                                   googleAPIKey: Environment.GoogleMapsAPI,
                                   inputDecoration: InputDecoration(

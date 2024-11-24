@@ -14,7 +14,9 @@ void main()async{
     options: DefaultFirebaseOptions.currentPlatform,
   );
   runApp(
-    const MyApp()
+      kDebugMode?  DevicePreview(
+        enabled:true,
+        builder: (context) => const MyApp(),):const MyApp()
   );
 }
 

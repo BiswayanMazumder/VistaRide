@@ -230,7 +230,7 @@ class _HomePageState extends State<HomePage> {
                   border: Border.all(
                       color: Colors.white
                   ),
-                  borderRadius: const BorderRadius.all(Radius.circular(50)),
+                  borderRadius: const BorderRadius.all(Radius.circular(20)),
                 ),
                 child:  Row(
                   children: [
