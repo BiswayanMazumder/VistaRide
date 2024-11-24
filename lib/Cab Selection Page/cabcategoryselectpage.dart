@@ -9,6 +9,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:vistaride/Cab%20Selection%20Page/CabFindingPage.dart';
 import 'package:vistaride/Environment%20Files/.env.dart';
 
 class CabSelectAndPrice extends StatefulWidget {
@@ -243,7 +244,12 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
               prefs.setString('Cab Category', cabcategorynames[_selectedindex]);
               prefs.setString('Travel Distance', DistanceTravel);
               prefs.setString('Travel Time', Time);
-              print(prefs.getString('Cab Category'));
+              if (kDebugMode) {
+                print('Cab ${prefs.getDouble('Fare')}');
+              }
+              if(prefs.getString('Cab Category')!=null){
+                Navigator.push(context, MaterialPageRoute(builder: (context) => CabFinding(),));
+              }
             },
             child: Align(
               alignment: Alignment
