@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -8,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simple_animation_progress_bar/simple_animation_progress_bar.dart';
+import 'package:vistaride/Booked%20Cab%20Details/bookedcabdetails.dart';
 
 class CabFinding extends StatefulWidget {
   const CabFinding({super.key});
@@ -40,12 +43,31 @@ class _CabFindingState extends State<CabFinding> with TickerProviderStateMixin {
   // Animation controller for the ripple effect
   late AnimationController _rippleController;
   late Animation<double> _rippleAnimation;
+  bool ridestarted=false;
+  late Timer _timertofetch;
+  Future<void>fetchridedetails()async{
+    final prefs=await SharedPreferences.getInstance();
+    final docsnap=await _firestore.collection('Ride Details').doc(prefs.getString('Booking ID')).get();
+    if(docsnap.exists){
+      setState(() {
+        ridestarted=docsnap.data()?['Ride Accepted'];
+      });
+    }
+    if(ridestarted){
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => BookedCabDetails(),));
+    }
+    print('Ride Started $ridestarted');
+  }
   @override
   void initState() {
     super.initState();
     _getCurrentLocation();
     inititalisesharedpref();
-    _timer = Timer.periodic(Duration(minutes: 1), _updateText);
+    fetchridedetails();
+    _timertofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
+      fetchridedetails();
+    });
+    _timer = Timer.periodic(const Duration(minutes: 1), _updateText);
 
     // Initialize the ripple animation
     _rippleController = AnimationController(
@@ -170,9 +192,18 @@ class _CabFindingState extends State<CabFinding> with TickerProviderStateMixin {
   void dispose() {
     _timer.cancel();
     _rippleController.dispose();
+    _timertofetch.cancel();
     super.dispose();
   }
-
+  int randomFiveDigitNumber = 0;
+  Future<void> generatePostID() async {
+    final random = Random();
+    randomFiveDigitNumber =
+        10000 + random.nextInt(90000); // Generates 5-digit number
+    if (kDebugMode) {
+      print('Random 5-digit number: $randomFiveDigitNumber');
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -315,8 +346,12 @@ class _CabFindingState extends State<CabFinding> with TickerProviderStateMixin {
                       child: Padding(
                         padding: const EdgeInsets.only(left: 20, right: 20),
                         child: InkWell(
-                          onTap: () {
+                          onTap: ()async{
                             Navigator.pop(context);
+                            final prefs=await SharedPreferences.getInstance();
+                            if (kDebugMode) {
+                              print(prefs.getString('Booking ID'));
+                            }
                           },
                           child: Container(
                             height: 50,

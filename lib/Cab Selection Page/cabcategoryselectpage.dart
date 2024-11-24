@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'dart:math';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -21,6 +24,8 @@ class CabSelectAndPrice extends StatefulWidget {
 
 class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
   late GoogleMapController mapController;
+  final FirebaseAuth _auth=FirebaseAuth.instance;
+  final FirebaseFirestore _firestore=FirebaseFirestore.instance;
   Set<Marker> _markers = {};
   Set<Polyline> _polylines = {}; // Set to hold polyline
   LatLng _pickupLocation =
@@ -227,7 +232,15 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
   }
-
+  int randomFiveDigitNumber = 0;
+  Future<void> generateBookingID() async {
+    final random = Random();
+    randomFiveDigitNumber =
+        10000 + random.nextInt(90000); // Generates 5-digit number
+    if (kDebugMode) {
+      print('Random 5-digit number: $randomFiveDigitNumber');
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -247,7 +260,32 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
               if (kDebugMode) {
                 print('Cab ${prefs.getDouble('Fare')}');
               }
-              if(prefs.getString('Cab Category')!=null){
+              await generateBookingID();
+              prefs.setString('Booking ID', randomFiveDigitNumber.toString());
+              await generateBookingID();
+              if (kDebugMode) {
+                print(prefs.getString('Booking ID'));
+              }
+              await _firestore.collection('Booking IDs').doc(_auth.currentUser!.uid).set(
+                  {
+                    'IDs':FieldValue.arrayUnion([prefs.getString('Booking ID')])
+                  },SetOptions(merge: true));
+              await _firestore.collection('Ride Details').doc(prefs.getString('Booking ID')).set(
+                  {
+                    'Booking ID':prefs.getString('Booking ID'),
+                    'Pickup Location':pickup,
+                    'Drop Location':dropoffloc,
+                    'Fare':prefs.getDouble('Fare'),
+                    'Cab Category':prefs.getString('Cab Category'),
+                    'Booking Time':FieldValue.serverTimestamp(),
+                    'Ride Accepted':false,
+                    'Driver Name':'',
+                    'Driver Photo':'',
+                    'Driver ID':'',
+                    'Travel Distance':prefs.getString('Travel Distance'),
+                    'Travel Time':prefs.getString('Travel Time')
+                  });
+              if(prefs.getString('Cab Category')!=null || prefs.getString('Fare')!=null){
                 Navigator.push(context, MaterialPageRoute(builder: (context) => CabFinding(),));
               }
             },
