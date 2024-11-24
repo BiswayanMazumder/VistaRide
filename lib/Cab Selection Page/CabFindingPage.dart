@@ -23,6 +23,15 @@ class _CabFindingState extends State<CabFinding> with TickerProviderStateMixin {
   String locationName = ''; // Store the name of the location
   final TextEditingController _locationcontroller = TextEditingController();
   bool islikedlocation = false;
+  String? pickup;
+  String? dropoff;
+  Future<void> inititalisesharedpref() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      dropoff = prefs.getString('dropoff');
+      pickup = prefs.getString('location');
+    });
+  }
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -31,18 +40,20 @@ class _CabFindingState extends State<CabFinding> with TickerProviderStateMixin {
   // Animation controller for the ripple effect
   late AnimationController _rippleController;
   late Animation<double> _rippleAnimation;
-
   @override
   void initState() {
     super.initState();
     _getCurrentLocation();
+    inititalisesharedpref();
     _timer = Timer.periodic(Duration(minutes: 1), _updateText);
 
     // Initialize the ripple animation
     _rippleController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
-    )..repeat(reverse: true); // Repeat and reverse the animation to simulate a ripple effect
+    )..repeat(
+        reverse:
+            true); // Repeat and reverse the animation to simulate a ripple effect
 
     _rippleAnimation = Tween<double>(begin: 0, end: 50).animate(
       CurvedAnimation(
@@ -78,13 +89,13 @@ class _CabFindingState extends State<CabFinding> with TickerProviderStateMixin {
     );
 
     List<Placemark> placemarks =
-    await placemarkFromCoordinates(position.latitude, position.longitude);
+        await placemarkFromCoordinates(position.latitude, position.longitude);
 
     if (placemarks.isNotEmpty) {
       Placemark placemark = placemarks[0];
       setState(() {
         locationName =
-        '${placemark.street}, ${placemark.thoroughfare}, ${placemark.subLocality}, '
+            '${placemark.street}, ${placemark.thoroughfare}, ${placemark.subLocality}, '
             '${placemark.locality},${placemark.administrativeArea}, ${placemark.postalCode} , ${placemark.country}';
         _locationcontroller.text = locationName;
       });
@@ -146,9 +157,9 @@ class _CabFindingState extends State<CabFinding> with TickerProviderStateMixin {
     'Getting you the quickest ride to your destination',
     'Waiting for driver to accept',
     'Sent requests to more drivers...',
-    'Waiting for driver...'
+    'Still Waiting for driver...'
   ];
-  List bookingimages=[
+  List bookingimages = [
     'https://www.gm.com/content/dam/company/img/us/en/vehicle-safety/safety_periscope2_research3.gif',
     'https://i.pinimg.com/originals/af/ab/46/afab4635c7491943d71528a650e95673.gif',
     'https://i.giphy.com/D8EFNfzm0c1KZyoYgh.webp',
@@ -173,8 +184,7 @@ class _CabFindingState extends State<CabFinding> with TickerProviderStateMixin {
               zoom: 15,
             ),
             onMapCreated: _onMapCreated,
-            // markers: _markers,
-            zoomGesturesEnabled: true,
+            zoomGesturesEnabled: false,
             zoomControlsEnabled: false,
             buildingsEnabled: true,
             trafficEnabled: true,
@@ -186,8 +196,10 @@ class _CabFindingState extends State<CabFinding> with TickerProviderStateMixin {
             animation: _rippleAnimation,
             builder: (context, child) {
               return Positioned(
-                top: MediaQuery.of(context).size.height / 2 - _rippleAnimation.value,
-                left: MediaQuery.of(context).size.width / 2 - _rippleAnimation.value,
+                top: MediaQuery.of(context).size.height / 2 -
+                    _rippleAnimation.value,
+                left: MediaQuery.of(context).size.width / 2 -
+                    _rippleAnimation.value,
                 child: Container(
                   width: _rippleAnimation.value * 2,
                   height: _rippleAnimation.value * 2,
@@ -220,13 +232,77 @@ class _CabFindingState extends State<CabFinding> with TickerProviderStateMixin {
                         duration: const Duration(minutes: 5),
                       )),
                   Positioned(
+                    top: 120,
+                    left: 20,
+                    right: 20,
+                    child: Container(
+                      width: MediaQuery.sizeOf(context).width,
+                      decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey,width: 0.5)),
+                      height: 50,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 10, right: 10),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.directions_walk,color: Colors.green,),
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            Expanded(
+                              child: Text(pickup!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.poppins(
+                                      color: Colors.black,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w400)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 200,
+                    left: 20,
+                    right: 20,
+                    child: Container(
+                      width: MediaQuery.sizeOf(context).width,
+                      decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey,width: 0.5)),
+                      height: 50,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 10, right: 10),
+                        child: Row(
+                          children: [
+                            const CircleAvatar(
+                              radius: 7,
+                              backgroundColor: Colors.red,
+                            ),
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            Expanded(
+                              child: Text(dropoff!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.poppins(
+                                      color: Colors.black,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w400)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
                     top: 35,
                     child: Container(
                       width: MediaQuery.sizeOf(context).width,
                       height: 20,
                       child: Center(
-                        child: Text(
-                            bookingtexts[currentIndex],
+                        child: Text(bookingtexts[currentIndex],
                             style: GoogleFonts.poppins(
                                 color: Colors.black,
                                 fontWeight: FontWeight.w600)),
@@ -245,7 +321,7 @@ class _CabFindingState extends State<CabFinding> with TickerProviderStateMixin {
                             height: 50,
                             decoration: BoxDecoration(
                                 borderRadius:
-                                const BorderRadius.all(Radius.circular(10)),
+                                    const BorderRadius.all(Radius.circular(10)),
                                 border: Border.all(color: Colors.grey)),
                             width: MediaQuery.sizeOf(context).width - 40,
                             child: Center(
