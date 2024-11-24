@@ -187,6 +187,7 @@ class _CabFindingState extends State<CabFinding> with TickerProviderStateMixin {
             zoomGesturesEnabled: false,
             zoomControlsEnabled: false,
             buildingsEnabled: true,
+            scrollGesturesEnabled: false,
             trafficEnabled: true,
             myLocationEnabled: true,
             myLocationButtonEnabled: false,
