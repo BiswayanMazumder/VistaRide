@@ -12,7 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vistaride/Home%20Page/HomePage.dart';
 import '../Environment Files/.env.dart';
-
+import 'package:image/image.dart' as img;
 class BookedCabDetails extends StatefulWidget {
   const BookedCabDetails({super.key});
 
@@ -55,8 +55,30 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
   String? pickup;
   String? dropoffloc;
   String DistanceTravel = '';
+  bool isdrivernearby=false;
+  Future<BitmapDescriptor> _getNetworkCarIcon(String imageUrl) async {
+    final response = await http.get(Uri.parse(imageUrl));
+    if (response.statusCode == 200) {
+      final Uint8List bytes = response.bodyBytes;
 
-  // Fetch route and travel time using the Google Directions API
+      // Decode the image and resize it
+      img.Image? originalImage = img.decodeImage(bytes);
+      if (originalImage == null) {
+        throw Exception('Failed to decode image');
+      }
+
+      img.Image resizedImage = img.copyResize(originalImage, width: 80, height: 80);
+
+      // Convert the resized image back to bytes
+      final Uint8List resizedBytes = Uint8List.fromList(img.encodePng(resizedImage));
+
+      // Create a BitmapDescriptor from the resized bytes
+      return BitmapDescriptor.fromBytes(resizedBytes);
+    } else {
+      throw Exception('Failed to load image from network');
+    }
+  }
+
   Future<void> _fetchRoute() async {
     await fetchridedetails();
     if (drivercurrentlatitude.isEmpty || drivercurrentlongitude.isEmpty || pickuplat == 0 || pickuplong == 0) {
@@ -94,7 +116,22 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
         String encodedPolyline = data['routes'][0]['overview_polyline']['points'];
         List<LatLng> polylinePoints = _decodePolyline(encodedPolyline);
 
+        // Convert distance to kilometers and check if driver is nearby
+        double distanceInKm = _convertDistanceToKm(distance);
+
+        // Fetch the custom car icon from the network
+        BitmapDescriptor carIcon;
+        try {
+          carIcon = await _getNetworkCarIcon(
+              'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2Fimages-removebg-preview%20(1).png?alt=media&token=80f80ee3-6787-4ddc-8aad-f9ce400461ea');
+        } catch (e) {
+          print('Failed to load custom car icon: $e');
+          carIcon = BitmapDescriptor.defaultMarker; // Fallback to default marker
+        }
+
         setState(() {
+          isdrivernearby = distanceInKm < 1;
+
           Time = duration;
           DistanceTravel = distance;
 
@@ -102,6 +139,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
           _markers.add(Marker(
             markerId: MarkerId('driver'),
             position: driverCurrentLocation,
+            // Use the custom network car icon
             infoWindow: InfoWindow(
                 title: 'Driver\'s Current Location',
                 snippet:
@@ -110,6 +148,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
           _markers.add(Marker(
             markerId: MarkerId('pickup'),
             position: _pickupLocation,
+            icon: carIcon,
             infoWindow: InfoWindow(
                 title: 'Pickup Location',
                 snippet:
@@ -130,12 +169,25 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
         if (kDebugMode) {
           print('Estimated travel time: $Time');
           print('Estimated distance: $DistanceTravel');
+          print('Is driver nearby: $isdrivernearby');
         }
       }
     } else {
       print('Failed to load route');
     }
   }
+
+
+// Helper function to convert distance to kilometers
+  double _convertDistanceToKm(String distance) {
+    if (distance.contains('km')) {
+      return double.parse(distance.replaceAll(' km', '').trim());
+    } else if (distance.contains('m')) {
+      return double.parse(distance.replaceAll(' m', '').trim()) / 1000;
+    }
+    return 0.0;
+  }
+
 
 
   // Method to decode polyline from the Directions API response
@@ -219,6 +271,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
   String carphoto = '';
   String carname = '';
   double rating = 0;
+  String cabcategory='';
   int rideotp = 0;
   String phonenumber = '';
   double pickuplong = 0;
@@ -244,7 +297,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
         droplong = docsnap.data()?['Drop Longitude'];
         pickuploc = docsnap.data()?['Pickup Location'];
         droploc = docsnap.data()?['Drop Location'];
-
+        cabcategory=docsnap.data()?['Cab Category'];
       });
     }
     print('OTP $rideotp');
@@ -276,7 +329,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
           GoogleMap(
             initialCameraPosition: CameraPosition(
               target: _pickupLocation,
-              zoom: 11.0,
+              zoom: 12.0,
             ),
             buildingsEnabled: true,
             zoomGesturesEnabled: true,
@@ -291,8 +344,8 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
             child: Container(
               height: 70,
               width: 85,
-              decoration: const BoxDecoration(
-                  color: Colors.white,
+              decoration:  BoxDecoration(
+                  color:isdrivernearby?Colors.purple: Colors.white,
                   borderRadius: BorderRadius.all(Radius.circular(10))),
               child: Center(
                 child: Column(
@@ -303,14 +356,14 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                     Text(
                       '$rideotp',
                       style: GoogleFonts.poppins(
-                          color: Colors.purple,
+                          color:isdrivernearby?Colors.white: Colors.purple,
                           fontWeight: FontWeight.bold,
                           fontSize: 18),
                     ),
                     Text(
                       'Start OTP',
                       style: GoogleFonts.poppins(
-                          color: Colors.grey, fontWeight: FontWeight.w500),
+                          color: isdrivernearby?Colors.white: Colors.grey, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
