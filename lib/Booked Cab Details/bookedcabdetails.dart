@@ -91,13 +91,19 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
       double.parse(drivercurrentlatitude),
       double.parse(drivercurrentlongitude),
     );
-
+    LatLng droplocation = LatLng(
+      double.parse(droplat.toString()),
+      double.parse(droplong.toString()),
+    );
     // Update the pickup location
     setState(() {
       _pickupLocation = LatLng(pickuplat, pickuplong);
+      _dropoffLocation=LatLng(droplat, droplong);
     });
 
     const String apiKey = Environment.GoogleMapsAPI;
+    final String url1 = //use it when ride is verified
+        'https://maps.googleapis.com/maps/api/directions/json?origin=${droplocation.latitude},${droplocation.longitude}&destination=${_pickupLocation.latitude},${_pickupLocation.longitude}&key=$apiKey';
     final String url =
         'https://maps.googleapis.com/maps/api/directions/json?origin=${driverCurrentLocation.latitude},${driverCurrentLocation.longitude}&destination=${_pickupLocation.latitude},${_pickupLocation.longitude}&key=$apiKey';
 
@@ -139,20 +145,19 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
           _markers.add(Marker(
             markerId: MarkerId('driver'),
             position: driverCurrentLocation,
+            icon: carIcon,
             // Use the custom network car icon
-            infoWindow: InfoWindow(
+            infoWindow:  InfoWindow(
                 title: 'Driver\'s Current Location',
-                snippet:
-                'Latitude: ${driverCurrentLocation.latitude}, Longitude: ${driverCurrentLocation.longitude}'),
-          ));
+              snippet: '$drivername is $DistanceTravel away from you'
+            )));
           _markers.add(Marker(
             markerId: MarkerId('pickup'),
             position: _pickupLocation,
-            icon: carIcon,
             infoWindow: InfoWindow(
                 title: 'Pickup Location',
                 snippet:
-                'Latitude: ${_pickupLocation.latitude}, Longitude: ${_pickupLocation.longitude}'),
+                'Driving arriving in $Time'),
           ));
 
           // Add polyline for the route
