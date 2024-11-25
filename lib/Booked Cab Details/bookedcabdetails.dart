@@ -8,7 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:url_launcher/url_launcher.dart';
+import 'package:vistaride/Home%20Page/HomePage.dart';
 import '../Environment Files/.env.dart';
 
 class BookedCabDetails extends StatefulWidget {
@@ -252,6 +253,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+
       body: Stack(
         children: [
           GoogleMap(
@@ -285,13 +287,13 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                       '$rideotp',
                       style: GoogleFonts.poppins(
                           color: Colors.purple,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.bold,
                           fontSize: 18),
                     ),
                     Text(
                       'Start OTP',
                       style: GoogleFonts.poppins(
-                          color: Colors.grey, fontWeight: FontWeight.w300),
+                          color: Colors.grey, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
@@ -311,10 +313,10 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                         height: 20,
                       ),
                       Text(
-                        'Your ride is confirmed.',
+                        "Share the 'OTP' before starting trip.",
                         style: GoogleFonts.poppins(
                             color: Colors.black,
-                            fontSize: 18,
+                            fontSize: 16,
                             fontWeight: FontWeight.w600),
                       ),
                       const SizedBox(
@@ -355,12 +357,27 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                                 const SizedBox(
                                   height: 8,
                                 ),
-                                Text(
-                                  drivername,
-                                  style: GoogleFonts.poppins(
-                                      color: Colors.grey,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w500),
+                                Row(
+                                  children: [
+                                    Text(
+                                      drivername,
+                                      style: GoogleFonts.poppins(
+                                          color: Colors.grey,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w500),
+                                    ),
+                                    const SizedBox(
+                                      width: 5,
+                                    ),
+                                    const Icon(Icons.star,color: Colors.yellow,),
+                                    Text(
+                                      rating.toString(),
+                                      style: GoogleFonts.poppins(
+                                          color: Colors.grey,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w500),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -375,6 +392,162 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                             ),
                           ],
                         ),
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20,right: 20),
+                        child: Row(
+                          children: [
+                            InkWell(
+                              onTap: ()async{
+                                final Uri phoneUri = Uri(scheme: 'tel', path: phonenumber);
+                                if (await canLaunchUrl(phoneUri)) {
+                                  await launchUrl(phoneUri);
+                                } else {
+                                  throw 'Could not launch $phoneUri';
+                                }
+                              },
+                              child: Container(
+                                height: 50,
+                                width: 120,
+                                decoration: BoxDecoration(
+                                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                                  border: Border.all(
+                                    color: Colors.grey,
+                                    width: 0.5
+                                  ),
+                                ),
+                                child:  Padding(padding: const EdgeInsets.only(left: 10,right: 10),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.call,color: Colors.black,),
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                    Text('Contact',style: GoogleFonts.poppins(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w600
+                                    ),)
+                                  ],
+                                ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding:
+                        const EdgeInsets.only(left: 20, right: 20, top: 20),
+                        child: InkWell(
+                          child: Container(
+                            width: MediaQuery.sizeOf(context).width,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Colors.grey,
+                                width: 0.5
+                              )
+                            ),
+                            child: Row(
+                              children: [
+                                const SizedBox(
+                                  width: 10,
+                                ),
+                                const Icon(
+                                  Icons.directions_walk,
+                                  color: Colors.green,
+                                ),
+                                const SizedBox(
+                                  width: 20,
+                                ),
+                                Expanded(
+                                    child: Text(
+                                      pickuploc,
+                                      style: GoogleFonts.poppins(color: Colors.black),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    )),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding:
+                        const EdgeInsets.only(left: 20, right: 20, top: 30,bottom: 20),
+                        child: InkWell(
+                          child: Container(
+                            width: MediaQuery.sizeOf(context).width,
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Colors.grey,width: 0.5
+                              )
+                            ),
+                            height: 40,
+                            child: Row(
+                              children: [
+                                const SizedBox(
+                                  width: 10,
+                                ),
+                                const CircleAvatar(
+                                  radius: 5,
+                                  backgroundColor: Colors.red,
+                                ),
+                                const SizedBox(
+                                  width: 20,
+                                ),
+                                Expanded(
+                                    child: Text(
+                                      droploc,
+                                      style: GoogleFonts.poppins(color: Colors.black),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    )),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20, right: 20),
+                        child: InkWell(
+                          onTap: ()async{
+                            // Navigator.pop(context);
+                            final prefs=await SharedPreferences.getInstance();
+                            if (kDebugMode) {
+                              print(prefs.getString('Booking ID'));
+                            }
+                            await _firestore.collection('Ride Details').doc(prefs.getString('Booking ID')).update(
+                                {
+                                  'Ride Accepted':false,
+                                  'Ride Cancelled':true,
+                                  'Cancellation Time':FieldValue.serverTimestamp(),
+                                });
+                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
+                          },
+                          child: Container(
+                            height: 50,
+                            decoration: BoxDecoration(
+                                borderRadius:
+                                const BorderRadius.all(Radius.circular(10)),
+                                border: Border.all(color: Colors.grey)),
+                            width: MediaQuery.sizeOf(context).width - 40,
+                            child: Center(
+                              child: Text(
+                                'Cancel Ride',
+                                style: GoogleFonts.poppins(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 20,
                       )
                     ],
                   ),
