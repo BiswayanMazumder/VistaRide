@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:math';
+import 'package:image/image.dart' as img;
+import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -29,6 +33,146 @@ class _HomePageState extends State<HomePage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String profilepic = '';
+  List<dynamic> driversnearme=[];
+  List<dynamic> driverlocation=[];
+  Future<BitmapDescriptor> _getNetworkCarIcon(String imageUrl) async {
+    final response = await http.get(Uri.parse(imageUrl));
+    if (response.statusCode == 200) {
+      final Uint8List bytes = response.bodyBytes;
+
+      // Decode the image and resize it
+      img.Image? originalImage = img.decodeImage(bytes);
+      if (originalImage == null) {
+        throw Exception('Failed to decode image');
+      }
+
+      img.Image resizedImage = img.copyResize(originalImage, width: 80, height: 80);
+
+      // Convert the resized image back to bytes
+      final Uint8List resizedBytes = Uint8List.fromList(img.encodePng(resizedImage));
+
+      // Create a BitmapDescriptor from the resized bytes
+      return BitmapDescriptor.fromBytes(resizedBytes);
+    } else {
+      throw Exception('Failed to load image from network');
+    }
+  }
+  Future<void> fetchdrivers() async {
+    await _getCurrentLocation();
+    try {
+      final QuerySnapshot docsnap = await _firestore
+          .collection('VistaRide Driver Details')
+          .get(); // Fetch all drivers regardless of their "Driver Online" status
+
+      List<dynamic> nearbyDrivers = [];
+      Set<Marker> driverMarkers = {}; // Temporary set for driver markers
+
+      for (var doc in docsnap.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final String driverLatitude = data['Current Latitude'] ?? "0.0";
+        final String driverLongitude = data['Current Longitude'] ?? "0.0";
+        final String cabcategory = data['Car Category'] ?? '';
+        final bool isDriverOnline = data['Driver Online'] ?? false;
+
+        // Skip offline drivers and remove their markers if they are already on the map
+        if (!isDriverOnline) {
+          setState(() {
+            _markers.removeWhere(
+                  (marker) =>
+              marker.markerId.value.startsWith('driver_') &&
+                  marker.markerId.value == 'driver_${doc.id}',
+            );
+          });
+          continue;
+        }
+
+        // Calculate the distance between user and driver
+        double distance = _calculateDistance(
+          _currentLocation.latitude,
+          _currentLocation.longitude,
+          double.parse(driverLatitude),
+          double.parse(driverLongitude),
+        );
+
+        if (kDebugMode) {
+          print('Distance $distance');
+        }
+
+        if (distance <= 15.0) { // Within 15 km
+          nearbyDrivers.add({
+            'driverId': doc.id,
+            'latitude': driverLatitude,
+            'longitude': driverLongitude,
+            'otherDetails': data,
+          });
+
+          BitmapDescriptor carIcon;
+          try {
+            carIcon = await _getNetworkCarIcon(
+                'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2Fimages-removebg-preview%20(1).png?alt=media&token=80f80ee3-6787-4ddc-8aad-f9ce400461ea');
+          } catch (e) {
+            print('Failed to load custom car icon: $e');
+            carIcon = BitmapDescriptor.defaultMarker; // Fallback to default marker
+          }
+
+          // Add a marker for this driver
+          driverMarkers.add(
+            Marker(
+              markerId: MarkerId('driver_${doc.id}'), // Unique ID for driver markers
+              icon: carIcon,
+              position: LatLng(double.parse(driverLatitude), double.parse(driverLongitude)),
+            ),
+          );
+        }
+      }
+
+      setState(() {
+        driversnearme = nearbyDrivers; // Update the state with nearby drivers
+        // Remove all driver markers first
+        _markers.removeWhere((marker) => marker.markerId.value.startsWith('driver_'));
+        // Add the updated driver markers
+        _markers.addAll(driverMarkers);
+      });
+
+      if (nearbyDrivers.isNotEmpty) {
+        for (var driver in nearbyDrivers) {
+          if (kDebugMode) {
+            print('Driver ID: ${driver['driverId']}');
+            print('Latitude: ${driver['latitude']}');
+            print('Longitude: ${driver['longitude']}');
+            print('Other Details: ${driver['otherDetails']}');
+            print('--------------------------');
+          }
+        }
+      } else {
+        if (kDebugMode) {
+          print('No drivers found within 15 km radius.');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error fetching drivers: $e');
+      }
+    }
+  }
+
+
+
+  double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+    const double R = 6371; // Radius of the Earth in km
+    final double dLat = _toRadians(lat2 - lat1);
+    final double dLon = _toRadians(lon2 - lon1);
+    final double a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(_toRadians(lat1)) * cos(_toRadians(lat2)) *
+            sin(dLon / 2) * sin(dLon / 2);
+    final double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    return R * c; // Distance in km
+  }
+
+  double _toRadians(double degree) {
+    return degree * pi / 180;
+  }
+
   Future<void>fetchactiveride()async{
     List bookingid=[];
     String acctivebookingid='';
@@ -48,12 +192,17 @@ class _HomePageState extends State<HomePage> {
       }
     }
   }
+  late Timer _timertofetch;
   @override
   void initState() {
     super.initState();
     _getCurrentLocation();
     fetchuserdetails();
     fetchactiveride();
+    fetchdrivers();
+    _timertofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
+      fetchdrivers();
+    });
   }
 
   // Function to get the current location using Geolocator

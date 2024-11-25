@@ -103,7 +103,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
 
     const String apiKey = Environment.GoogleMapsAPI;
     final String url1 = //use it when ride is verified
-        'https://maps.googleapis.com/maps/api/directions/json?origin=${droplocation.latitude},${droplocation.longitude}&destination=${_pickupLocation.latitude},${_pickupLocation.longitude}&key=$apiKey';
+        'https://maps.googleapis.com/maps/api/directions/json?origin=${driverCurrentLocation.latitude},${driverCurrentLocation.longitude}&destination=${_dropoffLocation.latitude},${_dropoffLocation.longitude}&key=$apiKey';
     final String url =
         'https://maps.googleapis.com/maps/api/directions/json?origin=${driverCurrentLocation.latitude},${driverCurrentLocation.longitude}&destination=${_pickupLocation.latitude},${_pickupLocation.longitude}&key=$apiKey';
 
@@ -111,7 +111,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
       print('URL $url');
     }
 
-    final response = await http.get(Uri.parse(url));
+    final response = await http.get(Uri.parse(rideverified?url1:url));
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(response.body);
       if (data['routes'].isNotEmpty) {
@@ -148,16 +148,16 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
             icon: carIcon,
             // Use the custom network car icon
             infoWindow:  InfoWindow(
-                title: 'Driver\'s Current Location',
-              snippet: '$drivername is $DistanceTravel away from you'
+                title:rideverified?'Your current location':'Driver\'s Current Location',
+              snippet:rideverified?'You are $DistanceTravel away from your drop location':'$drivername is $DistanceTravel away from you'
             )));
           _markers.add(Marker(
             markerId: MarkerId('pickup'),
-            position: _pickupLocation,
+            position:rideverified?_dropoffLocation: _pickupLocation,
             infoWindow: InfoWindow(
-                title: 'Pickup Location',
+                title:rideverified?'Drop Location':'Pickup Location',
                 snippet:
-                'Driving arriving in $Time'),
+                'Drop Location arriving in $Time'),
           ));
 
           // Add polyline for the route
@@ -269,6 +269,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
   }
 
   bool ridestarted = false;
+  bool rideverified=false;
   String driverid = '';
   String drivername = '';
   String driverprofilephoto = '';
@@ -303,6 +304,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
         pickuploc = docsnap.data()?['Pickup Location'];
         droploc = docsnap.data()?['Drop Location'];
         cabcategory=docsnap.data()?['Cab Category'];
+        rideverified=docsnap.data()?['Ride Verified'];
       });
     }
     print('OTP $rideotp');
@@ -321,6 +323,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
         phonenumber = Docsnap.data()?['Contact Number'];
         drivercurrentlatitude=Docsnap.data()?['Current Latitude'];
         drivercurrentlongitude=Docsnap.data()?['Current Longitude'];
+
       });
     }
   }
@@ -350,7 +353,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
               height: 70,
               width: 85,
               decoration:  BoxDecoration(
-                  color:isdrivernearby?Colors.purple: Colors.white,
+                  color:isdrivernearby || rideverified?Colors.purple: Colors.white,
                   borderRadius: BorderRadius.all(Radius.circular(10))),
               child: Center(
                 child: Column(
@@ -361,14 +364,14 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                     Text(
                       '$rideotp',
                       style: GoogleFonts.poppins(
-                          color:isdrivernearby?Colors.white: Colors.purple,
+                          color:isdrivernearby || rideverified?Colors.white: Colors.purple,
                           fontWeight: FontWeight.bold,
                           fontSize: 18),
                     ),
                     Text(
                       'Start OTP',
                       style: GoogleFonts.poppins(
-                          color: isdrivernearby?Colors.white: Colors.grey, fontWeight: FontWeight.w500),
+                          color: isdrivernearby || rideverified?Colors.white: Colors.grey, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
@@ -387,7 +390,23 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                       const SizedBox(
                         height: 20,
                       ),
-                      Text(
+                      rideverified?Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.check,color: Colors.green,),
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          Text(
+                            "Ride verified successfully.",
+                            style: GoogleFonts.poppins(
+                                color: Colors.black,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ): Text(
                         "Share the 'OTP' before starting trip.",
                         style: GoogleFonts.poppins(
                             color: Colors.black,
@@ -586,7 +605,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                           ),
                         ),
                       ),
-                      Padding(
+                    !rideverified?  Padding(
                         padding: const EdgeInsets.only(left: 20, right: 20),
                         child: InkWell(
                           onTap: ()async{
@@ -620,7 +639,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                             ),
                           ),
                         ),
-                      ),
+                      ):Container(),
                       const SizedBox(
                         height: 20,
                       )

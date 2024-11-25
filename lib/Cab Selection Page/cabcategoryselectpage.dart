@@ -12,6 +12,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:image/image.dart' as img;
+// import 'package:http/http.dart' as http;
 import 'package:vistaride/Cab%20Selection%20Page/CabFindingPage.dart';
 import 'package:vistaride/Environment%20Files/.env.dart';
 
@@ -34,7 +36,129 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
       22.582077, 88.368420); // Default drop-off location (Sealdah Station)
   String? _pickupAddress;
   String? _dropoffAddress;
+  Future<BitmapDescriptor> _getNetworkCarIcon(String imageUrl) async {
+    final response = await http.get(Uri.parse(imageUrl));
+    if (response.statusCode == 200) {
+      final Uint8List bytes = response.bodyBytes;
 
+      // Decode the image and resize it
+      img.Image? originalImage = img.decodeImage(bytes);
+      if (originalImage == null) {
+        throw Exception('Failed to decode image');
+      }
+
+      img.Image resizedImage = img.copyResize(originalImage, width: 80, height: 80);
+
+      // Convert the resized image back to bytes
+      final Uint8List resizedBytes = Uint8List.fromList(img.encodePng(resizedImage));
+
+      // Create a BitmapDescriptor from the resized bytes
+      return BitmapDescriptor.fromBytes(resizedBytes);
+    } else {
+      throw Exception('Failed to load image from network');
+    }
+  }
+  List<dynamic> driversnearme=[];
+  Future<void> fetchdrivers() async {
+    await _fetchRoute();
+    // await _getCurrentLocation();
+    try {
+      final QuerySnapshot docsnap = await _firestore
+          .collection('VistaRide Driver Details')
+          .where('Driver Online', isEqualTo: true)
+          .get();
+
+      List<dynamic> nearbyDrivers = [];
+      Set<Marker> driverMarkers = {}; // Create a new set for driver markers
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      double? pickuplongitude = prefs.getDouble('location longitude');
+      double? pickuplatitude = prefs.getDouble('location latitude');
+      for (var doc in docsnap.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final String driverLatitude = data['Current Latitude'] ?? "0.0";
+        final String driverLongitude = data['Current Longitude'] ?? "0.0";
+        final String cabcategory=data['Car Category']??'';
+
+        // Calculate the distance between user and driver
+        double distance = _calculateDistance(
+          pickuplatitude!,
+          pickuplongitude!,
+          double.parse(driverLatitude),
+          double.parse(driverLongitude),
+        );
+
+        if (kDebugMode) {
+          print('Distance $distance');
+        }
+
+        if (distance <= 15.0) { // Within 15 km
+          nearbyDrivers.add({
+            'driverId': doc.id,
+            'latitude': driverLatitude,
+            'longitude': driverLongitude,
+            'otherDetails': data,
+          });
+          BitmapDescriptor carIcon;
+          try {
+            carIcon = await _getNetworkCarIcon(
+                'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2Fimages-removebg-preview%20(1).png?alt=media&token=80f80ee3-6787-4ddc-8aad-f9ce400461ea');
+          } catch (e) {
+            print('Failed to load custom car icon: $e');
+            carIcon = BitmapDescriptor.defaultMarker; // Fallback to default marker
+          }
+          // Add a marker for this driver
+          driverMarkers.add(
+            Marker(
+              markerId: MarkerId(doc.id),
+              icon: carIcon,
+              position: LatLng(double.parse(driverLatitude), double.parse(driverLongitude)),
+            ),
+          );
+        }
+      }
+
+      setState(() {
+        driversnearme = nearbyDrivers; // Update the state with nearby drivers
+        _markers.addAll(driverMarkers); // Add driver markers to the map
+      });
+
+      if (nearbyDrivers.isNotEmpty) {
+        for (var driver in nearbyDrivers) {
+          if (kDebugMode) {
+            print('Driver ID: ${driver['driverId']}');
+            print('Latitude: ${driver['latitude']}');
+            print('Longitude: ${driver['longitude']}');
+            print('Other Details: ${driver['otherDetails']}');
+            print('--------------------------');
+          }
+        }
+      } else {
+        if (kDebugMode) {
+          print('No drivers found within 1 km radius.');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error fetching drivers: $e');
+      }
+    }
+  }
+
+
+  double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+    const double R = 6371; // Radius of the Earth in km
+    final double dLat = _toRadians(lat2 - lat1);
+    final double dLon = _toRadians(lon2 - lon1);
+    final double a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(_toRadians(lat1)) * cos(_toRadians(lat2)) *
+            sin(dLon / 2) * sin(dLon / 2);
+    final double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    return R * c; // Distance in km
+  }
+
+  double _toRadians(double degree) {
+    return degree * pi / 180;
+  }
   @override
   void initState() {
     super.initState();
@@ -483,7 +607,7 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                                     setState(() {
                                       _selectedindex = index;
                                     });
-
+                                    fetchdrivers();
                                     try {
                                       // Access SharedPreferences
                                       final prefs =
