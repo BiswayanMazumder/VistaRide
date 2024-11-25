@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -31,14 +32,25 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
       22.582077, 88.368420); // Default drop-off location (Sealdah Station)
   String? _pickupAddress;
   String? _dropoffAddress;
-
+  late Timer _timertofetch;
   @override
   void initState() {
     super.initState();
     _fetchRoute();
     fetchridedetails();
+    _timertofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
+      fetchridedetails();
+      _fetchRoute();
+    });
   }
-
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    _timertofetch.cancel();
+  }
+  String drivercurrentlongitude='';
+  String drivercurrentlatitude='';
   String Time = '';
   String? pickup;
   String? dropoffloc;
@@ -46,24 +58,26 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
 
   // Fetch route and travel time using the Google Directions API
   Future<void> _fetchRoute() async {
-    // Ensure ride details are fetched before attempting to fetch the route
     await fetchridedetails();
-
-    if (pickuplong == 0 || pickuplat == 0 || droplong == 0 || droplat == 0) {
-      print('Invalid coordinates from Firestore.');
+    if (drivercurrentlatitude.isEmpty || drivercurrentlongitude.isEmpty || pickuplat == 0 || pickuplong == 0) {
+      print('Invalid coordinates: Unable to fetch route.');
       return;
     }
 
-    // Update pickup and dropoff locations
+    // Driver's current location as origin
+    LatLng driverCurrentLocation = LatLng(
+      double.parse(drivercurrentlatitude),
+      double.parse(drivercurrentlongitude),
+    );
+
+    // Update the pickup location
     setState(() {
       _pickupLocation = LatLng(pickuplat, pickuplong);
-      _dropoffLocation = LatLng(droplat, droplong);
     });
 
-    final String apiKey =
-        Environment.GoogleMapsAPI; // Replace with your API key
+    const String apiKey = Environment.GoogleMapsAPI;
     final String url =
-        'https://maps.googleapis.com/maps/api/directions/json?origin=${_pickupLocation.latitude},${_pickupLocation.longitude}&destination=${_dropoffLocation.latitude},${_dropoffLocation.longitude}&key=$apiKey';
+        'https://maps.googleapis.com/maps/api/directions/json?origin=${driverCurrentLocation.latitude},${driverCurrentLocation.longitude}&destination=${_pickupLocation.latitude},${_pickupLocation.longitude}&key=$apiKey';
 
     if (kDebugMode) {
       print('URL $url');
@@ -77,30 +91,29 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
         final distance = data['routes'][0]['legs'][0]['distance']['text'];
 
         // Decode the polyline
-        String encodedPolyline =
-            data['routes'][0]['overview_polyline']['points'];
+        String encodedPolyline = data['routes'][0]['overview_polyline']['points'];
         List<LatLng> polylinePoints = _decodePolyline(encodedPolyline);
 
         setState(() {
           Time = duration;
           DistanceTravel = distance;
 
-          // Add markers for pickup and dropoff
+          // Add markers for driver's current location and pickup location
+          _markers.add(Marker(
+            markerId: MarkerId('driver'),
+            position: driverCurrentLocation,
+            infoWindow: InfoWindow(
+                title: 'Driver\'s Current Location',
+                snippet:
+                'Latitude: ${driverCurrentLocation.latitude}, Longitude: ${driverCurrentLocation.longitude}'),
+          ));
           _markers.add(Marker(
             markerId: MarkerId('pickup'),
             position: _pickupLocation,
             infoWindow: InfoWindow(
                 title: 'Pickup Location',
                 snippet:
-                    'Latitude: ${_pickupLocation.latitude}, Longitude: ${_pickupLocation.longitude}'),
-          ));
-          _markers.add(Marker(
-            markerId: MarkerId('dropoff'),
-            position: _dropoffLocation,
-            infoWindow: InfoWindow(
-                title: 'Drop-off Location',
-                snippet:
-                    'Latitude: ${_dropoffLocation.latitude}, Longitude: ${_dropoffLocation.longitude}'),
+                'Latitude: ${_pickupLocation.latitude}, Longitude: ${_pickupLocation.longitude}'),
           ));
 
           // Add polyline for the route
@@ -123,6 +136,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
       print('Failed to load route');
     }
   }
+
 
   // Method to decode polyline from the Directions API response
   List<LatLng> _decodePolyline(String encoded) {
@@ -230,6 +244,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
         droplong = docsnap.data()?['Drop Longitude'];
         pickuploc = docsnap.data()?['Pickup Location'];
         droploc = docsnap.data()?['Drop Location'];
+
       });
     }
     print('OTP $rideotp');
@@ -246,6 +261,8 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
         carnumber = Docsnap.data()?['Car Number Plate'];
         rating = Docsnap.data()?['Rating'];
         phonenumber = Docsnap.data()?['Contact Number'];
+        drivercurrentlatitude=Docsnap.data()?['Current Latitude'];
+        drivercurrentlongitude=Docsnap.data()?['Current Longitude'];
       });
     }
   }
