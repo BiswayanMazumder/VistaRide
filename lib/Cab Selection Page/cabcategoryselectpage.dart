@@ -241,6 +241,15 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
       print('Random 5-digit number: $randomFiveDigitNumber');
     }
   }
+  int randomFourDigitNumber = 0;
+  Future<void> generateotp() async {
+    final random = Random();
+    randomFourDigitNumber =
+        1000 + random.nextInt(9000); // Generates 5-digit number
+    if (kDebugMode) {
+      print('Random 4-digit number: $randomFourDigitNumber');
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -261,6 +270,7 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                 print('Cab ${prefs.getDouble('Fare')}');
               }
               await generateBookingID();
+              await generateotp();
               prefs.setString('Booking ID', randomFiveDigitNumber.toString());
               await generateBookingID();
               if (kDebugMode) {
@@ -282,8 +292,13 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                     'Driver Name':'',
                     'Driver Photo':'',
                     'Driver ID':'',
+                    'Pick Longitude':_pickupLocation.longitude,
+                    'Pickup Latitude':_pickupLocation.latitude,
+                    'Drop Latitude':_dropoffLocation.latitude,
+                    'Drop Longitude':_dropoffLocation.longitude,
                     'Travel Distance':prefs.getString('Travel Distance'),
-                    'Travel Time':prefs.getString('Travel Time')
+                    'Travel Time':prefs.getString('Travel Time'),
+                    'Ride OTP':randomFourDigitNumber,
                   });
               if(prefs.getString('Cab Category')!=null || prefs.getString('Fare')!=null){
                 Navigator.push(context, MaterialPageRoute(builder: (context) => CabFinding(),));

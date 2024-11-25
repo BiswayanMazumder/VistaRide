@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -44,47 +45,29 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
 
   // Fetch route and travel time using the Google Directions API
   Future<void> _fetchRoute() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      pickup = prefs.getString('location');
-      dropoffloc = prefs.getString('dropoff');
-    });
+    // Ensure ride details are fetched before attempting to fetch the route
+    await fetchridedetails();
 
-    // Retrieve coordinates as double for pickup and dropoff
-    double? pickuplongitude = prefs.getDouble('location longitude');
-    double? pickuplatitude = prefs.getDouble('location latitude');
-
-    String? dropofflatitudeStr = prefs.getString('dropofflatitude');
-    String? dropofflongitudeStr = prefs.getString('dropofflongitude');
-
-    // Check if drop-off coordinates are retrieved as String and parse them into double
-    double dropofflatitude =
-        dropofflatitudeStr != null ? double.parse(dropofflatitudeStr) : 0.0;
-    double dropofflongitude =
-        dropofflongitudeStr != null ? double.parse(dropofflongitudeStr) : 0.0;
-
-    // Check if valid data is present, if not use default
-    if (pickuplongitude == null ||
-        pickuplatitude == null ||
-        dropofflatitude == 0.0 ||
-        dropofflongitude == 0.0) {
-      print('Invalid coordinates, using default.');
+    if (pickuplong == 0 || pickuplat == 0 || droplong == 0 || droplat == 0) {
+      print('Invalid coordinates from Firestore.');
       return;
     }
 
     // Update pickup and dropoff locations
     setState(() {
-      _pickupLocation = LatLng(pickuplatitude, pickuplongitude);
-      _dropoffLocation = LatLng(dropofflatitude, dropofflongitude);
+      _pickupLocation = LatLng(pickuplat, pickuplong);
+      _dropoffLocation = LatLng(droplat, droplong);
     });
 
     final String apiKey =
         Environment.GoogleMapsAPI; // Replace with your API key
     final String url =
-        'https://maps.googleapis.com/maps/api/directions/json?origin=$pickuplatitude,$pickuplongitude&destination=$dropofflatitude,$dropofflongitude&key=$apiKey';
+        'https://maps.googleapis.com/maps/api/directions/json?origin=${_pickupLocation.latitude},${_pickupLocation.longitude}&destination=${_dropoffLocation.latitude},${_dropoffLocation.longitude}&key=$apiKey';
+
     if (kDebugMode) {
       print('URL $url');
     }
+
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(response.body);
@@ -92,7 +75,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
         final duration = data['routes'][0]['legs'][0]['duration']['text'];
         final distance = data['routes'][0]['legs'][0]['distance']['text'];
 
-        // Get polyline for the route
+        // Decode the polyline
         String encodedPolyline =
             data['routes'][0]['overview_polyline']['points'];
         List<LatLng> polylinePoints = _decodePolyline(encodedPolyline);
@@ -100,6 +83,8 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
         setState(() {
           Time = duration;
           DistanceTravel = distance;
+
+          // Add markers for pickup and dropoff
           _markers.add(Marker(
             markerId: MarkerId('pickup'),
             position: _pickupLocation,
@@ -117,13 +102,13 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                     'Latitude: ${_dropoffLocation.latitude}, Longitude: ${_dropoffLocation.longitude}'),
           ));
 
-          // Add polyline to the map
+          // Add polyline for the route
           _polylines.add(Polyline(
             polylineId: PolylineId('route'),
             visible: true,
             geodesic: true,
             points: polylinePoints,
-            color: Colors.black, // Line color (black in this case)
+            color: Colors.black, // Line color
             width: 4,
           ));
         });
@@ -212,8 +197,21 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
   }
 
   bool ridestarted = false;
+  String driverid = '';
   String drivername = '';
   String driverprofilephoto = '';
+  String carnumber = '';
+  String carphoto = '';
+  String carname = '';
+  double rating = 0;
+  int rideotp = 0;
+  String phonenumber = '';
+  double pickuplong = 0;
+  double pickuplat = 0;
+  double droplong = 0;
+  String pickuploc = '';
+  String droploc = '';
+  double droplat = 0;
   Future<void> fetchridedetails() async {
     final prefs = await SharedPreferences.getInstance();
     final docsnap = await _firestore
@@ -223,11 +221,32 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
     if (docsnap.exists) {
       setState(() {
         ridestarted = docsnap.data()?['Ride Accepted'];
-        drivername = docsnap.data()?['Driver Name'];
-        driverprofilephoto = docsnap.data()?['Driver Photo'];
+        driverid = docsnap.data()?['Driver ID'];
+        rideotp = docsnap.data()?['Ride OTP'];
+        pickuplong = docsnap.data()?['Pick Longitude'];
+        pickuplat = docsnap.data()?['Pickup Latitude'];
+        droplat = docsnap.data()?['Drop Latitude'];
+        droplong = docsnap.data()?['Drop Longitude'];
+        pickuploc = docsnap.data()?['Pickup Location'];
+        droploc = docsnap.data()?['Drop Location'];
       });
     }
-    print('Ride Started $drivername $driverprofilephoto');
+    print('OTP $rideotp');
+    final Docsnap = await _firestore
+        .collection('VistaRide Driver Details')
+        .doc(driverid)
+        .get();
+    if (Docsnap.exists) {
+      setState(() {
+        drivername = Docsnap.data()?['Name'];
+        driverprofilephoto = Docsnap.data()?['Profile Picture'];
+        carname = Docsnap.data()?['Car Name'];
+        carphoto = Docsnap.data()?['Car Photo'];
+        carnumber = Docsnap.data()?['Car Number Plate'];
+        rating = Docsnap.data()?['Rating'];
+        phonenumber = Docsnap.data()?['Contact Number'];
+      });
+    }
   }
 
   @override
@@ -238,7 +257,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
           GoogleMap(
             initialCameraPosition: CameraPosition(
               target: _pickupLocation,
-              zoom: 12.0,
+              zoom: 11.0,
             ),
             buildingsEnabled: true,
             zoomGesturesEnabled: true,
@@ -248,11 +267,118 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
             polylines: _polylines, // Display the polyline here
           ),
           Positioned(
+            bottom: 320,
+            left: 20,
+            child: Container(
+              height: 70,
+              width: 85,
+              decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.all(Radius.circular(10))),
+              child: Center(
+                child: Column(
+                  children: [
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    Text(
+                      '$rideotp',
+                      style: GoogleFonts.poppins(
+                          color: Colors.purple,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 18),
+                    ),
+                    Text(
+                      'Start OTP',
+                      style: GoogleFonts.poppins(
+                          color: Colors.grey, fontWeight: FontWeight.w300),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
               bottom: 0,
               child: Container(
                 height: 300,
                 width: MediaQuery.sizeOf(context).width,
                 color: Colors.white,
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      Text(
+                        'Your ride is confirmed.',
+                        style: GoogleFonts.poppins(
+                            color: Colors.black,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      const Divider(
+                        color: Colors.grey,
+                        thickness: 0.5,
+                      ),
+                      const SizedBox(
+                        height: 15,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20),
+                        child: Row(
+                          children: [
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  carnumber,
+                                  style: GoogleFonts.poppins(
+                                      color: Colors.black,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                                const SizedBox(
+                                  height: 8,
+                                ),
+                                Text(
+                                  carname,
+                                  style: GoogleFonts.poppins(
+                                      color: Colors.grey,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                                const SizedBox(
+                                  height: 8,
+                                ),
+                                Text(
+                                  drivername,
+                                  style: GoogleFonts.poppins(
+                                      color: Colors.grey,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                              ],
+                            ),
+                            const Spacer(),
+                            CircleAvatar(
+                              radius: 28,
+                              backgroundColor: Colors.white,
+                              backgroundImage:NetworkImage(driverprofilephoto) ,
+                            ),
+                            const SizedBox(
+                              width: 20,
+                            ),
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
+                ),
               ))
         ],
       ),

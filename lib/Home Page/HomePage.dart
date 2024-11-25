@@ -7,6 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vistaride/Booked%20Cab%20Details/bookedcabdetails.dart';
 import 'package:vistaride/Destination%20Set%20Page/pickupanddroplocationset.dart';
 import 'package:vistaride/Login%20Pages/loginpage.dart'; // Import geocoding package
 import 'package:vistaride/Environment%20Files/.env.dart';
@@ -28,11 +29,31 @@ class _HomePageState extends State<HomePage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String profilepic = '';
+  Future<void>fetchactiveride()async{
+    List bookingid=[];
+    String acctivebookingid='';
+    final prefs=await SharedPreferences.getInstance();
+    final docsnap=await _firestore.collection('Booking IDs').doc(_auth.currentUser!.uid).get();
+    if(docsnap.exists){
+      bookingid=docsnap.data()?['IDs'];
+    }
+    for(int i=0;i<bookingid.length;i++){
+      final Docsnap=await _firestore.collection('Ride Details').doc(bookingid[i]).get();
+      if(Docsnap.exists){
+        if(Docsnap.data()?['Ride Accepted']){
+          prefs.setString('Booking ID', bookingid[i]);
+          print('BID ${bookingid[i]}');
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => BookedCabDetails(),));
+        }
+      }
+    }
+  }
   @override
   void initState() {
     super.initState();
     _getCurrentLocation();
     fetchuserdetails();
+    fetchactiveride();
   }
 
   // Function to get the current location using Geolocator
