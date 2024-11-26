@@ -441,6 +441,7 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                       'Booking Time':FieldValue.serverTimestamp(),
                       'Ride Accepted':false,
                       'Ride Verified':false,
+                      'Ride Completed':false,
                       'Driver ID':'',
                       'Pick Longitude':_pickupLocation.longitude,
                       'Pickup Latitude':_pickupLocation.latitude,

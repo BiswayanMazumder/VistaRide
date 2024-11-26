@@ -56,6 +56,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
   String? dropoffloc;
   String DistanceTravel = '';
   bool isdrivernearby=false;
+  bool istripdone=false;
   Future<BitmapDescriptor> _getNetworkCarIcon(String imageUrl) async {
     final response = await http.get(Uri.parse(imageUrl));
     if (response.statusCode == 200) {
@@ -294,6 +295,8 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
   String pickuploc = '';
   String droploc = '';
   double droplat = 0;
+  bool isamountpaid=false;
+  double price=0;
   Future<void> fetchridedetails() async {
     final prefs = await SharedPreferences.getInstance();
     final docsnap = await _firestore
@@ -308,14 +311,17 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
         pickuplong = docsnap.data()?['Pick Longitude'];
         pickuplat = docsnap.data()?['Pickup Latitude'];
         droplat = docsnap.data()?['Drop Latitude'];
+        price=docsnap.data()?['Fare'];
         droplong = docsnap.data()?['Drop Longitude'];
         pickuploc = docsnap.data()?['Pickup Location'];
         droploc = docsnap.data()?['Drop Location'];
         cabcategory=docsnap.data()?['Cab Category'];
         rideverified=docsnap.data()?['Ride Verified'];
+        istripdone=docsnap.data()?['Ride Completed'];
+        isamountpaid=docsnap.data()?['Amount Paid']??false;
       });
     }
-    print('OTP $rideotp');
+    print('Trip Done $isamountpaid');
     final Docsnap = await _firestore
         .collection('VistaRide Driver Details')
         .doc(driverid)
@@ -331,8 +337,10 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
         phonenumber = Docsnap.data()?['Contact Number'];
         drivercurrentlatitude=Docsnap.data()?['Current Latitude'];
         drivercurrentlongitude=Docsnap.data()?['Current Longitude'];
-
       });
+    }
+    if(isamountpaid){
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
     }
   }
 
@@ -354,7 +362,60 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
             markers: _markers,
             polylines: _polylines, // Display the polyline here
           ),
-          Positioned(
+         istripdone?Center(
+            child: Container(
+              height: 250,
+              width: 300,
+              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+                color: Colors.white,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Text('Trip Completed',style: GoogleFonts.poppins(
+                    color: Colors.black,fontWeight: FontWeight.w600,fontSize: 17
+                  ),),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  const Divider(
+                    color: Colors.grey,
+                    thickness: 0.5,
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Text('₹$price',style: GoogleFonts.poppins(
+                      color: Colors.black,fontWeight: FontWeight.w600,fontSize: 30
+                  ),),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Align(
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Please pay the fare amount (₹$price) to the driver.',
+                      textAlign: TextAlign.center, // Ensures text wraps and stays centered
+                      style: GoogleFonts.poppins(
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                ],
+              ),
+            ),
+          ):Container(),
+         istripdone?Container(): Positioned(
             bottom: 320,
             left: 20,
             child: Container(
@@ -386,7 +447,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
               ),
             ),
           ),
-          Positioned(
+          istripdone?Container(): Positioned(
               bottom: 0,
               child: Container(
                 height: 300,
