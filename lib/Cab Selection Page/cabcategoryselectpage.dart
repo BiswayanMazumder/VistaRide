@@ -59,9 +59,9 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
     }
   }
   List<dynamic> driversnearme=[];
+  bool isdrivernearby=false;
   Future<void> fetchdrivers() async {
     await _fetchRoute();
-    // await _getCurrentLocation();
     try {
       final QuerySnapshot docsnap = await _firestore
           .collection('VistaRide Driver Details')
@@ -69,15 +69,16 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
           .get();
 
       List<dynamic> nearbyDrivers = [];
-      Set<Marker> driverMarkers = {}; // Create a new set for driver markers
+      Set<Marker> driverMarkers = {}; // Temporary set for driver markers
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       double? pickuplongitude = prefs.getDouble('location longitude');
       double? pickuplatitude = prefs.getDouble('location latitude');
+
       for (var doc in docsnap.docs) {
         final data = doc.data() as Map<String, dynamic>;
         final String driverLatitude = data['Current Latitude'] ?? "0.0";
         final String driverLongitude = data['Current Longitude'] ?? "0.0";
-        final String cabcategory=data['Car Category']??'';
+        final String cabcategory = data['Car Category'] ?? '';
 
         // Calculate the distance between user and driver
         double distance = _calculateDistance(
@@ -91,13 +92,18 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
           print('Distance $distance');
         }
 
-        if (distance <= 15.0) { // Within 15 km
+        // Condition to add the driver marker
+        if (distance <= 15.0 && cabcategory == cabcategorynames[_selectedindex]) {
+          setState(() {
+            isdrivernearby=true;
+          });
           nearbyDrivers.add({
             'driverId': doc.id,
             'latitude': driverLatitude,
             'longitude': driverLongitude,
             'otherDetails': data,
           });
+
           BitmapDescriptor carIcon;
           try {
             carIcon = await _getNetworkCarIcon(
@@ -106,10 +112,11 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
             print('Failed to load custom car icon: $e');
             carIcon = BitmapDescriptor.defaultMarker; // Fallback to default marker
           }
-          // Add a marker for this driver
+
+          // Add the driver marker
           driverMarkers.add(
             Marker(
-              markerId: MarkerId(doc.id),
+              markerId: MarkerId('driver_${doc.id}'), // Use a unique identifier for drivers
               icon: carIcon,
               position: LatLng(double.parse(driverLatitude), double.parse(driverLongitude)),
             ),
@@ -118,13 +125,26 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
       }
 
       setState(() {
-        driversnearme = nearbyDrivers; // Update the state with nearby drivers
-        _markers.addAll(driverMarkers); // Add driver markers to the map
+        driversnearme = nearbyDrivers; // Update state with nearby drivers
+
+        // Remove all existing driver markers
+        _markers.removeWhere((marker) => marker.markerId.value.startsWith('driver_'));
+
+        // Add the updated driver markers
+        _markers.addAll(driverMarkers);
       });
 
-      if (nearbyDrivers.isNotEmpty) {
-        for (var driver in nearbyDrivers) {
-          if (kDebugMode) {
+      if (nearbyDrivers.isEmpty) {
+        setState(() {
+          isdrivernearby=false;
+        });
+        if (kDebugMode) {
+
+          print('No drivers found within the specified radius.');
+        }
+      } else {
+        if (kDebugMode) {
+          for (var driver in nearbyDrivers) {
             print('Driver ID: ${driver['driverId']}');
             print('Latitude: ${driver['latitude']}');
             print('Longitude: ${driver['longitude']}');
@@ -132,19 +152,16 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
             print('--------------------------');
           }
         }
-      } else {
-        if (kDebugMode) {
-          print('No drivers found within 1 km radius.');
-        }
       }
     } catch (e) {
       if (kDebugMode) {
+        setState(() {
+          isdrivernearby=false;
+        });
         print('Error fetching drivers: $e');
       }
     }
   }
-
-
   double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
     const double R = 6371; // Radius of the Earth in km
     final double dLat = _toRadians(lat2 - lat1);
@@ -394,37 +411,39 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                 print('Cab ${prefs.getDouble('Fare')}');
               }
               await generateBookingID();
-              await generateotp();
-              prefs.setString('Booking ID', randomFiveDigitNumber.toString());
-              await generateBookingID();
-              if (kDebugMode) {
-                print(prefs.getString('Booking ID'));
-              }
-              await _firestore.collection('Booking IDs').doc(_auth.currentUser!.uid).set(
-                  {
-                    'IDs':FieldValue.arrayUnion([prefs.getString('Booking ID')])
-                  },SetOptions(merge: true));
-              await _firestore.collection('Ride Details').doc(prefs.getString('Booking ID')).set(
-                  {
-                    'Booking ID':prefs.getString('Booking ID'),
-                    'Pickup Location':pickup,
-                    'Drop Location':dropoffloc,
-                    'Fare':prefs.getDouble('Fare'),
-                    'Cab Category':prefs.getString('Cab Category'),
-                    'Booking Time':FieldValue.serverTimestamp(),
-                    'Ride Accepted':false,
-                    'Ride Verified':false,
-                    'Driver ID':'',
-                    'Pick Longitude':_pickupLocation.longitude,
-                    'Pickup Latitude':_pickupLocation.latitude,
-                    'Drop Latitude':_dropoffLocation.latitude,
-                    'Drop Longitude':_dropoffLocation.longitude,
-                    'Travel Distance':prefs.getString('Travel Distance'),
-                    'Travel Time':prefs.getString('Travel Time'),
-                    'Ride OTP':randomFourDigitNumber,
-                  });
-              if(prefs.getString('Cab Category')!=null || prefs.getString('Fare')!=null){
-                Navigator.push(context, MaterialPageRoute(builder: (context) => CabFinding(),));
+              if(isdrivernearby){
+                await generateotp();
+                prefs.setString('Booking ID', randomFiveDigitNumber.toString());
+                await generateBookingID();
+                if (kDebugMode) {
+                  print(prefs.getString('Booking ID'));
+                }
+                await _firestore.collection('Booking IDs').doc(_auth.currentUser!.uid).set(
+                    {
+                      'IDs':FieldValue.arrayUnion([prefs.getString('Booking ID')])
+                    },SetOptions(merge: true));
+                await _firestore.collection('Ride Details').doc(prefs.getString('Booking ID')).set(
+                    {
+                      'Booking ID':prefs.getString('Booking ID'),
+                      'Pickup Location':pickup,
+                      'Drop Location':dropoffloc,
+                      'Fare':prefs.getDouble('Fare'),
+                      'Cab Category':prefs.getString('Cab Category'),
+                      'Booking Time':FieldValue.serverTimestamp(),
+                      'Ride Accepted':false,
+                      'Ride Verified':false,
+                      'Driver ID':'',
+                      'Pick Longitude':_pickupLocation.longitude,
+                      'Pickup Latitude':_pickupLocation.latitude,
+                      'Drop Latitude':_dropoffLocation.latitude,
+                      'Drop Longitude':_dropoffLocation.longitude,
+                      'Travel Distance':prefs.getString('Travel Distance'),
+                      'Travel Time':prefs.getString('Travel Time'),
+                      'Ride OTP':randomFourDigitNumber,
+                    });
+                if(prefs.getString('Cab Category')!=null || prefs.getString('Fare')!=null){
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => CabFinding(),));
+                }
               }
             },
             child: Align(
@@ -433,12 +452,12 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
               child: Container(
                 width: MediaQuery.sizeOf(context).width,
                 height: 50,
-                decoration: const BoxDecoration(
-                    color: Colors.black,
+                decoration:  BoxDecoration(
+                    color:isdrivernearby?Colors.black:Colors.grey,
                     borderRadius: BorderRadius.all(Radius.circular(10))),
                 child: Center(
                   child: Text(
-                    'Book ${cabcategorynames[_selectedindex]}',
+                  isdrivernearby? 'Book ${cabcategorynames[_selectedindex]}':'No drivers nearby',
 
                     style: GoogleFonts.poppins(
                         color: Colors.white, fontWeight: FontWeight.w600),
