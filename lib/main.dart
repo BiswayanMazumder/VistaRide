@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:vistaride/Home%20Page/HomePage.dart';
 import 'package:vistaride/Login%20Pages/loginpage.dart';
+import 'package:vistaride/Splash%20Screen/splash_screen.dart';
 
 import 'firebase_options.dart';
 
@@ -34,7 +35,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home:_auth.currentUser!=null?const HomePage(): const LoginPage()
+      home:const SplashScreen()
     );
   }
 }

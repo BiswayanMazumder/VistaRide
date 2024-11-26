@@ -73,7 +73,7 @@ class _HomePageState extends State<HomePage> {
         final String driverLongitude = data['Current Longitude'] ?? "0.0";
         final String cabcategory = data['Car Category'] ?? '';
         final bool isDriverOnline = data['Driver Online'] ?? false;
-
+        final bool isDriverAvaliable=data['Driver Avaliable']??true;
         // Skip offline drivers and remove their markers if they are already on the map
         if (!isDriverOnline) {
           setState(() {
@@ -98,7 +98,7 @@ class _HomePageState extends State<HomePage> {
           print('Distance $distance');
         }
 
-        if (distance <= 15.0) { // Within 15 km
+        if (distance <= 15.0 && isDriverAvaliable) { // Within 15 km
           nearbyDrivers.add({
             'driverId': doc.id,
             'latitude': driverLatitude,

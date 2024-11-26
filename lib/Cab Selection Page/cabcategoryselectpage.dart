@@ -79,7 +79,7 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
         final String driverLatitude = data['Current Latitude'] ?? "0.0";
         final String driverLongitude = data['Current Longitude'] ?? "0.0";
         final String cabcategory = data['Car Category'] ?? '';
-
+        final bool isDriverAvaliable=data['Driver Avaliable']??true;
         // Calculate the distance between user and driver
         double distance = _calculateDistance(
           pickuplatitude!,
@@ -93,7 +93,7 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
         }
 
         // Condition to add the driver marker
-        if (distance <= 15.0 && cabcategory == cabcategorynames[_selectedindex]) {
+        if (distance <= 15.0 && cabcategory == cabcategorynames[_selectedindex] && isDriverAvaliable) {
           setState(() {
             isdrivernearby=true;
           });
