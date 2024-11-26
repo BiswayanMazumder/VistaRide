@@ -38,7 +38,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
     super.initState();
     _fetchRoute();
     fetchridedetails();
-    _timertofetch = Timer.periodic(const Duration(seconds: 900), (Timer t) {
+    _timertofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
       fetchridedetails();
       _fetchRoute();
     });
