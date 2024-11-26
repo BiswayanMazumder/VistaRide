@@ -586,6 +586,7 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                       indent: 0,
                       endIndent: 0,
                       color: Colors.grey,
+
                       thickness: 0.5,
                     ),
                     Padding(

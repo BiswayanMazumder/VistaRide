@@ -63,6 +63,7 @@ class _CabFindingState extends State<CabFinding> with TickerProviderStateMixin {
     super.initState();
     _getCurrentLocation();
     inititalisesharedpref();
+    requestrides();
     fetchridedetails();
     _timertofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
       fetchridedetails();
@@ -83,6 +84,28 @@ class _CabFindingState extends State<CabFinding> with TickerProviderStateMixin {
         curve: Curves.easeInOut,
       ),
     );
+  }
+  Future<void> requestrides() async {
+    final prefs = await SharedPreferences.getInstance();
+    List<String>? driverIds = prefs.getStringList('Driver IDs');
+    String? rideId = prefs.getString('Booking ID');
+
+    for (int i = 0; i < driverIds!.length; i++) {
+      await _firestore.collection('VistaRide Driver Details').doc(driverIds[i]).update(
+        {
+          'Ride Requested': rideId,
+        },
+      );
+
+      // Schedule removal after 5 seconds
+      Future.delayed(const Duration(seconds: 10), () async {
+        await _firestore.collection('VistaRide Driver Details').doc(driverIds[i]).update(
+          {
+            'Ride Requested': FieldValue.delete(), // Removes the field
+          },
+        );
+      });
+    }
   }
 
   // Function to update the current index and refresh the UI
@@ -349,6 +372,10 @@ class _CabFindingState extends State<CabFinding> with TickerProviderStateMixin {
                           onTap: ()async{
                             Navigator.pop(context);
                             final prefs=await SharedPreferences.getInstance();
+                            await _firestore.collection('Booking IDs').doc(_auth.currentUser!.uid).set(
+                                {
+                                  'IDs':FieldValue.arrayRemove([prefs.getString('Booking ID')])
+                                },SetOptions(merge: true));
                             if (kDebugMode) {
                               print(prefs.getString('Booking ID'));
                             }
