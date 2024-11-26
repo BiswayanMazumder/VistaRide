@@ -38,7 +38,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
     super.initState();
     _fetchRoute();
     fetchridedetails();
-    _timertofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
+    _timertofetch = Timer.periodic(const Duration(seconds: 900), (Timer t) {
       fetchridedetails();
       _fetchRoute();
     });
@@ -134,7 +134,14 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
           print('Failed to load custom car icon: $e');
           carIcon = BitmapDescriptor.defaultMarker; // Fallback to default marker
         }
-
+        BitmapDescriptor pinIcon;
+        try {
+          pinIcon = await _getNetworkCarIcon(
+              'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2Fpngimg.com%20-%20pin_PNG27.png?alt=media&token=a7926167-44dd-4938-b74f-030f0487e5b4');
+        } catch (e) {
+          print('Failed to load custom car icon: $e');
+          pinIcon = BitmapDescriptor.defaultMarker; // Fallback to default marker
+        }
         setState(() {
           isdrivernearby = distanceInKm < 1;
 
@@ -153,6 +160,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
             )));
           _markers.add(Marker(
             markerId: MarkerId('pickup'),
+            icon: pinIcon,
             position:rideverified?_dropoffLocation: _pickupLocation,
             infoWindow: InfoWindow(
                 title:rideverified?'Drop Location':'Pickup Location',

@@ -255,7 +255,12 @@ class _HomePageState extends State<HomePage> {
       CameraUpdate.newLatLng(_currentLocation),
     );
   }
-
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    _timertofetch.cancel();
+  }
   // Called when the map is created
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
