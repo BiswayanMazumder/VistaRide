@@ -429,6 +429,17 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                         thickness: 0.5,
                       ),
                       const SizedBox(
+                        height: 10,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20),
+                        child: Row(
+                          children: [
+                            Text('Driver arriving in $Time',style: GoogleFonts.poppins(color: Colors.black,fontWeight: FontWeight.w600),),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(
                         height: 15,
                       ),
                       Padding(
@@ -540,6 +551,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                           ],
                         ),
                       ),
+
                       Padding(
                         padding:
                         const EdgeInsets.only(left: 20, right: 20, top: 20),

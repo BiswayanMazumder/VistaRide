@@ -59,9 +59,11 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
     }
   }
   List<dynamic> driversnearme=[];
+  List<String> driverids=[];
   bool isdrivernearby=false;
   Future<void> fetchdrivers() async {
     await _fetchRoute();
+    driverids.clear();
     try {
       final QuerySnapshot docsnap = await _firestore
           .collection('VistaRide Driver Details')
@@ -103,7 +105,9 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
             'longitude': driverLongitude,
             'otherDetails': data,
           });
-
+          driverids.add(doc.id);
+          prefs.setStringList('Driver IDs', driverids);
+          print("Driver ${cabcategorynames[_selectedindex]} $driverids");
           BitmapDescriptor carIcon;
           try {
             carIcon = await _getNetworkCarIcon(
@@ -351,7 +355,11 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
     // Use DateFormat to display time as h:mm
     return DateFormat('H:mm a').format(time);
   }
-
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+  }
   List carcategoryimages = [
     'https://olawebcdn.com/images/v1/cabs/sl/ic_mini.png',
     'https://olawebcdn.com/images/v1/cabs/sl/ic_prime.png',
@@ -402,6 +410,7 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
           padding: const EdgeInsets.only(left: 30, right: 30),
           child: InkWell(
             onTap: () async {
+              await fetchdrivers();
               final prefs =
               await SharedPreferences.getInstance();
               prefs.setString('Cab Category', cabcategorynames[_selectedindex]);
