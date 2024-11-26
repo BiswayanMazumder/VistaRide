@@ -50,6 +50,12 @@ class _SplashScreenState extends State<SplashScreen> {
     });
   }
   @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    _timertofetch.cancel();
+  }
+  @override
   Widget build(BuildContext context) {
     return  Scaffold(
       backgroundColor: Colors.white,
