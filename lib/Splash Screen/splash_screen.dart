@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vistaride/Home%20Page/HomePage.dart';
+import 'package:vistaride/Login%20Pages/loginpage.dart';
 
 import '../Booked Cab Details/bookedcabdetails.dart';
 class SplashScreen extends StatefulWidget {
@@ -45,8 +46,10 @@ class _SplashScreenState extends State<SplashScreen> {
     // TODO: implement initState
     super.initState();
     _timertofetch = Timer.periodic(const Duration(seconds: 15), (Timer t)async{
-      await fetchactiveride();
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>isactiveride?const BookedCabDetails(): const HomePage(),));
+      if(_auth.currentUser!=null){
+        await fetchactiveride();
+      }
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>_auth.currentUser!=null?isactiveride?const BookedCabDetails(): const HomePage():const LoginPage(),));
     });
   }
   @override
