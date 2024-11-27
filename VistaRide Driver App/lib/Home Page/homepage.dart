@@ -152,7 +152,8 @@ class _HomePageState extends State<HomePage> {
       });
     }
   }
-
+  bool isamountpaid=false;
+  bool istripcompleted=false;
   Future<void> fetchRideDetails(String rideId) async {
     player = AudioPlayer();
 
@@ -167,6 +168,8 @@ class _HomePageState extends State<HomePage> {
         traveltime = docSnap.data()?['Travel Time'] ?? '';
         distance = docSnap.data()?['Travel Distance'] ?? '';
         cabcategory = docSnap.data()?['Cab Category'] ?? '';
+        isamountpaid=docSnap.data()?['Amount Paid']??false;
+        istripcompleted=docSnap.data()?['Ride Completed'];
       });
     }
   }
