@@ -14,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image/image.dart' as img;
 import 'package:http/http.dart' as http;
 import 'package:vistaridedriver/Login%20Pages/login_page.dart';
+import 'package:vistaridedriver/Ride%20Details/ridedetails.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -216,14 +217,31 @@ class _HomePageState extends State<HomePage> {
       }
     });
   }
+  String rideid='';
+  Future<void>fetchactiverides()async{
+    final docsnap=await _firestore.collection('VistaRide Driver Details').doc(_auth.currentUser!.uid).get();
 
-
+    if(docsnap.exists){
+      setState(() {
+        rideid=docsnap.data()?['Ride Doing'];
+      });
+    }
+    if (kDebugMode) {
+      print('Ride Doing $rideid');
+    }
+    if(rideid!=''){
+      final prefs=await SharedPreferences.getInstance();
+      await prefs.setString('Booking ID', rideid);
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => RideDetails(),));
+    }
+  }
   @override
   void initState() {
     super.initState();
     fetchuserdetails();
     _getCurrentLocation();
     listenForRideRequest();
+    fetchactiverides();
   }
 
   @override
@@ -450,6 +468,9 @@ class _HomePageState extends State<HomePage> {
                                       'Ride Doing':riderequestid,
                                       'Ride Accepted':FieldValue.delete()
                                     });
+                                final prefs=await SharedPreferences.getInstance();
+                                await prefs.setString('Booking ID', riderequestid);
+                                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => RideDetails(),));
                               },
                               child: Container(
                                 height: 60,

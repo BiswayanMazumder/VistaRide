@@ -53,6 +53,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
   String drivercurrentlatitude='';
   String Time = '';
   String? pickup;
+
   String? dropoffloc;
   String DistanceTravel = '';
   bool isdrivernearby=false;
