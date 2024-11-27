@@ -322,11 +322,14 @@ class _RideDetailsState extends State<RideDetails> {
         .get();
     if (docsnap.exists) {
       setState(() {
-        rideid = docsnap.data()?['Ride Doing'];
+        rideid = docsnap.data()?['Ride Doing']??'';
       });
     }
     if (kDebugMode) {
       print('Ride Doing $rideid');
+    }
+    if(rideid==''){
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
     }
   }
 
@@ -393,7 +396,6 @@ class _RideDetailsState extends State<RideDetails> {
       });
     }
   }
-
   @override
   void dispose() {
     // TODO: implement dispose
@@ -407,12 +409,13 @@ class _RideDetailsState extends State<RideDetails> {
     // TODO: implement initState
     super.initState();
     fetchactiverides();
+    // listenForRideRequest();
     fetchridedetails();
     _getCurrentLocation();
-    // _timetofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
-    //   fetchridedetails();
-    //   // _getCurrentLocation();
-    // });
+    _timetofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
+      fetchactiverides();
+      // _getCurrentLocation();
+    });
   }
 
   bool isotpverification = false;
@@ -475,7 +478,8 @@ class _RideDetailsState extends State<RideDetails> {
                         });
                         await _firestore.collection('VistaRide Driver Details').doc(_auth.currentUser!.uid).update({
                           'Driver Avaliable':true,
-                          'Ride Doing':FieldValue.delete()
+                          'Ride Doing':FieldValue.delete(),
+                          'Rides Completed':FieldValue.arrayUnion([rideid]),
                         });
                         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
                       },
@@ -505,7 +509,7 @@ class _RideDetailsState extends State<RideDetails> {
           istripcompleted?Container() :Positioned(
               bottom: 0,
               child: Container(
-                height: 350,
+                height: 300,
                 width: MediaQuery.sizeOf(context).width,
                 color: Colors.white,
                 child: Padding(
@@ -536,7 +540,7 @@ class _RideDetailsState extends State<RideDetails> {
                                   height: 20,
                                 ),
                                 Text(
-                                  'You are $DistanceTravel ($Time) away from your pickup',
+                                rideverified? 'You are $DistanceTravel ($Time) away from your drop' :'You are $DistanceTravel ($Time) away from your pickup',
                                   style: GoogleFonts.poppins(
                                       color: Colors.black,
                                       fontWeight: FontWeight.w500),

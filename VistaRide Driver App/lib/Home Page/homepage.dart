@@ -305,6 +305,36 @@ class _HomePageState extends State<HomePage> {
                     .collection('VistaRide Driver Details')
                     .doc(_auth.currentUser!.uid)
                     .update({'Driver Online': isonline});
+                if(!isonline){
+                  player.setReleaseMode(ReleaseMode.stop);
+                  WidgetsBinding.instance.addPostFrameCallback((_) async {
+                    try {
+                      await player.setSourceUrl(
+                        'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2Fuber_offline.mp3?alt=media&token=f36e57e3-5a20-48f0-ab12-fd7bdc867a08',
+                      );
+                      await player.resume();
+                    } catch (e) {
+                      if (kDebugMode) {
+                        print("Error playing sound: $e");
+                      }
+                    }
+                  });
+                }
+                if(isonline){
+                  player.setReleaseMode(ReleaseMode.stop);
+                  WidgetsBinding.instance.addPostFrameCallback((_) async {
+                    try {
+                      await player.setSourceUrl(
+                        'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2Fuber_online.mp3?alt=media&token=16b87e0b-fad4-4e78-81b8-459a4aff6ed3',
+                      );
+                      await player.resume();
+                    } catch (e) {
+                      if (kDebugMode) {
+                        print("Error playing sound: $e");
+                      }
+                    }
+                  });
+                }
               },
               child: CircleAvatar(
                 radius: 40,
@@ -359,7 +389,7 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(
                           height: 20,
                         ),
-                        Text('₹${fare} Trip Fare',style: GoogleFonts.poppins(
+                        Text('₹$fare Trip Fare',style: GoogleFonts.poppins(
                             color: Colors.black,fontWeight: FontWeight.w700,fontSize: 20
                         ),),
                         const SizedBox(
@@ -458,22 +488,31 @@ class _HomePageState extends State<HomePage> {
                             ),
                             InkWell(
                               onTap: ()async{
+                                String riderassigned='';
+                                final docsnap=await _firestore.collection('Ride Details').doc(riderequestid).get();
+                                if(docsnap.exists){
+                                  setState(() {
+                                    riderassigned=docsnap.data()?['Driver ID']??'';
+                                  });
+                                }
                                 //Ride Details update Driver ID to current user then Ride Accepted to true
-                                await _firestore.collection('Ride Details').doc(riderequestid).update(
-                                    {
-                                      'Driver ID':_auth.currentUser!.uid,
-                                      'Ride Accepted':true
-                                    });
-                                //In VistaRide Driver Details update Driver Avaliable to false Ride Doing to bookingid
-                                await _firestore.collection('VistaRide Driver Details').doc(_auth.currentUser!.uid).update(
-                                    {
-                                      'Driver Avaliable':false,
-                                      'Ride Doing':riderequestid,
-                                      'Ride Accepted':FieldValue.delete()
-                                    });
-                                final prefs=await SharedPreferences.getInstance();
-                                await prefs.setString('Booking ID', riderequestid);
-                                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => RideDetails(),));
+                                if(riderassigned==''){
+                                  await _firestore.collection('Ride Details').doc(riderequestid).update(
+                                      {
+                                        'Driver ID':_auth.currentUser!.uid,
+                                        'Ride Accepted':true
+                                      });
+                                  //In VistaRide Driver Details update Driver Avaliable to false Ride Doing to bookingid
+                                  await _firestore.collection('VistaRide Driver Details').doc(_auth.currentUser!.uid).update(
+                                      {
+                                        'Driver Avaliable':false,
+                                        'Ride Doing':riderequestid,
+                                        'Ride Accepted':FieldValue.delete()
+                                      });
+                                  final prefs=await SharedPreferences.getInstance();
+                                  await prefs.setString('Booking ID', riderequestid);
+                                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => RideDetails(),));
+                                }
                               },
                               child: Container(
                                 height: 60,
