@@ -702,6 +702,11 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                                   'Ride Cancelled':true,
                                   'Cancellation Time':FieldValue.serverTimestamp(),
                                 });
+                            await _firestore.collection('VistaRide Driver Details').doc(driverid).update(
+                                {
+                                  'Ride Doing':FieldValue.delete(),
+                                  'Driver Avaliable':true
+                                });
                             Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
                           },
                           child: Container(
