@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import '../Home Page/homepage.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -60,7 +62,7 @@ class _LoginPageState extends State<LoginPage> {
                 'Email Address': account.email,
               });
         }
-        // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage()));
       }
     } catch (error) {
       // Handle sign-in errors
@@ -94,13 +96,14 @@ class _LoginPageState extends State<LoginPage> {
             const Image(
               image: NetworkImage(
                   'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2FSc'
-                      'reenshot_2024-11-22_204328-removebg-preview.png?alt=media&token=53712449-daaa-4f70-bb92-0ca64793111e'),
+                      'reenshot_2024-11-22_204328-removebg-preview.png?alt=media&token=53712449-daaa-4'
+                      'f70-bb92-0ca64793111e'),
               height: 150,
               width: 150,
             ),
             const SizedBox(height: 15),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               width: MediaQuery.sizeOf(context).width,
               child: Text(
                 'Driven to Deliver, Every Mile!',
