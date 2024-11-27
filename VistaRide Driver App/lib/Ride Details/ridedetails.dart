@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -315,6 +316,7 @@ class _RideDetailsState extends State<RideDetails> {
   }
 
   String rideid = '';
+  late AudioPlayer player = AudioPlayer();
   Future<void> fetchactiverides() async {
     final docsnap = await _firestore
         .collection('VistaRide Driver Details')
@@ -329,6 +331,19 @@ class _RideDetailsState extends State<RideDetails> {
       print('Ride Doing $rideid');
     }
     if(rideid==''){
+      player.setReleaseMode(ReleaseMode.stop);
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        try {
+          await player.setSourceUrl(
+            'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2Fuber_cancel.mp3?alt=media&token=ce740648-57ef-4c44-8349-7a3a626f1cae',
+          );
+          await player.resume();
+        } catch (e) {
+          if (kDebugMode) {
+            print("Error playing sound: $e");
+          }
+        }
+      });
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
     }
   }
