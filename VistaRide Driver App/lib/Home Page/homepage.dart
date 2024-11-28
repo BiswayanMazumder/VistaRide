@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
@@ -13,9 +15,12 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image/image.dart' as img;
 import 'package:http/http.dart' as http;
+import 'package:vistaridedriver/Environment%20Files/.env.dart';
 import 'package:vistaridedriver/Login%20Pages/login_page.dart';
 import 'package:vistaridedriver/Ride%20Details/ridedetails.dart';
 
+import '../Services/NotificationServices.dart';
+import '../Services/fcm_services.dart';
 import '../Services/get_serverkey.dart';
 
 class HomePage extends StatefulWidget {
@@ -65,10 +70,12 @@ class _HomePageState extends State<HomePage> {
         throw Exception('Failed to decode image');
       }
 
-      img.Image resizedImage = img.copyResize(originalImage, width: 80, height: 80);
+      img.Image resizedImage =
+          img.copyResize(originalImage, width: 80, height: 80);
 
       // Convert the resized image back to bytes
-      final Uint8List resizedBytes = Uint8List.fromList(img.encodePng(resizedImage));
+      final Uint8List resizedBytes =
+          Uint8List.fromList(img.encodePng(resizedImage));
 
       // Create a BitmapDescriptor from the resized bytes
       return BitmapDescriptor.fromBytes(resizedBytes);
@@ -91,14 +98,14 @@ class _HomePageState extends State<HomePage> {
     );
 
     List<Placemark> placemarks =
-    await placemarkFromCoordinates(position.latitude, position.longitude);
+        await placemarkFromCoordinates(position.latitude, position.longitude);
 
     if (placemarks.isNotEmpty) {
       Placemark placemark = placemarks[0];
 
       setState(() {
         locationName =
-        '${placemark.street}, ${placemark.thoroughfare}, ${placemark.subLocality}, '
+            '${placemark.street}, ${placemark.thoroughfare}, ${placemark.subLocality}, '
             '${placemark.locality},${placemark.administrativeArea}, ${placemark.postalCode} , ${placemark.country}';
         _locationcontroller.text = locationName;
       });
@@ -128,11 +135,13 @@ class _HomePageState extends State<HomePage> {
     if (kDebugMode) {
       print('Longitude ${prefs.getDouble('location latitude')}');
     }
-    await _firestore.collection('VistaRide Driver Details').doc(_auth.currentUser!.uid).update(
-        {
-          'Current Latitude':position.latitude.toString(),
-          'Current Longitude':position.longitude.toString()
-        });
+    await _firestore
+        .collection('VistaRide Driver Details')
+        .doc(_auth.currentUser!.uid)
+        .update({
+      'Current Latitude': position.latitude.toString(),
+      'Current Longitude': position.longitude.toString()
+    });
     mapController.animateCamera(
       CameraUpdate.newLatLng(_currentLocation),
     );
@@ -154,14 +163,16 @@ class _HomePageState extends State<HomePage> {
       });
     }
   }
-  bool isamountpaid=false;
-  bool istripcompleted=false;
+
+  bool isamountpaid = false;
+  bool istripcompleted = false;
   Future<void> fetchRideDetails(String rideId) async {
     player = AudioPlayer();
 
     // Set the release mode to keep the source after playback has completed.
 
-    final docSnap = await _firestore.collection('Ride Details').doc(rideId).get();
+    final docSnap =
+        await _firestore.collection('Ride Details').doc(rideId).get();
     if (docSnap.exists) {
       setState(() {
         pickuplocation = docSnap.data()?['Pickup Location'] ?? '';
@@ -170,11 +181,12 @@ class _HomePageState extends State<HomePage> {
         traveltime = docSnap.data()?['Travel Time'] ?? '';
         distance = docSnap.data()?['Travel Distance'] ?? '';
         cabcategory = docSnap.data()?['Cab Category'] ?? '';
-        isamountpaid=docSnap.data()?['Amount Paid']??false;
-        istripcompleted=docSnap.data()?['Ride Completed'];
+        isamountpaid = docSnap.data()?['Amount Paid'] ?? false;
+        istripcompleted = docSnap.data()?['Ride Completed'];
       });
     }
   }
+
   late AudioPlayer player = AudioPlayer();
   void listenForRideRequest() {
     _rideRequestListener = _firestore
@@ -222,31 +234,144 @@ class _HomePageState extends State<HomePage> {
       }
     });
   }
-  String rideid='';
-  Future<void>fetchactiverides()async{
-    final docsnap=await _firestore.collection('VistaRide Driver Details').doc(_auth.currentUser!.uid).get();
 
-    if(docsnap.exists){
+  String rideid = '';
+  Future<void> fetchactiverides() async {
+    final docsnap = await _firestore
+        .collection('VistaRide Driver Details')
+        .doc(_auth.currentUser!.uid)
+        .get();
+
+    if (docsnap.exists) {
       setState(() {
-        rideid=docsnap.data()?['Ride Doing'];
+        rideid = docsnap.data()?['Ride Doing'];
       });
     }
     if (kDebugMode) {
       print('Ride Doing $rideid');
     }
-    if(rideid!=''){
-      final prefs=await SharedPreferences.getInstance();
+    if (rideid != '') {
+      final prefs = await SharedPreferences.getInstance();
       await prefs.setString('Booking ID', rideid);
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => RideDetails(),));
+      Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RideDetails(),
+          ));
+    }
+  }
+
+  NotificationService notificationService = NotificationService();
+  Future<void> sendnotification() async {
+    await getDeviceToken(); // Assuming this sets a valid `token`
+
+    // Replace this with your actual server token.
+    const String serverToken = Environment.ServerToken;
+
+    final response = await http.post(
+      Uri.parse('https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
+      headers: {
+        'Content-Type': 'application/json', // Correct Content-Type header
+        'Authorization': 'Bearer $serverToken', // Correct Authorization header
+      },
+      body: jsonEncode({
+        "message": {
+          "token":
+          '$token',
+          "notification": {
+            "body":
+            "Unfortunately, your rider has cancelled the trip. Please wait for some time till we assign you a new ride.",
+            "title": "Ride Cancelled"
+          }
+        }
+      }), // Convert the body Map to JSON string
+    );
+
+    if (response.statusCode == 200) {
+      if (kDebugMode) {
+        print('Notification sent');
+      }
+    } else {
+      if (kDebugMode) {
+        print('Failed to send notification. Status code: ${response.statusCode}');
+        print('Response: ${response.body}');
+      }
+    }
+  }
+  Future<void> sendrideacceptnotification() async {
+    await fetchRideDetails(riderequestid);
+    await getDeviceToken();
+
+    // Replace this with your actual server token.
+    const String serverToken = Environment.ServerToken;
+
+    final response = await http.post(
+      Uri.parse('https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
+      headers: {
+        'Content-Type': 'application/json', // Correct Content-Type header
+        'Authorization': 'Bearer $serverToken', // Correct Authorization header
+      },
+      body: jsonEncode({
+        "message": {
+          "token":
+          '$token',
+          "notification": {
+            "body":
+            "Your trip to $droplocation has successfully been accepted",
+            "title": "Ride Accepted"
+          }
+        }
+      }), // Convert the body Map to JSON string
+    );
+
+    if (response.statusCode == 200) {
+      if (kDebugMode) {
+        print('Notification sent');
+      }
+    } else {
+      if (kDebugMode) {
+        print('Failed to send notification. Status code: ${response.statusCode}');
+        print('Response: ${response.body}');
+      }
     }
   }
   @override
   void initState() {
     super.initState();
+    notificationService.requestnotificationpermission();
+    notificationService.getDeviceToken();
+    notificationService.firebaseInit(context);
+    notificationService.setupInteractMessage(context);
+    FCMService.firebaseInit();
     fetchuserdetails();
     _getCurrentLocation();
     listenForRideRequest();
     fetchactiverides();
+    getDeviceToken();
+    // sendnotification();
+  }
+
+  String? token;
+  Future<void> getDeviceToken() async {
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+    try {
+      token = await messaging.getToken();
+      if (token != null) {
+        if (kDebugMode) {
+          print("Device Token: $token");
+        }
+        // Save the token to your backend or use it directly for testing
+      } else {
+        if (kDebugMode) {
+          print("Failed to retrieve token.");
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error fetching device token: $e");
+      }
+    }
   }
 
   @override
@@ -296,256 +421,297 @@ class _HomePageState extends State<HomePage> {
           ),
           riderequestid == ''
               ? Positioned(
-            bottom: 30,
-            left: (MediaQuery.sizeOf(context).width / 2) - 40,
-            child: InkWell(
-              onTap: () async {
-                setState(() {
-                  isonline = !isonline;
-                });
-                await _firestore
-                    .collection('VistaRide Driver Details')
-                    .doc(_auth.currentUser!.uid)
-                    .update({'Driver Online': isonline});
-                if(!isonline){
-                  player.setReleaseMode(ReleaseMode.stop);
-                  WidgetsBinding.instance.addPostFrameCallback((_) async {
-                    try {
-                      await player.setSourceUrl(
-                        'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2Fuber_offline.mp3?alt=media&token=f36e57e3-5a20-48f0-ab12-fd7bdc867a08',
-                      );
-                      await player.resume();
-                    } catch (e) {
-                      if (kDebugMode) {
-                        print("Error playing sound: $e");
+                  bottom: 30,
+                  left: (MediaQuery.sizeOf(context).width / 2) - 40,
+                  child: InkWell(
+                    onTap: () async {
+                      // await sendnotification();
+                      setState(() {
+                        isonline = !isonline;
+                      });
+                      await _firestore
+                          .collection('VistaRide Driver Details')
+                          .doc(_auth.currentUser!.uid)
+                          .update({'Driver Online': isonline});
+                      if (!isonline) {
+                        player.setReleaseMode(ReleaseMode.stop);
+                        WidgetsBinding.instance.addPostFrameCallback((_) async {
+                          try {
+                            await player.setSourceUrl(
+                              'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2Fuber_offline.mp3?alt=media&token=f36e57e3-5a20-48f0-ab12-fd7bdc867a08',
+                            );
+                            await player.resume();
+                          } catch (e) {
+                            if (kDebugMode) {
+                              print("Error playing sound: $e");
+                            }
+                          }
+                        });
                       }
-                    }
-                  });
-                }
-                if(isonline){
-                  player.setReleaseMode(ReleaseMode.stop);
-                  WidgetsBinding.instance.addPostFrameCallback((_) async {
-                    try {
-                      await player.setSourceUrl(
-                        'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2Fuber_online.mp3?alt=media&token=16b87e0b-fad4-4e78-81b8-459a4aff6ed3',
-                      );
-                      await player.resume();
-                    } catch (e) {
-                      if (kDebugMode) {
-                        print("Error playing sound: $e");
+                      if (isonline) {
+                        player.setReleaseMode(ReleaseMode.stop);
+                        WidgetsBinding.instance.addPostFrameCallback((_) async {
+                          try {
+                            await player.setSourceUrl(
+                              'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2Fuber_online.mp3?alt=media&token=16b87e0b-fad4-4e78-81b8-459a4aff6ed3',
+                            );
+                            await player.resume();
+                          } catch (e) {
+                            if (kDebugMode) {
+                              print("Error playing sound: $e");
+                            }
+                          }
+                        });
                       }
-                    }
-                  });
-                }
-                GetServerKey getserertoken =GetServerKey();
-                String accesstoken=await getserertoken.getserertoken();
-                if (kDebugMode) {
-                  print('Token $accesstoken');
-                }
-              },
-              child: CircleAvatar(
-                radius: 40,
-                backgroundColor: isonline ? Colors.red : Colors.blue,
-                child: Center(
-                  child: Text(
-                    isonline ? 'Stop' : 'Go',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 20,
+                    },
+                    child: CircleAvatar(
+                      radius: 40,
+                      backgroundColor: isonline ? Colors.red : Colors.blue,
+                      child: Center(
+                        child: Text(
+                          isonline ? 'Stop' : 'Go',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ),
-          )
+                )
               : Container(),
           riderequestid != ''
               ? Positioned(
-              bottom: 0,
-              child: Container(
-                height: MediaQuery.sizeOf(context).height/2.2,
-                width: (MediaQuery.sizeOf(context).width),
-                color: Colors.white,
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left:20,right: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        Container(
-                          height: 60,
-                          width: 100,
-                          decoration: const BoxDecoration(
-                              color: Colors.black,
-                              borderRadius: BorderRadius.all(Radius.circular(50))
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              const Icon(Icons.person,color: Colors.white,),
-                              Text(cabcategory,style: GoogleFonts.poppins(
-                                  color: Colors.white,fontWeight: FontWeight.w600
-                              ),)
-                            ],
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        Text('₹$fare Trip Fare',style: GoogleFonts.poppins(
-                            color: Colors.black,fontWeight: FontWeight.w700,fontSize: 20
-                        ),),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        Text('Includes 5% Tax',style: GoogleFonts.poppins(
-                            color: Colors.grey,fontWeight: FontWeight.w200,fontSize: 15
-                        ),),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        Text('${traveltime} (${distance}) trip',style: GoogleFonts.poppins(
-                            color: Colors.black,fontWeight: FontWeight.w500,fontSize: 18
-                        ),),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  bottom: 0,
+                  child: Container(
+                    height: MediaQuery.sizeOf(context).height / 2.2,
+                    width: (MediaQuery.sizeOf(context).width),
+                    color: Colors.white,
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 20, right: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(
-                              Icons.directions_walk,
-                              color: Colors.green,
-                            ),
                             const SizedBox(
-                              width: 20,
+                              height: 20,
                             ),
-                            Flexible(
-                              child: Text(
-                                pickuplocation,
-                                maxLines: 5, // Ensures the text doesn't exceed 5 lines
-                                overflow: TextOverflow.ellipsis, // Adds ellipsis if text is too long
-                                style: GoogleFonts.poppins(
+                            Container(
+                              height: 60,
+                              width: 100,
+                              decoration: const BoxDecoration(
                                   color: Colors.black,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(
-                          height: 30,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            const Icon(
-                              Icons.pin_drop,
-                              color: Colors.red,
-                            ),
-                            const SizedBox(
-                              width: 20,
-                            ),
-                            Flexible(
-                              child: Text(
-                                droplocation,
-                                maxLines: 5, // Ensures the text doesn't exceed 5 lines
-                                overflow: TextOverflow.ellipsis, // Adds ellipsis if text is too long
-                                style: GoogleFonts.poppins(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(
-                          height: 30,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            InkWell(
-                              onTap: ()async{
-                                await _firestore.collection('VistaRide Driver Details').doc(_auth.currentUser!.uid).update(
-                                    {
-                                      'Ride Requested':FieldValue.delete()
-                                    });
-                              },
-                              child: Container(
-                                height: 60,
-                                width: 100,
-                                decoration:  BoxDecoration(
-                                  borderRadius: const BorderRadius.all(Radius.circular(50)),
-                                  border: Border.all(
-                                    color: Colors.black,
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(50))),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  const Icon(
+                                    Icons.person,
+                                    color: Colors.white,
+                                  ),
+                                  Text(
+                                    cabcategory,
+                                    style: GoogleFonts.poppins(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600),
                                   )
-                                ),
-                                child: Center(
-                                  child: Text('Pass',style: GoogleFonts.poppins(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.w500
-                                  ),),
-                                ),
+                                ],
                               ),
                             ),
-                            InkWell(
-                              onTap: ()async{
-                                String riderassigned='';
-                                final docsnap=await _firestore.collection('Ride Details').doc(riderequestid).get();
-                                if(docsnap.exists){
-                                  setState(() {
-                                    riderassigned=docsnap.data()?['Driver ID']??'';
-                                  });
-                                }
-                                //Ride Details update Driver ID to current user then Ride Accepted to true
-                                if(riderassigned==''){
-                                  await _firestore.collection('Ride Details').doc(riderequestid).update(
-                                      {
-                                        'Driver ID':_auth.currentUser!.uid,
-                                        'Ride Accepted':true
-                                      });
-                                  //In VistaRide Driver Details update Driver Avaliable to false Ride Doing to bookingid
-                                  await _firestore.collection('VistaRide Driver Details').doc(_auth.currentUser!.uid).update(
-                                      {
-                                        'Driver Avaliable':false,
-                                        'Ride Doing':riderequestid,
-                                        'Ride Accepted':FieldValue.delete()
-                                      });
-                                  final prefs=await SharedPreferences.getInstance();
-                                  await prefs.setString('Booking ID', riderequestid);
-                                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => RideDetails(),));
-                                }
-                              },
-                              child: Container(
-                                height: 60,
-                                width: 100,
-                                decoration:  const BoxDecoration(
-                                    borderRadius: BorderRadius.all(Radius.circular(50)),
-                                    color: Colors.green
+                            const SizedBox(
+                              height: 20,
+                            ),
+                            Text(
+                              '₹$fare Trip Fare',
+                              style: GoogleFonts.poppins(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 20),
+                            ),
+                            const SizedBox(
+                              height: 20,
+                            ),
+                            Text(
+                              'Includes 5% Tax',
+                              style: GoogleFonts.poppins(
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w200,
+                                  fontSize: 15),
+                            ),
+                            const SizedBox(
+                              height: 20,
+                            ),
+                            Text(
+                              '${traveltime} (${distance}) trip',
+                              style: GoogleFonts.poppins(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 18),
+                            ),
+                            const SizedBox(
+                              height: 20,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                const Icon(
+                                  Icons.directions_walk,
+                                  color: Colors.green,
                                 ),
-                                child: Center(
-                                  child: Text('Accept',style: GoogleFonts.poppins(
+                                const SizedBox(
+                                  width: 20,
+                                ),
+                                Flexible(
+                                  child: Text(
+                                    pickuplocation,
+                                    maxLines:
+                                        5, // Ensures the text doesn't exceed 5 lines
+                                    overflow: TextOverflow
+                                        .ellipsis, // Adds ellipsis if text is too long
+                                    style: GoogleFonts.poppins(
                                       color: Colors.black,
-                                      fontWeight: FontWeight.w500
-                                  ),),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            )
+                              ],
+                            ),
+                            const SizedBox(
+                              height: 30,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                const Icon(
+                                  Icons.pin_drop,
+                                  color: Colors.red,
+                                ),
+                                const SizedBox(
+                                  width: 20,
+                                ),
+                                Flexible(
+                                  child: Text(
+                                    droplocation,
+                                    maxLines:
+                                        5, // Ensures the text doesn't exceed 5 lines
+                                    overflow: TextOverflow
+                                        .ellipsis, // Adds ellipsis if text is too long
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(
+                              height: 30,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                InkWell(
+                                  onTap: () async {
+                                    await _firestore
+                                        .collection('VistaRide Driver Details')
+                                        .doc(_auth.currentUser!.uid)
+                                        .update({
+                                      'Ride Requested': FieldValue.delete()
+                                    });
+                                  },
+                                  child: Container(
+                                    height: 60,
+                                    width: 100,
+                                    decoration: BoxDecoration(
+                                        borderRadius: const BorderRadius.all(
+                                            Radius.circular(50)),
+                                        border: Border.all(
+                                          color: Colors.black,
+                                        )),
+                                    child: Center(
+                                      child: Text(
+                                        'Pass',
+                                        style: GoogleFonts.poppins(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.w500),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                InkWell(
+                                  onTap: () async {
+                                    String riderassigned = '';
+                                    final docsnap = await _firestore
+                                        .collection('Ride Details')
+                                        .doc(riderequestid)
+                                        .get();
+                                    if (docsnap.exists) {
+                                      setState(() {
+                                        riderassigned =
+                                            docsnap.data()?['Driver ID'] ?? '';
+                                      });
+                                    }
+                                    //Ride Details update Driver ID to current user then Ride Accepted to true
+                                    if (riderassigned == '') {
+                                      await _firestore
+                                          .collection('Ride Details')
+                                          .doc(riderequestid)
+                                          .update({
+                                        'Driver ID': _auth.currentUser!.uid,
+                                        'Ride Accepted': true
+                                      });
+                                      //In VistaRide Driver Details update Driver Avaliable to false Ride Doing to bookingid
+                                      await _firestore
+                                          .collection(
+                                              'VistaRide Driver Details')
+                                          .doc(_auth.currentUser!.uid)
+                                          .update({
+                                        'Driver Avaliable': false,
+                                        'Ride Doing': riderequestid,
+                                        'Ride Accepted': FieldValue.delete()
+                                      });
+                                      final prefs =
+                                          await SharedPreferences.getInstance();
+                                      await prefs.setString(
+                                          'Booking ID', riderequestid);
+                                      await sendrideacceptnotification();
+                                      Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => RideDetails(),
+                                          ));
+                                    }
+                                  },
+                                  child: Container(
+                                    height: 60,
+                                    width: 100,
+                                    decoration: const BoxDecoration(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(50)),
+                                        color: Colors.green),
+                                    child: Center(
+                                      child: Text(
+                                        'Accept',
+                                        style: GoogleFonts.poppins(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.w500),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              ],
+                            ),
+                            const SizedBox(
+                              height: 20,
+                            ),
                           ],
                         ),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-              ))
+                  ))
               : Container(),
         ],
       ),

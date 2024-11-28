@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
@@ -19,6 +20,9 @@ import 'package:http/http.dart' as http;
 import 'package:vistaridedriver/Home%20Page/homepage.dart';
 
 import '../Environment Files/.env.dart';
+import '../Services/NotificationServices.dart';
+import '../Services/fcm_services.dart';
+import '../Services/get_serverkey.dart';
 
 class RideDetails extends StatefulWidget {
   const RideDetails({super.key});
@@ -314,7 +318,64 @@ class _RideDetailsState extends State<RideDetails> {
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
   }
+  String? token;
+  Future<void> getDeviceToken() async {
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
 
+    try {
+      token = await messaging.getToken();
+      if (token != null) {
+        if (kDebugMode) {
+          print("Device Token: $token");
+        }
+        // Save the token to your backend or use it directly for testing
+      } else {
+        if (kDebugMode) {
+          print("Failed to retrieve token.");
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error fetching device token: $e");
+      }
+    }
+  }
+  Future<void> sendnotification() async {
+    await getDeviceToken(); // Assuming this sets a valid `token`
+
+    // Replace this with your actual server token.
+    const String serverToken = Environment.ServerToken;
+
+    final response = await http.post(
+      Uri.parse('https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
+      headers: {
+        'Content-Type': 'application/json', // Correct Content-Type header
+        'Authorization': 'Bearer $serverToken', // Correct Authorization header
+      },
+      body: jsonEncode({
+        "message": {
+          "token":
+          '$token',
+          "notification": {
+            "body":
+            "Unfortunately, your rider has cancelled the trip. Please wait for some time till we assign you a new ride.",
+            "title": "Ride Cancelled"
+          }
+        }
+      }), // Convert the body Map to JSON string
+    );
+
+    if (response.statusCode == 200) {
+      if (kDebugMode) {
+        print('Notification sent');
+      }
+    } else {
+      if (kDebugMode) {
+        print('Failed to send notification. Status code: ${response.statusCode}');
+        print('Response: ${response.body}');
+      }
+    }
+  }
   String rideid = '';
   late AudioPlayer player = AudioPlayer();
   Future<void> fetchactiverides() async {
@@ -344,6 +405,7 @@ class _RideDetailsState extends State<RideDetails> {
           }
         }
       });
+      await sendnotification();
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
     }
   }
@@ -417,13 +479,26 @@ class _RideDetailsState extends State<RideDetails> {
     super.dispose();
     _timetofetch.cancel();
   }
-
+  NotificationService notificationService=NotificationService();
+  Future<void>fetchservertoken()async{
+    GetServerKey getserertoken =GetServerKey();
+    String accesstoken=await getserertoken.getserertoken();
+    if (kDebugMode) {
+      print('Token $accesstoken');
+    }
+  }
   final TextEditingController _OTPController = TextEditingController();
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    notificationService.requestnotificationpermission();
+    notificationService.getDeviceToken();
+    notificationService.firebaseInit(context);
+    notificationService.setupInteractMessage(context);
+    FCMService.firebaseInit();
     fetchactiverides();
+    fetchservertoken();
     // listenForRideRequest();
     fetchridedetails();
     _getCurrentLocation();
@@ -434,7 +509,7 @@ class _RideDetailsState extends State<RideDetails> {
   }
 
   bool isotpverification = false;
-  String? token;
+  // String? token;
 
   @override
   Widget build(BuildContext context) {

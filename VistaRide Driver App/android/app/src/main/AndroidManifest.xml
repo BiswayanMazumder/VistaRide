@@ -38,6 +38,17 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyApzKC2nq9OCuaVQV2Jbm9cJoOHPy9kzvM"
             />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="ecomm-channel" />
 
+        <!-- Firebase Messaging Service -->
+
+        <receiver android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>
