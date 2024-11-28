@@ -434,6 +434,8 @@ class _RideDetailsState extends State<RideDetails> {
   }
 
   bool isotpverification = false;
+  String? token;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
