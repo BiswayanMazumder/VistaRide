@@ -469,7 +469,7 @@ class _RideDetailsState extends State<RideDetails> {
                   children: [
                     Align(
                       alignment: Alignment.center,
-                      child: Text('Please collect ₹${price}',style: GoogleFonts.poppins(
+                      child: Text('Please collect ₹$price',style: GoogleFonts.poppins(
                         color: Colors.black,fontWeight: FontWeight.w600,fontSize: 20
                       ),),
                     ),
@@ -478,7 +478,7 @@ class _RideDetailsState extends State<RideDetails> {
                     ),
                     InkWell(
                       onTap: ()async{
-                        //amount paid true ride doing remove driver avaliable true navigate to home screen
+                        //amount paid true ride doing remove driver available true navigate to home screen
                         setState(() {
                           isamountpaid=true;
                         });
@@ -521,14 +521,16 @@ class _RideDetailsState extends State<RideDetails> {
               ),
             ),
           ):Container(),
-          istripcompleted?Container() :Positioned(
+          istripcompleted?
+          Container() :
+          Positioned(
               bottom: 0,
               child: Container(
-                height: 300,
+                height: 320,
                 width: MediaQuery.sizeOf(context).width,
                 color: Colors.white,
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 20, right: 20),
+                padding: const EdgeInsets.only(left: 20, right: 20),
                   child: SingleChildScrollView(
                       child: !isotpverification
                           ? Column(
@@ -653,30 +655,33 @@ class _RideDetailsState extends State<RideDetails> {
                                           ),
                                         ),
                                       )
-                                    : InkWell(
-                                        onTap: () {
-                                          setState(() {
-                                            isotpverification = true;
-                                          });
-                                        },
-                                        child: Container(
-                                          height: 60,
-                                          width:
-                                              MediaQuery.sizeOf(context).width,
-                                          decoration: const BoxDecoration(
-                                              borderRadius: BorderRadius.all(
-                                                  Radius.circular(50)),
-                                              color: Colors.green),
-                                          child: Center(
-                                            child: Text(
-                                              'Verify OTP',
-                                              style: GoogleFonts.poppins(
-                                                  color: Colors.black,
-                                                  fontWeight: FontWeight.w500),
+                                    : Padding(
+                                      padding: const EdgeInsets.only(bottom: 20),
+                                      child: InkWell(
+                                          onTap: () {
+                                            setState(() {
+                                              isotpverification = true;
+                                            });
+                                          },
+                                          child: Container(
+                                            height: 60,
+                                            width:
+                                                MediaQuery.sizeOf(context).width,
+                                            decoration: const BoxDecoration(
+                                                borderRadius: BorderRadius.all(
+                                                    Radius.circular(50)),
+                                                color: Colors.green),
+                                            child: Center(
+                                              child: Text(
+                                                'Verify OTP',
+                                                style: GoogleFonts.poppins(
+                                                    color: Colors.black,
+                                                    fontWeight: FontWeight.w500),
+                                              ),
                                             ),
                                           ),
                                         ),
-                                      ),
+                                    ),
                               ],
                             )
                           : Column(
