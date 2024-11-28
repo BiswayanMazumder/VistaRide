@@ -106,7 +106,7 @@ class _ChatSupportState extends State<ChatSupport> {
                           const SizedBox(width: 8),
                         ],
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 30),
+                          padding: const EdgeInsets.only(bottom: 30,top: 25),
                           child: Container(
                             margin:
                             const EdgeInsets.symmetric(vertical: 5),
