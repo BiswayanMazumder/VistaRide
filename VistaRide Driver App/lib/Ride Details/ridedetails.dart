@@ -17,6 +17,7 @@ import 'package:otp_text_field/style.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image/image.dart' as img;
 import 'package:http/http.dart' as http;
+import 'package:vistaridedriver/Chat%20Customer%20Support/customersupport.dart';
 import 'package:vistaridedriver/Home%20Page/homepage.dart';
 
 import '../Environment Files/.env.dart';
@@ -376,6 +377,42 @@ class _RideDetailsState extends State<RideDetails> {
       }
     }
   }
+  Future<void> sendotpverfiednotification() async {
+    await getDeviceToken(); // Assuming this sets a valid `token`
+
+    // Replace this with your actual server token.
+    const String serverToken = Environment.ServerToken;
+
+    final response = await http.post(
+      Uri.parse('https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
+      headers: {
+        'Content-Type': 'application/json', // Correct Content-Type header
+        'Authorization': 'Bearer $serverToken', // Correct Authorization header
+      },
+      body: jsonEncode({
+        "message": {
+          "token":
+          '$token',
+          "notification": {
+            "body":
+            "OTP verified successfully,you can start your trip.Safe Journey!",
+            "title": "OTP Verified"
+          }
+        }
+      }), // Convert the body Map to JSON string
+    );
+
+    if (response.statusCode == 200) {
+      if (kDebugMode) {
+        print('Notification sent');
+      }
+    } else {
+      if (kDebugMode) {
+        print('Failed to send notification. Status code: ${response.statusCode}');
+        print('Response: ${response.body}');
+      }
+    }
+  }
   String rideid = '';
   late AudioPlayer player = AudioPlayer();
   Future<void> fetchactiverides() async {
@@ -598,6 +635,28 @@ class _RideDetailsState extends State<RideDetails> {
               ),
             ),
           ):Container(),
+         rideverified? Positioned(
+              top: 20,
+              right: 20,
+              child: InkWell(
+                onTap: (){
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => ChatSupport(RideID: rideid),));
+                },
+                child: Container(
+                            height: 50,
+                            width: 100,
+                            decoration:  BoxDecoration(
+                color: Colors.purple.shade500,
+                borderRadius: const BorderRadius.all(Radius.circular(50))
+                            ),
+                            child: Center(
+                child: Text('Support',style: GoogleFonts.poppins(
+                  color: Colors.white,fontWeight: FontWeight.w600
+                ),),
+                            ),
+                          ),
+              )
+         ):Container(),
           istripcompleted?
           Container() :
           Positioned(
@@ -801,6 +860,7 @@ class _RideDetailsState extends State<RideDetails> {
                                 ),
                                 InkWell(
                                   onTap: () async {
+                                    await sendotpverfiednotification();
                                     final prefs =
                                         await SharedPreferences.getInstance();
                                     if (kDebugMode) {
