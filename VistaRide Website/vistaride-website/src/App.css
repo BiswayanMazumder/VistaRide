@@ -60,10 +60,21 @@
   display: flex;
   margin-left: 50px;
   font-size: 15px;
-  margin-top: 8px;
+  margin-top: -2px;
   font-weight: 600;
   flex-direction: row;
   gap: 50px;
+}
+.eefebf{
+  /* background-color: grey; */
+  border-radius:20px;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  padding: 10px;
+}
+.eefebf:hover{
+  background-color: rgb(77, 76, 76);
 }
 .hhbnbdv{
   display: none;
