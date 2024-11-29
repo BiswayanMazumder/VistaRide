@@ -476,9 +476,6 @@ class _HomePageState extends State<HomePage> {
     fetchactiverides();
     getDeviceToken();
     fetchdrivers();
-    _timetofetch = Timer.periodic(const Duration(seconds: 10), (Timer t) {
-      fetchdrivers();
-    });
     // sendnotification();
   }
 
