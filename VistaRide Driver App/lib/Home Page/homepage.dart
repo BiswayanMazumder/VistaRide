@@ -276,9 +276,8 @@ class _HomePageState extends State<HomePage> {
       },
       body: jsonEncode({
         "message": {
-          "token":
-          '$token',
-          "notification": {
+          "token":'$token',
+           "notification": {
             "body":
             "Unfortunately, your rider has cancelled the trip. Please wait for some time till we assign you a new ride.",
             "title": "Ride Cancelled"

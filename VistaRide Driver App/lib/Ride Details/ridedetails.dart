@@ -395,7 +395,7 @@ class _RideDetailsState extends State<RideDetails> {
           '$token',
           "notification": {
             "body":
-            "OTP verified successfully,you can start your trip.Safe Journey!",
+            "OTP verified successfully, you can start your trip.Safe Journey!",
             "title": "OTP Verified"
           }
         }
