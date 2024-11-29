@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:audioplayers/audioplayers.dart';
@@ -339,7 +340,127 @@ class _HomePageState extends State<HomePage> {
       }
     }
   }
+  List<dynamic> driversnearme = [];
+  Future<void> fetchdrivers() async {
+    await _getCurrentLocation();
+    try {
+      final QuerySnapshot docsnap = await _firestore
+          .collection('VistaRide Driver Details')
+          .get(); // Fetch all drivers regardless of their "Driver Online" status
 
+      List<dynamic> nearbyDrivers = [];
+      Set<Marker> driverMarkers = {}; // Temporary set for driver markers
+
+      for (var doc in docsnap.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final String driverLatitude = data['Current Latitude'] ?? "0.0";
+        final String driverLongitude = data['Current Longitude'] ?? "0.0";
+        final String cabcategory = data['Car Category'] ?? '';
+        final bool isDriverOnline = data['Driver Online'] ?? false;
+        final bool isDriverAvaliable = data['Driver Avaliable'] ?? true;
+        // Skip offline drivers and remove their markers if they are already on the map
+        if (!isDriverOnline) {
+          setState(() {
+            _markers.removeWhere(
+                  (marker) =>
+              marker.markerId.value.startsWith('driver_') &&
+                  marker.markerId.value == 'driver_${doc.id}',
+            );
+          });
+          continue;
+        }
+
+        // Calculate the distance between user and driver
+        double distance = _calculateDistance(
+          _currentLocation.latitude,
+          _currentLocation.longitude,
+          double.parse(driverLatitude),
+          double.parse(driverLongitude),
+        );
+
+        if (kDebugMode) {
+          print('Distance $distance');
+        }
+
+        if (distance <= 30.0 && isDriverAvaliable) {
+          // Within 15 km
+          nearbyDrivers.add({
+            'driverId': doc.id,
+            'latitude': driverLatitude,
+            'longitude': driverLongitude,
+            'otherDetails': data,
+          });
+
+          BitmapDescriptor carIcon;
+          try {
+            carIcon = await _getNetworkCarIcon(
+                'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2Fpngtree-red-car-top-view-icon-png-image_3745904-removebg-preview.png?alt=media&token=ec094a1a-9864-4a06-9b44-529d04ed2a29');
+          } catch (e) {
+            print('Failed to load custom car icon: $e');
+            carIcon =
+                BitmapDescriptor.defaultMarker; // Fallback to default marker
+          }
+
+          // Add a marker for this driver
+          driverMarkers.add(
+            Marker(
+              markerId:
+              MarkerId('driver_${doc.id}'), // Unique ID for driver markers
+              icon: carIcon,
+              position: LatLng(
+                  double.parse(driverLatitude), double.parse(driverLongitude)),
+            ),
+          );
+        }
+      }
+
+      setState(() {
+        driversnearme = nearbyDrivers; // Update the state with nearby drivers
+        // Remove all driver markers first
+        _markers.removeWhere(
+                (marker) => marker.markerId.value.startsWith('driver_'));
+        // Add the updated driver markers
+        _markers.addAll(driverMarkers);
+      });
+
+      if (nearbyDrivers.isNotEmpty) {
+        for (var driver in nearbyDrivers) {
+          if (kDebugMode) {
+            print('Driver ID: ${driver['driverId']}');
+            print('Latitude: ${driver['latitude']}');
+            print('Longitude: ${driver['longitude']}');
+            print('Other Details: ${driver['otherDetails']}');
+            print('--------------------------');
+          }
+        }
+      } else {
+        if (kDebugMode) {
+          print('No drivers found within 15 km radius.');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error fetching drivers: $e');
+      }
+    }
+  }
+  double _calculateDistance(
+      double lat1, double lon1, double lat2, double lon2) {
+    const double R = 6371; // Radius of the Earth in km
+    final double dLat = _toRadians(lat2 - lat1);
+    final double dLon = _toRadians(lon2 - lon1);
+    final double a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(_toRadians(lat1)) *
+            cos(_toRadians(lat2)) *
+            sin(dLon / 2) *
+            sin(dLon / 2);
+    final double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    return R * c; // Distance in km
+  }
+
+  double _toRadians(double degree) {
+    return degree * pi / 180;
+  }
   @override
   void initState() {
     super.initState();
@@ -353,6 +474,7 @@ class _HomePageState extends State<HomePage> {
     listenForRideRequest();
     fetchactiverides();
     getDeviceToken();
+    fetchdrivers();
     // sendnotification();
   }
 
