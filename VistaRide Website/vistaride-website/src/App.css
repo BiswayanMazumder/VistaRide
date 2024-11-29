@@ -111,6 +111,23 @@ body{
   color: #a0a0a0; /* Optional: Customize placeholder color */
   font-size: 14px; /* Optional: Adjust font size */
 }
+.jffnrn{
+  height: 50px;
+  width: 120px;
+  border-radius: 10px;
+  background-color: black;
+  margin-top: 20px;
+  margin-left:100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Avenir', sans-serif;
+  color: white;
+  font-weight: 600;
+}
+.jffnrn:hover{
+  background-color: rgb(25, 25, 25);
+}
 @media screen and (min-width: 1135px) {
   .hhbnbdv{
     display: flex;
