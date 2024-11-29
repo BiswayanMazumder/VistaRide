@@ -3,7 +3,9 @@
 .App {
   text-align: center;
 }
-
+body{
+  overflow-x: hidden;
+}
 .App-logo {
   height: 40vmin;
   pointer-events: none;
@@ -78,6 +80,36 @@
 }
 .hhbnbdv{
   display: none;
+}
+.nbnrnjrnf{
+  width: 100vw;
+  height: 90vh;
+}
+.ehfefbefb{
+  width: 50vw;
+}
+.jnjvn{
+  margin-top: 80px;
+  font-family: 'Avenir', sans-serif;
+  font-weight: bolder;
+  margin-left: 100px;
+  color:#333333;
+  line-height: 64px;
+  font-size: 52px;
+}
+.ebfbebfeh{
+  height: 50px;
+  width: 400px;
+  border-radius: 10px;
+  border: none;
+  font-family: 'Avendir', sans-serif;
+  background-color: #F3F3F3;
+}
+.ebfbebfeh::placeholder {
+  margin-left: 20px;
+  font-family: 'Avendir', sans-serif; /* Apply the desired font family */
+  color: #a0a0a0; /* Optional: Customize placeholder color */
+  font-size: 14px; /* Optional: Adjust font size */
 }
 @media screen and (min-width: 1135px) {
   .hhbnbdv{
