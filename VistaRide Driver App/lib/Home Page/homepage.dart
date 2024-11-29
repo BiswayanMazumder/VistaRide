@@ -397,7 +397,7 @@ class _HomePageState extends State<HomePage> {
               zoom: 15,
             ),
             onMapCreated: _onMapCreated,
-            markers: _markers,
+            markers:isonline? _markers:{},
             zoomGesturesEnabled: true,
             zoomControlsEnabled: false,
             buildingsEnabled: true,
