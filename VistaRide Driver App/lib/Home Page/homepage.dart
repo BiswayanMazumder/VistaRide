@@ -18,6 +18,7 @@ import 'package:http/http.dart' as http;
 import 'package:vistaridedriver/Environment%20Files/.env.dart';
 import 'package:vistaridedriver/Login%20Pages/login_page.dart';
 import 'package:vistaridedriver/Ride%20Details/ridedetails.dart';
+import 'package:vistaridedriver/Sidebar%20Pages/mytrips.dart';
 
 import '../Services/NotificationServices.dart';
 import '../Services/fcm_services.dart';
@@ -531,21 +532,29 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(
                           height: 15,
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            const SizedBox(
-                              width: 40,
-                            ),
-                            const Icon(Icons.pin_drop_rounded,color: Colors.green,),
-                            const SizedBox(
-                              width: 20,
-                            ),
-                            Text('Trips Done',style: GoogleFonts.poppins(
-                              color: Colors.black,
-                              fontWeight: FontWeight.w600,
-                            ),),
-                          ],
+                        InkWell(
+                          onTap: (){
+                            setState(() {
+                              ismenuopened=false;
+                            });
+                            Navigator.push(context,MaterialPageRoute(builder: (context) => const TripsPage(),));
+                          },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              const SizedBox(
+                                width: 40,
+                              ),
+                              const Icon(Icons.pin_drop_rounded,color: Colors.green,),
+                              const SizedBox(
+                                width: 20,
+                              ),
+                              Text('Trips Done',style: GoogleFonts.poppins(
+                                color: Colors.black,
+                                fontWeight: FontWeight.w600,
+                              ),),
+                            ],
+                          ),
                         ),
                         const SizedBox(
                           height: 15,
