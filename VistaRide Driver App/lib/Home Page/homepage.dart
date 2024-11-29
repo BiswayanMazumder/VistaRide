@@ -125,7 +125,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _currentLocation = LatLng(position.latitude, position.longitude);
       _markers.add(Marker(
-        markerId: MarkerId('currentLocation'),
+        markerId: const MarkerId('currentLocation'),
         position: _currentLocation,
         icon: carIcon,
         infoWindow: InfoWindow(title: locationName),
@@ -341,6 +341,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
   List<dynamic> driversnearme = [];
+  late Timer _timetofetch;
   Future<void> fetchdrivers() async {
     await _getCurrentLocation();
     try {
@@ -359,7 +360,7 @@ class _HomePageState extends State<HomePage> {
         final bool isDriverOnline = data['Driver Online'] ?? false;
         final bool isDriverAvaliable = data['Driver Avaliable'] ?? true;
         // Skip offline drivers and remove their markers if they are already on the map
-        if (!isDriverOnline) {
+        if (!isDriverOnline || doc.id == _auth.currentUser!.uid) {
           setState(() {
             _markers.removeWhere(
                   (marker) =>
@@ -475,6 +476,9 @@ class _HomePageState extends State<HomePage> {
     fetchactiverides();
     getDeviceToken();
     fetchdrivers();
+    _timetofetch = Timer.periodic(const Duration(seconds: 10), (Timer t) {
+      fetchdrivers();
+    });
     // sendnotification();
   }
 
@@ -504,6 +508,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _rideRequestListener?.cancel();
+    _timetofetch.cancel();
     super.dispose();
   }
 
