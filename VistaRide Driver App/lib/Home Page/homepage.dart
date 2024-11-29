@@ -550,6 +550,7 @@ class _HomePageState extends State<HomePage> {
                   left: (MediaQuery.sizeOf(context).width / 2) - 40,
                   child: InkWell(
                     onTap: () async {
+
                       // await sendnotification();
                       setState(() {
                         isonline = !isonline;
@@ -572,6 +573,7 @@ class _HomePageState extends State<HomePage> {
                             }
                           }
                         });
+                        await fetchdrivers();
                       }
                       if (isonline) {
                         player.setReleaseMode(ReleaseMode.stop);
