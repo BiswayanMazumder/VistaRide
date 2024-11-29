@@ -150,7 +150,7 @@ class _HomePageState extends State<HomePage> {
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
   }
-
+  String name='';
   Future<void> fetchuserdetails() async {
     final docsnap = await _firestore
         .collection('VistaRide Driver Details')
@@ -160,6 +160,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         profilepic = docsnap.data()?['Profile Picture'];
         isonline = docsnap.data()?['Driver Online'];
+        name=docsnap.data()?['Name']??'';
       });
     }
   }
@@ -269,17 +270,18 @@ class _HomePageState extends State<HomePage> {
     const String serverToken = Environment.ServerToken;
 
     final response = await http.post(
-      Uri.parse('https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
+      Uri.parse(
+          'https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
       headers: {
         'Content-Type': 'application/json', // Correct Content-Type header
         'Authorization': 'Bearer $serverToken', // Correct Authorization header
       },
       body: jsonEncode({
         "message": {
-          "token":'$token',
-           "notification": {
+          "token": '$token',
+          "notification": {
             "body":
-            "Unfortunately, your rider has cancelled the trip. Please wait for some time till we assign you a new ride.",
+                "Unfortunately, your rider has cancelled the trip. Please wait for some time till we assign you a new ride.",
             "title": "Ride Cancelled"
           }
         }
@@ -292,11 +294,13 @@ class _HomePageState extends State<HomePage> {
       }
     } else {
       if (kDebugMode) {
-        print('Failed to send notification. Status code: ${response.statusCode}');
+        print(
+            'Failed to send notification. Status code: ${response.statusCode}');
         print('Response: ${response.body}');
       }
     }
   }
+
   Future<void> sendrideacceptnotification() async {
     await fetchRideDetails(riderequestid);
     await getDeviceToken();
@@ -305,18 +309,17 @@ class _HomePageState extends State<HomePage> {
     const String serverToken = Environment.ServerToken;
 
     final response = await http.post(
-      Uri.parse('https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
+      Uri.parse(
+          'https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
       headers: {
         'Content-Type': 'application/json', // Correct Content-Type header
         'Authorization': 'Bearer $serverToken', // Correct Authorization header
       },
       body: jsonEncode({
         "message": {
-          "token":
-          '$token',
+          "token": '$token',
           "notification": {
-            "body":
-            "Your trip to $droplocation has successfully been accepted",
+            "body": "Your trip to $droplocation has successfully been accepted",
             "title": "Ride Accepted"
           }
         }
@@ -329,11 +332,13 @@ class _HomePageState extends State<HomePage> {
       }
     } else {
       if (kDebugMode) {
-        print('Failed to send notification. Status code: ${response.statusCode}');
+        print(
+            'Failed to send notification. Status code: ${response.statusCode}');
         print('Response: ${response.body}');
       }
     }
   }
+
   @override
   void initState() {
     super.initState();
@@ -379,6 +384,7 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
+  bool ismenuopened = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -404,11 +410,6 @@ class _HomePageState extends State<HomePage> {
               children: [
                 InkWell(
                   onTap: () async {
-                    await _auth.signOut();
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => LoginPage()),
-                    );
                   },
                   child: CircleAvatar(
                     radius: 25,
@@ -480,6 +481,125 @@ class _HomePageState extends State<HomePage> {
                   ),
                 )
               : Container(),
+          ismenuopened
+              ? Positioned(
+                  child: GestureDetector(
+                  onHorizontalDragUpdate: (details) {
+                    setState(() {
+                      ismenuopened = false;
+                    });
+                  },
+                  child: Container(
+                    height: MediaQuery.sizeOf(context).height,
+                    width: MediaQuery.sizeOf(context).width / 1.5,
+                    color: Colors.white,
+                    child: Column(
+                      children: [
+                        const SizedBox(
+                          height: 50,
+                        ),
+                        CircleAvatar(
+                          radius: 40,
+                          backgroundImage: NetworkImage(profilepic),
+                        ),
+                        const SizedBox(
+                          height: 20,
+                        ),
+                        Text(name,style: GoogleFonts.poppins(
+                          color: Colors.black,
+                          fontWeight: FontWeight.w600,
+                        ),),
+                        const SizedBox(
+                          height: 20,
+                        ),
+                         Row(
+                           mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            const SizedBox(
+                              width: 40,
+                            ),
+                            const Icon(Icons.person,color: Colors.green,),
+                            const SizedBox(
+                              width: 20,
+                            ),
+                            Text('Profile',style: GoogleFonts.poppins(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
+                            ),),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 15,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            const SizedBox(
+                              width: 40,
+                            ),
+                            const Icon(Icons.pin_drop_rounded,color: Colors.green,),
+                            const SizedBox(
+                              width: 20,
+                            ),
+                            Text('Trips Done',style: GoogleFonts.poppins(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
+                            ),),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 15,
+                        ),
+                        InkWell(
+                          onTap: () async {
+                            await _auth.signOut();
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (context) => LoginPage()),
+                            );
+                          },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              const SizedBox(
+                                width: 40,
+                              ),
+                              const Icon(Icons.logout,color: Colors.red,),
+                              const SizedBox(
+                                width: 20,
+                              ),
+                              Text('Logout',style: GoogleFonts.poppins(
+                                color: Colors.black,
+                                fontWeight: FontWeight.w600,
+                              ),),
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                ))
+              : Container(),
+          ismenuopened
+              ? Container()
+              : Positioned(
+                  top: 20,
+                  left: 20,
+                  child: InkWell(
+                    onTap: () {
+                      setState(() {
+                        ismenuopened = !ismenuopened;
+                      });
+                    },
+                    child: const CircleAvatar(
+                      radius: 25,
+                      backgroundColor: Colors.yellow,
+                      child: Icon(
+                        Icons.menu,
+                        color: Colors.black,
+                      ),
+                    ),
+                  )),
           riderequestid != ''
               ? Positioned(
                   bottom: 0,

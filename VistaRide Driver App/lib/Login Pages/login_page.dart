@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../Home Page/homepage.dart';
 
@@ -141,23 +142,56 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
             const SizedBox(height: 30),
-            Container(
-              height: 50,
-              width: MediaQuery.sizeOf(context).width - 50,
-              decoration: const BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.all(Radius.circular(50))),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  children: [
-                    const Image(image: NetworkImage('https://www.apple.com/favicon.ico')),
-                    const SizedBox(width: 50),
-                    Text('Continue using Apple', style: GoogleFonts.poppins(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600
-                    )),
-                  ],
+            InkWell(
+              onTap: () async {
+                try {
+                  final credential = await SignInWithApple.getAppleIDCredential(
+                    scopes: [
+                      AppleIDAuthorizationScopes.email,
+                      AppleIDAuthorizationScopes.fullName,
+                    ],
+                    webAuthenticationOptions: WebAuthenticationOptions(
+                      clientId: 'your.service.id',
+                      redirectUri: Uri.parse(
+                        'https://vistafeedd.firebaseapp.com/__/auth/handler', // Replace with your actual redirect URI
+                      ),
+                    ),
+                  );
+
+                  // Handle credential
+                  if (kDebugMode) {
+                    print('User Identifier: ${credential.userIdentifier}');
+                  }
+                  if (kDebugMode) {
+                    print('Email: ${credential.email}');
+                  }
+                  if (kDebugMode) {
+                    print('Full Name: ${credential.givenName} ${credential.familyName}');
+                  }
+                } catch (e) {
+                  if (kDebugMode) {
+                    print('Error with Apple Sign-In: $e');
+                  }
+                }
+              },
+              child: Container(
+                height: 50,
+                width: MediaQuery.sizeOf(context).width - 50,
+                decoration: const BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.all(Radius.circular(50))),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      const Image(image: NetworkImage('https://www.apple.com/favicon.ico')),
+                      const SizedBox(width: 50),
+                      Text('Continue using Apple', style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600
+                      )),
+                    ],
+                  ),
                 ),
               ),
             ),

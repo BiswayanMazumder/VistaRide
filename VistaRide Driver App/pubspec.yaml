@@ -59,6 +59,7 @@ dependencies:
   awesome_notifications: ^0.8.2
   firebase_messaging: ^14.7.19
   googleapis_auth: ^1.6.0
+  sign_in_with_apple: ^5.0.0
 
 dev_dependencies:
   flutter_test:
