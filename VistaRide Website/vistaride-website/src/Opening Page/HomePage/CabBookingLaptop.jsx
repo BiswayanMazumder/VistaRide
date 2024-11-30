@@ -159,7 +159,7 @@ export default function CabBookingLaptop() {
                         options={mapOptions}
                     >
                         {selectedPickupLocation && (
-                            <Marker position={selectedPickupLocation} label="You are here" />
+                            <Marker position={selectedPickupLocation} />
                         )}
                         {selectedDropLocation && <Marker position={selectedDropLocation} />}
                         {directions && directions.routes[0].overview_path && (
