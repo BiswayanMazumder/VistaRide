@@ -170,6 +170,7 @@ body{
   line-height: 24px;
   margin-top: 20px;
 }
+
 @media screen and (min-width: 1135px) {
   .hhbnbdv{
     display: flex;
