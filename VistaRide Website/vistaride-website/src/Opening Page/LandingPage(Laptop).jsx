@@ -1,8 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { GoogleMap, LoadScript, Marker, Polyline } from '@react-google-maps/api';
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
-// Default coordinates (latitude, longitude)
+const provider = new GoogleAuthProvider();
+const firebaseConfig = {
+    apiKey: "AIzaSyA5h_ElqdgLrs6lXLgwHOfH9Il5W7ARGiI",
+    authDomain: "vistafeedd.firebaseapp.com",
+    projectId: "vistafeedd",
+    storageBucket: "vistafeedd.appspot.com",
+    messagingSenderId: "1025680611513",
+    appId: "1:1025680611513:web:0f8c6be4228dba901ea368",
+    measurementId: "G-ZFRR1BZQFV"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+// Get Auth instance and Google provider
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
 const defaultLatLng = { lat: 22.5660201, lng: 88.3630783 };
 
 export default function LandingPage_Laptop() {
@@ -127,9 +145,9 @@ export default function LandingPage_Laptop() {
     // Calculate the center between pickup and drop for map centering
     const mapCenter = selectedDropLocation
         ? {
-              lat: (selectedPickupLocation.lat + selectedDropLocation.lat) / 2,
-              lng: (selectedPickupLocation.lng + selectedDropLocation.lng) / 2,
-          }
+            lat: (selectedPickupLocation.lat + selectedDropLocation.lat) / 2,
+            lng: (selectedPickupLocation.lng + selectedDropLocation.lng) / 2,
+        }
         : selectedPickupLocation || defaultLatLng;
 
     // Add console logs to debug the pickup location
@@ -137,6 +155,18 @@ export default function LandingPage_Laptop() {
         console.log("Selected Pickup Location:", selectedPickupLocation);
     }, [selectedPickupLocation]);
 
+    const [user, setUser] = useState(null);
+    const [error, setError] = useState(null);
+
+    const handleLogin = async () => {
+        try {
+            const result = await signInWithPopup(auth, googleProvider);
+            const user = result.user;
+            setUser(user);
+        } catch (err) {
+            setError(err.message);
+        }
+    };
     return (
         <div className="webbody">
             <div className="ehfjfv">
@@ -151,6 +181,9 @@ export default function LandingPage_Laptop() {
                         </Link>
                         <Link style={{ textDecoration: 'none', color: 'white' }}>
                             <div className="eefebf">Business</div>
+                        </Link>
+                        <Link style={{ textDecoration: 'none', color: 'white' }} onClick={handleLogin}>
+                            <div className="eefebf">Login</div>
                         </Link>
                     </div>
                 </div>
@@ -256,7 +289,7 @@ export default function LandingPage_Laptop() {
                     </div>
                     <div className="mapssection">
                         <LoadScript
-                            googleMapsApiKey="Google_Maps_API_KEY"
+                            googleMapsApiKey="Google_MAPS_API_KEY"
                             libraries={['places']}
                         >
                             <GoogleMap
@@ -307,12 +340,12 @@ export default function LandingPage_Laptop() {
                     </div>
                 </div>
                 <div className="njnjnnfv">
-                     <div className="jdnfjkjk">
+                    <div className="jdnfjkjk">
                         <div className="nfvn">
-                        The VistaRide you<br />know, reimagined<br />for business
+                            The VistaRide you<br />know, reimagined<br />for business
                         </div>
                         <div className="mdnfjdnm">
-                        VistaRide for Business is a platform for managing global rides and<br/>and local deliveries, for companies of any size.
+                            VistaRide for Business is a platform for managing global rides and<br />and local deliveries, for companies of any size.
                         </div>
                         <Link style={{ textDecoration: 'none', color: 'white' }}>
                             <div className="jffnrn">
@@ -326,10 +359,10 @@ export default function LandingPage_Laptop() {
                     <img src="https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_576,w_576/v1696243819/assets/18/34e6fd-33e3-4c95-ad7a-f484a8c812d7/original/fleet-management.jpg" alt="" height={576} width={576} />
                     <div className="jdnfjkjk">
                         <div className="nfvn">
-                        Make money by renting out<br/>your car
+                            Make money by renting out<br />your car
                         </div>
                         <div className="mdnfjdnm">
-                        Connect with thousands of drivers and earn more per week<br/>with VistaRide's free fleet management tools.
+                            Connect with thousands of drivers and earn more per week<br />with VistaRide's free fleet management tools.
                         </div>
                         <Link style={{ textDecoration: 'none', color: 'white' }}>
                             <div className="jffnrn">
