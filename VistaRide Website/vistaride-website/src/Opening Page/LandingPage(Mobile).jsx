@@ -285,7 +285,7 @@ export default function LandingPageMobile() {
                         Drive when you want, make what you need
                     </div>
                     <div className="jjndjvnfv">
-                        Make money on your schedule with deliveries or rides—or both. You can use your own car or choose a rental through Uber.
+                        Make money on your schedule with deliveries or rides—or both. You can use your own car or choose a rental through VistaRide.
                     </div>
                     <div className="dndjvnj">
                         <Link style={{ textDecoration: 'none', color: 'white' }}>
@@ -300,10 +300,10 @@ export default function LandingPageMobile() {
                 </div>
                 <br /><br />
                 <div className="jejfr">
-                    The Uber you know, reimagined for business
+                    The VistaRide you know, reimagined for business
                 </div>
                 <div className="jjndjvnfv">
-                    Uber for Business is a platform for managing global rides and meals, and local deliveries, for companies of any size.
+                VistaRide for Business is a platform for managing global rides and meals, and local deliveries, for companies of any size.
                 </div>
                 <div className="dndjvnj">
                     <Link style={{ textDecoration: 'none', color: 'white' }}>
@@ -319,7 +319,7 @@ export default function LandingPageMobile() {
                     Make money by renting out your car
                 </div>
                 <div className="jjndjvnfv">
-                    Connect with thousands of drivers and earn more per week with Uber’s free fleet management tools.
+                    Connect with thousands of drivers and earn more per week with VistaRide's free fleet management tools.
                 </div>
                 <div className="dndjvnj">
                     <Link style={{ textDecoration: 'none', color: 'white' }}>
