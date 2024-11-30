@@ -254,3 +254,9 @@ body{
   color: #a0a0a0; /* Optional: Customize placeholder color */
   font-size: 20px; /* Optional: Adjust 0ont size */
 }
+.ehbfhebfe::placeholder {
+  margin-left: 20px;
+  font-family: 'Avendir', sans-serif; /* Apply the desired font family */
+  color: #a0a0a0; /* Optional: Customize placeholder color */
+  font-size: 15px; /* Optional: Adjust 0ont size */
+}
