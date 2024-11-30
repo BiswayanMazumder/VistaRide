@@ -102,6 +102,7 @@ body{
   flex-direction: column;
   margin-top: -200px;
 }
+
 .jnjvn,.jnjvndd{
   margin-top: 80px;
   font-family: 'Avenir', sans-serif;
@@ -145,6 +146,29 @@ body{
 }
 .jffnrn:hover{
   background-color: rgb(25, 25, 25);
+}
+.njnjnnfv{
+  height: 580px;
+  width: 100vw;
+  display: flex;
+  flex-direction: row;
+  justify-content:center;
+  gap: 80px;
+  align-items: center;
+  margin-top: 150px;
+  line-height: 60px;
+}
+.nfvn{
+  font-family: 'Avenir', sans-serif;
+  font-size: 52px;
+  font-weight: bolder;
+}
+.mdnfjdnm{
+  font-size: 16px;
+  font-family: 'Avenir', sans-serif;
+  font-weight: 500;
+  line-height: 24px;
+  margin-top: 20px;
 }
 @media screen and (min-width: 1135px) {
   .hhbnbdv{
