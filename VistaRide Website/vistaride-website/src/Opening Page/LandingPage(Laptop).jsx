@@ -289,7 +289,7 @@ export default function LandingPage_Laptop() {
                     </div>
                     <div className="mapssection">
                         <LoadScript
-                            googleMapsApiKey="Google_MAPS_API_KEY"
+                            googleMapsApiKey="Google_Maps_API_KEY"
                             libraries={['places']}
                         >
                             <GoogleMap

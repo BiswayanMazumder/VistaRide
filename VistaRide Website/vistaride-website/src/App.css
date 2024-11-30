@@ -67,7 +67,7 @@ body{
   flex-direction: row;
   gap: 50px;
 }
-.eefebf{
+.eefebf,.eefebfs{
   /* background-color: grey; */
   border-radius:20px;
   justify-content: center;
@@ -170,9 +170,77 @@ body{
   line-height: 24px;
   margin-top: 20px;
 }
-
+.hvfnvn{
+  width: 100vw;
+  /* height: 70px; */
+  background-color: black;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+.ndjvnjd{
+  width: 100vw;
+  height: 1500px;
+  background-color: black;
+}
+.mdnjvn{
+  color: white;
+  font-family: 'Avenir', sans-serif;
+  /* margin-left: 50px; */
+  display: flex;
+  flex-direction: row;
+  font-weight: bolder;
+  font-size: 20px;
+  padding: 30px;
+}
+@media screen and (max-width: 1135px) {
+  .jnvjnfjn{
+    display: flex;
+  }
+}
 @media screen and (min-width: 1135px) {
   .hhbnbdv{
     display: flex;
   }
+}
+.ehfbehfb{
+  margin-left: 30px;
+  padding-top: 30px;
+  color: white;
+  font-family: 'Avenir', sans-serif;
+  font-weight: bolder;
+  font-size: 35px;
+  line-height: 50px;
+}
+.ehfbehfbd{
+  margin-left: 30px;
+  padding-top: 15px;
+  color: white;
+  font-family: 'Avenir', sans-serif;
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 50px;
+}
+.njnv{
+  margin-left: 30px;
+  margin-top: 10px;
+}
+.ehbfhebfe{
+  height: 50px;
+  width: 50vw;
+  border-radius: 10px;
+  border: none;
+  font-family: 'Avendir', sans-serif;
+  background-color: #F3F3F3;
+}
+@media screen and (max-width: 599px) {
+  .ehbfhebfe{
+    width: 80vw;
+  }
+}
+.ebfbebfeh::placeholder {
+  margin-left: 20px;
+  font-family: 'Avendir', sans-serif; /* Apply the desired font family */
+  color: #a0a0a0; /* Optional: Customize placeholder color */
+  font-size: 20px; /* Optional: Adjust 0ont size */
 }
