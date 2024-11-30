@@ -298,6 +298,39 @@ export default function LandingPageMobile() {
                         <img src="https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_552,w_552/v1684855112/assets/96/4dd3d1-94e7-481e-b28c-08d59353b9e0/original/earner-illustra.png" alt="" width={"100%"} height={"40%"} />
                     </div>
                 </div>
+                <br /><br />
+                <div className="jejfr">
+                    The Uber you know, reimagined for business
+                </div>
+                <div className="jjndjvnfv">
+                    Uber for Business is a platform for managing global rides and meals, and local deliveries, for companies of any size.
+                </div>
+                <div className="dndjvnj">
+                    <Link style={{ textDecoration: 'none', color: 'white' }}>
+                        <div className="jffnrn">
+                            Get Started
+                        </div>
+                    </Link>
+                </div>
+                <div className="djvnj" style={{ padding: "30px" }}>
+                    <img src="https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_552,w_552/v1684887108/assets/76/baf1ea-385a-408c-846b-59211086196c/original/u4b-square.png" alt="" width={"100%"} height={"40%"} />
+                </div>
+                <div className="jejfr">
+                    Make money by renting out your car
+                </div>
+                <div className="jjndjvnfv">
+                    Connect with thousands of drivers and earn more per week with Uber’s free fleet management tools.
+                </div>
+                <div className="dndjvnj">
+                    <Link style={{ textDecoration: 'none', color: 'white' }}>
+                        <div className="jffnrn">
+                            Get Started
+                        </div>
+                    </Link>
+                </div>
+                <div className="djvnj" style={{ padding: "30px" }}>
+                    <img src="https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_552,w_552/v1696243819/assets/18/34e6fd-33e3-4c95-ad7a-f484a8c812d7/original/fleet-management.jpg" alt="" width={"100%"} height={"40%"} />
+                </div>
             </div>
         </div>
     )
