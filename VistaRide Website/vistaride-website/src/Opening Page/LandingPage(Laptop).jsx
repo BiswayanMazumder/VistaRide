@@ -359,10 +359,10 @@ export default function LandingPage_Laptop() {
                     <img src="https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_576,w_576/v1696243819/assets/18/34e6fd-33e3-4c95-ad7a-f484a8c812d7/original/fleet-management.jpg" alt="" height={576} width={576} />
                     <div className="jdnfjkjk">
                         <div className="nfvn">
-                            Make money by renting out<br />your car
+                        Make money by<br/>renting out<br />your car
                         </div>
                         <div className="mdnfjdnm">
-                            Connect with thousands of drivers and earn more per week<br />with VistaRide's free fleet management tools.
+                        Connect with thousands of drivers and earn more per week<br />with VistaRide's free fleet management tools.
                         </div>
                         <Link style={{ textDecoration: 'none', color: 'white' }}>
                             <div className="jffnrn">
