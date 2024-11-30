@@ -155,7 +155,7 @@ export default function CabBookingLaptop() {
                     <GoogleMap
                         mapContainerStyle={mapContainerStyle}
                         center={mapCenter}
-                        zoom={14}
+                        zoom={17}
                         options={mapOptions}
                     >
                         {selectedPickupLocation && (
