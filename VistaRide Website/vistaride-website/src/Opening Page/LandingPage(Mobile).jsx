@@ -166,7 +166,7 @@ export default function LandingPageMobile() {
         console.log("Selected Pickup Location:", selectedPickupLocation);
     }, [selectedPickupLocation]);
     return (
-        <div className='webbody' style={{ backgroundColor: 'black' }}>
+        <div className='webbody'>
             <div className="jnnvfkvfk">
                 <div className="hvfnvn">
                     <div className="mdnjvn">
@@ -276,6 +276,9 @@ export default function LandingPageMobile() {
                     <Link style={{ textDecoration: 'none', color: 'white' }}>
                         <div className="jffnrn" style={{ backgroundColor: 'white', marginLeft: '30px', marginTop: "25px", color: 'black' }}>See prices</div>
                     </Link>
+                    <div className="djvnj" style={{padding: "30px"}}>
+                    <img src="https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_690,w_552/v1684852612/assets/ba/4947c1-b862-400e-9f00-668f4926a4a2/original/Ride-with-Uber.png" alt="" width={"100%"} height={"40%"} />
+                    </div>
                 </div>
             </div>
         </div>
