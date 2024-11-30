@@ -86,13 +86,27 @@ body{
   height: 90vh;
 }
 .ehfefbefb{
-  width: 50vw;
+  /* width: 50vw; */
+  display: flex;
+  /* margin-left: 200px; */
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+  gap: 120px;
 }
-.jnjvn{
+.mapssection{
+  margin-top: 80px;
+}
+.enhfnjn{
+  display: flex;
+  flex-direction: column;
+  margin-top: -200px;
+}
+.jnjvn,.jnjvndd{
   margin-top: 80px;
   font-family: 'Avenir', sans-serif;
   font-weight: bolder;
-  margin-left: 100px;
+  /* margin-left: 100px; */
   color:#333333;
   line-height: 64px;
   font-size: 52px;
@@ -104,6 +118,10 @@ body{
   border: none;
   font-family: 'Avendir', sans-serif;
   background-color: #F3F3F3;
+}
+.ebfbebfeh::before{
+  left: 20px;
+  position: absolute;
 }
 .ebfbebfeh::placeholder {
   margin-left: 20px;
@@ -117,7 +135,7 @@ body{
   border-radius: 10px;
   background-color: black;
   margin-top: 20px;
-  margin-left:100px;
+  /* margin-left:100px; */
   display: flex;
   justify-content: center;
   align-items: center;
