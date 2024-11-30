@@ -276,8 +276,26 @@ export default function LandingPageMobile() {
                     <Link style={{ textDecoration: 'none', color: 'white' }}>
                         <div className="jffnrn" style={{ backgroundColor: 'white', marginLeft: '30px', marginTop: "25px", color: 'black' }}>See prices</div>
                     </Link>
-                    <div className="djvnj" style={{padding: "30px"}}>
-                    <img src="https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_690,w_552/v1684852612/assets/ba/4947c1-b862-400e-9f00-668f4926a4a2/original/Ride-with-Uber.png" alt="" width={"100%"} height={"40%"} />
+                    <div className="djvnj" style={{ padding: "30px" }}>
+                        <img src="https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_690,w_552/v1684852612/assets/ba/4947c1-b862-400e-9f00-668f4926a4a2/original/Ride-with-Uber.png" alt="" width={"100%"} height={"40%"} />
+                    </div>
+                </div>
+                <div className="dnffnf">
+                    <div className="jejfr">
+                        Drive when you want, make what you need
+                    </div>
+                    <div className="jjndjvnfv">
+                        Make money on your schedule with deliveries or rides—or both. You can use your own car or choose a rental through Uber.
+                    </div>
+                    <div className="dndjvnj">
+                        <Link style={{ textDecoration: 'none', color: 'white' }}>
+                            <div className="jffnrn">
+                                Get Started
+                            </div>
+                        </Link>
+                    </div>
+                    <div className="djvnj" style={{ padding: "30px" }}>
+                        <img src="https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_552,w_552/v1684855112/assets/96/4dd3d1-94e7-481e-b28c-08d59353b9e0/original/earner-illustra.png" alt="" width={"100%"} height={"40%"} />
                     </div>
                 </div>
             </div>
