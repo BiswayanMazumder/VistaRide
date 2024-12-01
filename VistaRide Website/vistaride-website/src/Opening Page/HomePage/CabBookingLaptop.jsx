@@ -15,7 +15,6 @@ const firebaseConfig = {
     measurementId: "G-ZFRR1BZQFV",
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
@@ -38,7 +37,8 @@ export default function CabBookingLaptop() {
         width: '100vw',
         height: '89vh',
     });
-    const [directions, setDirections] = useState(null); // To hold directions result
+    const [directions, setDirections] = useState(null);
+    const [distanceAndTime, setDistanceAndTime] = useState({ distance: '', duration: '' });
 
     const handlePickupInputChange = (e) => {
         const value = e.target.value;
@@ -102,45 +102,32 @@ export default function CabBookingLaptop() {
     };
 
     useEffect(() => {
-        const handleResize = () => {
-            setMapContainerStyle({
-                width: '100vw',
-                height: '90vh',
-            });
-        };
+        setDirections(null);
 
-        window.addEventListener('resize', handleResize);
-        handleResize();
-
-        return () => {
-            window.removeEventListener('resize', handleResize);
-        };
-    }, []);
-
-    useEffect(() => {
-        // Reset directions whenever either pickup or drop location changes
-        setDirections(null); // Clears the previous polyline
-
-        // If both locations are selected, fetch directions to draw polyline
         if (selectedPickupLocation && selectedDropLocation) {
             const directionsService = new window.google.maps.DirectionsService();
 
             const request = {
                 origin: selectedPickupLocation,
                 destination: selectedDropLocation,
-                travelMode: window.google.maps.TravelMode.DRIVING, // You can change this to WALKING, BICYCLING, etc.
+                travelMode: window.google.maps.TravelMode.DRIVING,
             };
 
             directionsService.route(request, (result, status) => {
                 if (status === window.google.maps.DirectionsStatus.OK) {
-                    console.log("Directions response:", result); // Log the directions response
-                    setDirections(result); // Save the directions result
+                    console.log("Directions response:", result);
+                    setDirections(result);
+                    const distance = result.routes[0].legs[0].distance.text;
+                    const duration = result.routes[0].legs[0].duration.text;
+
+                    console.log(`Distance: ${distance}, Duration: ${duration}`);
+                    setDistanceAndTime({ distance, duration });
                 } else {
-                    console.error("Directions request failed:", status); // Log error if request fails
+                    console.error("Directions request failed:", status);
                 }
             });
         }
-    }, [selectedPickupLocation, selectedDropLocation]); // This effect will run when either pickup or drop location changes
+    }, [selectedPickupLocation, selectedDropLocation]);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -183,7 +170,6 @@ export default function CabBookingLaptop() {
         document.title = 'Request a Ride with VistaRide';
     }, []);
 
-    // Fetch and set current location
     useEffect(() => {
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
@@ -221,15 +207,7 @@ export default function CabBookingLaptop() {
         <div className="webbody">
             <div className="ehfjfv" style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <div className="hfejfw">VistaRide</div>
-                <div
-                    className="hfejfw"
-                    style={{
-                        right: '100px',
-                        position: 'absolute',
-                        flexDirection: 'row',
-                        gap: '20px',
-                    }}
-                >
+                <div className="hfejfw" style={{ right: '100px', position: 'absolute', flexDirection: 'row', gap: '20px' }}>
                     {loading ? (
                         <div></div>
                     ) : error ? (
@@ -265,23 +243,21 @@ export default function CabBookingLaptop() {
                                 onChange={handlePickupInputChange}
                             />
                             {pickupSuggestions.length > 0 && (
-                                <ul
-                                    style={{
-                                        listStyleType: 'none',
-                                        padding: '0',
-                                        margin: '0',
-                                        border: '1px solid #ccc',
-                                        borderRadius: '4px',
-                                        maxHeight: '150px',
-                                        overflowY: 'auto',
-                                        backgroundColor: '#fff',
-                                        position: 'absolute',
-                                        top: '100%',
-                                        left: '0',
-                                        right: '0',
-                                        zIndex: 1000,
-                                    }}
-                                >
+                                <ul style={{
+                                    listStyleType: 'none',
+                                    padding: '0',
+                                    margin: '0',
+                                    border: '1px solid #ccc',
+                                    borderRadius: '4px',
+                                    maxHeight: '150px',
+                                    overflowY: 'auto',
+                                    backgroundColor: '#fff',
+                                    position: 'absolute',
+                                    top: '100%',
+                                    left: '0',
+                                    right: '0',
+                                    zIndex: 1000,
+                                }}>
                                     {pickupSuggestions.map((suggestion) => (
                                         <li
                                             key={suggestion.place_id}
@@ -310,23 +286,21 @@ export default function CabBookingLaptop() {
                                 onChange={handleDropInputChange}
                             />
                             {dropSuggestions.length > 0 && (
-                                <ul
-                                    style={{
-                                        listStyleType: 'none',
-                                        padding: '0',
-                                        margin: '0',
-                                        border: '1px solid #ccc',
-                                        borderRadius: '4px',
-                                        maxHeight: '150px',
-                                        overflowY: 'auto',
-                                        backgroundColor: '#fff',
-                                        zIndex: 1000,
-                                        position: 'absolute',
-                                        top: '100%',
-                                        left: '0',
-                                        right: '0',
-                                    }}
-                                >
+                                <ul style={{
+                                    listStyleType: 'none',
+                                    padding: '0',
+                                    margin: '0',
+                                    border: '1px solid #ccc',
+                                    borderRadius: '4px',
+                                    maxHeight: '150px',
+                                    overflowY: 'auto',
+                                    backgroundColor: '#fff',
+                                    zIndex: 1000,
+                                    position: 'absolute',
+                                    top: '100%',
+                                    left: '0',
+                                    right: '0',
+                                }}>
                                     {dropSuggestions.map((suggestion) => (
                                         <li
                                             key={suggestion.place_id}
@@ -348,7 +322,11 @@ export default function CabBookingLaptop() {
 
                         <div className="mdnvjnv">
                             <Link style={{ textDecoration: 'none', color: 'white' }}>
-                                <div className="jffnrn" style={{ backgroundColor: pickupLocation && dropLocation ? 'black' : 'grey' }}>
+                                <div className="jffnrn" style={{ backgroundColor: pickupLocation && dropLocation ? 'black' : 'grey' }} onClick={
+                                    distanceAndTime.distance && distanceAndTime.duration &&(
+                                        console.log('Lat Pickup :', selectedPickupLocation.lat, 'Long Pickup :', selectedPickupLocation.lng, 'Lat Drop :', selectedDropLocation.lat, 'Long Drop :', selectedDropLocation.lng)
+                                    )
+                                }>
                                     Get Started
                                 </div>
                             </Link>
@@ -360,11 +338,14 @@ export default function CabBookingLaptop() {
                         mapContainerStyle={mapContainerStyle}
                         center={mapCenter}
                         zoom={17}
-                        options={mapOptions}
+                        options={{
+                            zoomControl: true,
+                            mapTypeControl: false,
+                            streetViewControl: false,
+                            fullscreenControl: false,
+                        }}
                     >
-                        {selectedPickupLocation && (
-                            <Marker position={selectedPickupLocation} />
-                        )}
+                        {selectedPickupLocation && <Marker position={selectedPickupLocation} />}
                         {selectedDropLocation && <Marker position={selectedDropLocation} />}
                         {directions && directions.routes[0].overview_path && (
                             <Polyline
@@ -378,6 +359,15 @@ export default function CabBookingLaptop() {
                         )}
                     </GoogleMap>
                 </LoadScript>
+
+                {/* {distanceAndTime.distance && distanceAndTime.duration && (
+                    <div style={{ marginTop: '20px' }}>
+                        <p>Pickup Location: {selectedPickupLocation.lat}, {selectedPickupLocation.lng}</p>
+                        <p>Drop Location: {selectedDropLocation.lat}, {selectedDropLocation.lng}</p>
+                        <p>Distance: {distanceAndTime.distance}</p>
+                        <p>Estimated Time: {distanceAndTime.duration}</p>
+                    </div>
+                )} */}
             </div>
         </div>
     );
