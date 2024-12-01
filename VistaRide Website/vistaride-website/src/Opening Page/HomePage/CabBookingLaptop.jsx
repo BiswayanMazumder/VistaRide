@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { onAuthStateChanged, getAuth, GoogleAuthProvider } from "firebase/auth";
+import { onAuthStateChanged, getAuth } from "firebase/auth";
 import { doc, getDoc, getFirestore } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import { GoogleMap, LoadScript, Marker, Polyline } from '@react-google-maps/api';
@@ -22,7 +22,6 @@ const auth = getAuth(app);
 const defaultLatLng = { lat: 22.5660201, lng: 88.3630783 };
 
 export default function CabBookingLaptop() {
-
     const [user, setUser] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -119,6 +118,9 @@ export default function CabBookingLaptop() {
     }, []);
 
     useEffect(() => {
+        // Reset directions whenever either pickup or drop location changes
+        setDirections(null); // Clears the previous polyline
+
         // If both locations are selected, fetch directions to draw polyline
         if (selectedPickupLocation && selectedDropLocation) {
             const directionsService = new window.google.maps.DirectionsService();
@@ -138,7 +140,7 @@ export default function CabBookingLaptop() {
                 }
             });
         }
-    }, [selectedPickupLocation, selectedDropLocation]);
+    }, [selectedPickupLocation, selectedDropLocation]); // This effect will run when either pickup or drop location changes
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -254,24 +256,96 @@ export default function CabBookingLaptop() {
                         <div className="mdnvjnv" style={{ fontSize: '30px', fontWeight: 'bold', fontFamily: 'Avenir', display: 'flex', justifyContent: 'start', alignItems: 'start', flexDirection: 'row' }}>
                             Find a trip
                         </div>
-                        <div className="mdnvjnv">
+                        <div className="mdnvjnv" style={{ position: 'relative' }}>
                             <input
                                 type="text"
                                 className="ebfbebfeh"
-                                placeholder=" Pickup location"
+                                placeholder="Pickup location"
                                 value={pickupLocation}
                                 onChange={handlePickupInputChange}
                             />
+                            {pickupSuggestions.length > 0 && (
+                                <ul
+                                    style={{
+                                        listStyleType: 'none',
+                                        padding: '0',
+                                        margin: '0',
+                                        border: '1px solid #ccc',
+                                        borderRadius: '4px',
+                                        maxHeight: '150px',
+                                        overflowY: 'auto',
+                                        backgroundColor: '#fff',
+                                        position: 'absolute',
+                                        top: '100%',
+                                        left: '0',
+                                        right: '0',
+                                        zIndex: 1000,
+                                    }}
+                                >
+                                    {pickupSuggestions.map((suggestion) => (
+                                        <li
+                                            key={suggestion.place_id}
+                                            style={{
+                                                padding: '6px 10px',
+                                                cursor: 'pointer',
+                                                borderBottom: '1px solid #f0f0f0',
+                                                fontSize: '16px',
+                                                lineHeight: '1.4',
+                                            }}
+                                            onClick={() => handleSuggestionClick(suggestion.place_id, 'pickup')}
+                                        >
+                                            {suggestion.description}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </div>
-                        <div className="mdnvjnv">
+
+                        <div className="mdnvjnv" style={{ position: 'relative' }}>
                             <input
                                 type="text"
                                 className="ebfbebfeh"
-                                placeholder=" Dropoff location"
+                                placeholder="Dropoff location"
                                 value={dropLocation}
                                 onChange={handleDropInputChange}
                             />
+                            {dropSuggestions.length > 0 && (
+                                <ul
+                                    style={{
+                                        listStyleType: 'none',
+                                        padding: '0',
+                                        margin: '0',
+                                        border: '1px solid #ccc',
+                                        borderRadius: '4px',
+                                        maxHeight: '150px',
+                                        overflowY: 'auto',
+                                        backgroundColor: '#fff',
+                                        zIndex: 1000,
+                                        position: 'absolute',
+                                        top: '100%',
+                                        left: '0',
+                                        right: '0',
+                                    }}
+                                >
+                                    {dropSuggestions.map((suggestion) => (
+                                        <li
+                                            key={suggestion.place_id}
+                                            style={{
+                                                padding: '6px 10px',
+                                                cursor: 'pointer',
+                                                borderBottom: '1px solid #f0f0f0',
+                                                fontSize: '16px',
+                                                lineHeight: '1.4',
+                                            }}
+                                            onClick={() => handleSuggestionClick(suggestion.place_id, 'drop')}
+                                        >
+                                            {suggestion.description}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </div>
+
                         <div className="mdnvjnv">
                             <Link style={{ textDecoration: 'none', color: 'white' }}>
                                 <div className="jffnrn" style={{ backgroundColor: pickupLocation && dropLocation ? 'black' : 'grey' }}>
@@ -281,10 +355,7 @@ export default function CabBookingLaptop() {
                         </div>
                     </div>
                 </div>
-                <LoadScript
-                    googleMapsApiKey="AIzaSyApzKC2nq9OCuaVQV2Jbm9cJoOHPy9kzvM"
-                    libraries={['places']}
-                >
+                <LoadScript googleMapsApiKey="AIzaSyApzKC2nq9OCuaVQV2Jbm9cJoOHPy9kzvM" libraries={['places']}>
                     <GoogleMap
                         mapContainerStyle={mapContainerStyle}
                         center={mapCenter}
