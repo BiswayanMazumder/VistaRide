@@ -229,136 +229,141 @@ export default function CabBookingLaptop() {
                 </div>
             </div>
             <div className="ejhfjhfd">
-                <div className="fbnbvfnbv">
-                    <div className="fhbfnbjfn">
-                        <div className="mdnvjnv" style={{ fontSize: '30px', fontWeight: 'bold', display: 'flex', justifyContent: 'start', alignItems: 'start', flexDirection: 'row' }}>
-                            Find a trip
-                        </div>
-                        <div className="mdnvjnv" style={{ position: 'relative' }}>
-                            <input
-                                type="text"
-                                className="ebfbebfeh"
-                                placeholder="Pickup location"
-                                value={pickupLocation}
-                                onChange={handlePickupInputChange}
-                            />
-                            {pickupSuggestions.length > 0 && (
-                                <ul style={{
-                                    listStyleType: 'none',
-                                    padding: '0',
-                                    margin: '0',
-                                    border: '1px solid #ccc',
-                                    borderRadius: '4px',
-                                    maxHeight: '150px',
-                                    overflowY: 'auto',
-                                    backgroundColor: '#fff',
-                                    position: 'absolute',
-                                    top: '100%',
-                                    left: '0',
-                                    right: '0',
-                                    zIndex: 1000,
-                                }}>
-                                    {pickupSuggestions.map((suggestion) => (
-                                        <li
-                                            key={suggestion.place_id}
-                                            style={{
-                                                padding: '6px 10px',
-                                                cursor: 'pointer',
-                                                borderBottom: '1px solid #f0f0f0',
-                                                fontSize: '16px',
-                                                lineHeight: '1.4',
-                                            }}
-                                            onClick={() => handleSuggestionClick(suggestion.place_id, 'pickup')}
-                                        >
-                                            {suggestion.description}
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </div>
+                <div className="djhfndj" style={{display: 'flex', flexDirection: 'row'}}>
+                    <div className="fbnbvfnbv">
+                        <div className="fhbfnbjfn">
+                            <div className="mdnvjnv" style={{ fontSize: '30px', fontWeight: 'bold', display: 'flex', justifyContent: 'start', alignItems: 'start', flexDirection: 'row' }}>
+                                Find a trip
+                            </div>
+                            <div className="mdnvjnv" style={{ position: 'relative' }}>
+                                <input
+                                    type="text"
+                                    className="ebfbebfeh"
+                                    placeholder="Pickup location"
+                                    value={pickupLocation}
+                                    onChange={handlePickupInputChange}
+                                />
+                                {pickupSuggestions.length > 0 && (
+                                    <ul style={{
+                                        listStyleType: 'none',
+                                        padding: '0',
+                                        margin: '0',
+                                        border: '1px solid #ccc',
+                                        borderRadius: '4px',
+                                        maxHeight: '150px',
+                                        overflowY: 'auto',
+                                        backgroundColor: '#fff',
+                                        position: 'absolute',
+                                        top: '100%',
+                                        left: '0',
+                                        right: '0',
+                                        zIndex: 1000,
+                                    }}>
+                                        {pickupSuggestions.map((suggestion) => (
+                                            <li
+                                                key={suggestion.place_id}
+                                                style={{
+                                                    padding: '6px 10px',
+                                                    cursor: 'pointer',
+                                                    borderBottom: '1px solid #f0f0f0',
+                                                    fontSize: '16px',
+                                                    lineHeight: '1.4',
+                                                }}
+                                                onClick={() => handleSuggestionClick(suggestion.place_id, 'pickup')}
+                                            >
+                                                {suggestion.description}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
 
-                        <div className="mdnvjnv" style={{ position: 'relative' }}>
-                            <input
-                                type="text"
-                                className="ebfbebfeh"
-                                placeholder="Dropoff location"
-                                value={dropLocation}
-                                onChange={handleDropInputChange}
-                            />
-                            {dropSuggestions.length > 0 && (
-                                <ul style={{
-                                    listStyleType: 'none',
-                                    padding: '0',
-                                    margin: '0',
-                                    border: '1px solid #ccc',
-                                    borderRadius: '4px',
-                                    maxHeight: '150px',
-                                    overflowY: 'auto',
-                                    backgroundColor: '#fff',
-                                    zIndex: 1000,
-                                    position: 'absolute',
-                                    top: '100%',
-                                    left: '0',
-                                    right: '0',
-                                }}>
-                                    {dropSuggestions.map((suggestion) => (
-                                        <li
-                                            key={suggestion.place_id}
-                                            style={{
-                                                padding: '6px 10px',
-                                                cursor: 'pointer',
-                                                borderBottom: '1px solid #f0f0f0',
-                                                fontSize: '16px',
-                                                lineHeight: '1.4',
-                                            }}
-                                            onClick={() => handleSuggestionClick(suggestion.place_id, 'drop')}
-                                        >
-                                            {suggestion.description}
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </div>
+                            <div className="mdnvjnv" style={{ position: 'relative' }}>
+                                <input
+                                    type="text"
+                                    className="ebfbebfeh"
+                                    placeholder="Dropoff location"
+                                    value={dropLocation}
+                                    onChange={handleDropInputChange}
+                                />
+                                {dropSuggestions.length > 0 && (
+                                    <ul style={{
+                                        listStyleType: 'none',
+                                        padding: '0',
+                                        margin: '0',
+                                        border: '1px solid #ccc',
+                                        borderRadius: '4px',
+                                        maxHeight: '150px',
+                                        overflowY: 'auto',
+                                        backgroundColor: '#fff',
+                                        zIndex: 1000,
+                                        position: 'absolute',
+                                        top: '100%',
+                                        left: '0',
+                                        right: '0',
+                                    }}>
+                                        {dropSuggestions.map((suggestion) => (
+                                            <li
+                                                key={suggestion.place_id}
+                                                style={{
+                                                    padding: '6px 10px',
+                                                    cursor: 'pointer',
+                                                    borderBottom: '1px solid #f0f0f0',
+                                                    fontSize: '16px',
+                                                    lineHeight: '1.4',
+                                                }}
+                                                onClick={() => handleSuggestionClick(suggestion.place_id, 'drop')}
+                                            >
+                                                {suggestion.description}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
 
-                        <div className="mdnvjnv">
-                            <Link style={{ textDecoration: 'none', color: 'white' }}>
-                                <div
-                                    className="jffnrn"
-                                    style={{ backgroundColor: pickupLocation && dropLocation ? 'black' : 'grey' }}
-                                    onClick={() => {
+                            <div className="mdnvjnv">
+                                <Link style={{ textDecoration: 'none', color: 'white' }}>
+                                    <div
+                                        className="jffnrn"
+                                        style={{ backgroundColor: pickupLocation && dropLocation ? 'black' : 'grey' }}
+                                        onClick={() => {
 
-                                        if (distanceAndTime.distance && distanceAndTime.duration) {
-                                            const random4DigitNumber = Math.floor(1000 + Math.random() * 9000);
-                                            const randomotp = Math.floor(1000 + Math.random() * 9000);
+                                            if (distanceAndTime.distance && distanceAndTime.duration) {
+                                                const random4DigitNumber = Math.floor(1000 + Math.random() * 9000);
+                                                const randomotp = Math.floor(1000 + Math.random() * 9000);
 
-                                            const bookingData = {
-                                                "Pickup Latitude": selectedPickupLocation.lat,
-                                                "Pickup Longitude": selectedPickupLocation.lng,
-                                                "Drop Latitude": selectedDropLocation.lat,
-                                                "Drop Longitude": selectedDropLocation.lng,
-                                                "Booking ID": random4DigitNumber,
-                                                "Booking Owner": user,
-                                                "Ride OTP": randomotp,
-                                                "Pickup Location": pickupLocation,
-                                                "Drop Location": dropLocation,
-                                                "Travel Distance": distanceAndTime.distance,
-                                                "Travel Time": distanceAndTime.duration,
-                                                "Booking Time": new Date(),  // Get current timestamp in ISO format
-                                                "Fare": cabmultiplier[0] * parseInt(distanceAndTime.distance)
-                                            };
+                                                const bookingData = {
+                                                    "Pickup Latitude": selectedPickupLocation.lat,
+                                                    "Pickup Longitude": selectedPickupLocation.lng,
+                                                    "Drop Latitude": selectedDropLocation.lat,
+                                                    "Drop Longitude": selectedDropLocation.lng,
+                                                    "Booking ID": random4DigitNumber,
+                                                    "Booking Owner": user,
+                                                    "Ride OTP": randomotp,
+                                                    "Pickup Location": pickupLocation,
+                                                    "Drop Location": dropLocation,
+                                                    "Travel Distance": distanceAndTime.distance,
+                                                    "Travel Time": distanceAndTime.duration,
+                                                    "Booking Time": new Date(),  // Get current timestamp in ISO format
+                                                    "Fare": cabmultiplier[0] * parseInt(distanceAndTime.distance)
+                                                };
 
-                                            // Log the booking data as a JSON string
-                                            console.log(JSON.stringify(bookingData, null, 2)); // Pretty print JSON with 2 spaces indentation
-                                        }
+                                                // Log the booking data as a JSON string
+                                                console.log(JSON.stringify(bookingData, null, 2)); // Pretty print JSON with 2 spaces indentation
+                                            }
 
-                                    }}
-                                >
-                                    Get Started
-                                </div>
+                                        }}
+                                    >
+                                        Get Started
+                                    </div>
 
-                            </Link>
+                                </Link>
+                            </div>
                         </div>
                     </div>
+                    {
+                        (pickupLocation && dropLocation)?<div className="fbnbvfnbv" style={{width: '20vw'}}></div>:<></>
+                    }
                 </div>
                 <LoadScript googleMapsApiKey="AIzaSyApzKC2nq9OCuaVQV2Jbm9cJoOHPy9kzvM" libraries={['places']}>
                     <GoogleMap
@@ -387,14 +392,7 @@ export default function CabBookingLaptop() {
                     </GoogleMap>
                 </LoadScript>
 
-                {/* {distanceAndTime.distance && distanceAndTime.duration && (
-                    <div style={{ marginTop: '20px' }}>
-                        <p>Pickup Location: {selectedPickupLocation.lat}, {selectedPickupLocation.lng}</p>
-                        <p>Drop Location: {selectedDropLocation.lat}, {selectedDropLocation.lng}</p>
-                        <p>Distance: {distanceAndTime.distance}</p>
-                        <p>Estimated Time: {distanceAndTime.duration}</p>
-                    </div>
-                )} */}
+
             </div>
         </div>
     );
