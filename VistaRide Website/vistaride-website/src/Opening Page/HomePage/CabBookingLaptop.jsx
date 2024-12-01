@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { onAuthStateChanged, getAuth } from "firebase/auth";
-import { doc, getDoc, getFirestore } from "firebase/firestore";
+import { doc, FieldValue, getDoc, getFirestore, serverTimestamp } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import { GoogleMap, LoadScript, Marker, Polyline } from '@react-google-maps/api';
 import { Link } from 'react-router-dom';
@@ -21,6 +21,7 @@ const auth = getAuth(app);
 const defaultLatLng = { lat: 22.5660201, lng: 88.3630783 };
 
 export default function CabBookingLaptop() {
+    const cabmultiplier = [36, 40, 65, 15];
     const [user, setUser] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -165,7 +166,6 @@ export default function CabBookingLaptop() {
 
         fetchUserDetails();
     }, [user]);
-
     useEffect(() => {
         document.title = 'Request a Ride with VistaRide';
     }, []);
@@ -231,7 +231,7 @@ export default function CabBookingLaptop() {
             <div className="ejhfjhfd">
                 <div className="fbnbvfnbv">
                     <div className="fhbfnbjfn">
-                        <div className="mdnvjnv" style={{ fontSize: '30px', fontWeight: 'bold', fontFamily: 'Avenir', display: 'flex', justifyContent: 'start', alignItems: 'start', flexDirection: 'row' }}>
+                        <div className="mdnvjnv" style={{ fontSize: '30px', fontWeight: 'bold', display: 'flex', justifyContent: 'start', alignItems: 'start', flexDirection: 'row' }}>
                             Find a trip
                         </div>
                         <div className="mdnvjnv" style={{ position: 'relative' }}>
@@ -322,13 +322,40 @@ export default function CabBookingLaptop() {
 
                         <div className="mdnvjnv">
                             <Link style={{ textDecoration: 'none', color: 'white' }}>
-                                <div className="jffnrn" style={{ backgroundColor: pickupLocation && dropLocation ? 'black' : 'grey' }} onClick={
-                                    distanceAndTime.distance && distanceAndTime.duration &&(
-                                        console.log('Lat Pickup :', selectedPickupLocation.lat, 'Long Pickup :', selectedPickupLocation.lng, 'Lat Drop :', selectedDropLocation.lat, 'Long Drop :', selectedDropLocation.lng)
-                                    )
-                                }>
+                                <div
+                                    className="jffnrn"
+                                    style={{ backgroundColor: pickupLocation && dropLocation ? 'black' : 'grey' }}
+                                    onClick={() => {
+
+                                        if (distanceAndTime.distance && distanceAndTime.duration) {
+                                            const random4DigitNumber = Math.floor(1000 + Math.random() * 9000);
+                                            const randomotp = Math.floor(1000 + Math.random() * 9000);
+
+                                            const bookingData = {
+                                                "Pickup Latitude": selectedPickupLocation.lat,
+                                                "Pickup Longitude": selectedPickupLocation.lng,
+                                                "Drop Latitude": selectedDropLocation.lat,
+                                                "Drop Longitude": selectedDropLocation.lng,
+                                                "Booking ID": random4DigitNumber,
+                                                "Booking Owner": user,
+                                                "Ride OTP": randomotp,
+                                                "Pickup Location": pickupLocation,
+                                                "Drop Location": dropLocation,
+                                                "Travel Distance": distanceAndTime.distance,
+                                                "Travel Time": distanceAndTime.duration,
+                                                "Booking Time": new Date(),  // Get current timestamp in ISO format
+                                                "Fare": cabmultiplier[0] * parseInt(distanceAndTime.distance)
+                                            };
+
+                                            // Log the booking data as a JSON string
+                                            console.log(JSON.stringify(bookingData, null, 2)); // Pretty print JSON with 2 spaces indentation
+                                        }
+
+                                    }}
+                                >
                                     Get Started
                                 </div>
+
                             </Link>
                         </div>
                     </div>
