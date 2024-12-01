@@ -3,6 +3,7 @@ import { onAuthStateChanged, getAuth, GoogleAuthProvider } from "firebase/auth";
 import { doc, getDoc, getFirestore } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import { GoogleMap, LoadScript, Marker, Polyline } from '@react-google-maps/api';
+import { Link } from 'react-router-dom';
 
 const firebaseConfig = {
     apiKey: "AIzaSyA5h_ElqdgLrs6lXLgwHOfH9Il5W7ARGiI",
@@ -21,6 +22,7 @@ const auth = getAuth(app);
 const defaultLatLng = { lat: 22.5660201, lng: 88.3630783 };
 
 export default function CabBookingLaptop() {
+
     const [user, setUser] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -37,7 +39,106 @@ export default function CabBookingLaptop() {
         width: '100vw',
         height: '89vh',
     });
-    const [directions, setDirections] = useState(null);
+    const [directions, setDirections] = useState(null); // To hold directions result
+
+    const handlePickupInputChange = (e) => {
+        const value = e.target.value;
+        setPickupLocation(value);
+
+        if (value.length > 2) {
+            const service = new window.google.maps.places.AutocompleteService();
+            service.getPlacePredictions(
+                { input: value },
+                (predictions, status) => {
+                    if (status === window.google.maps.places.PlacesServiceStatus.OK) {
+                        setPickupSuggestions(predictions);
+                    }
+                }
+            );
+        } else {
+            setPickupSuggestions([]);
+        }
+    };
+
+    const handleDropInputChange = (e) => {
+        const value = e.target.value;
+        setDropLocation(value);
+
+        if (value.length > 2) {
+            const service = new window.google.maps.places.AutocompleteService();
+            service.getPlacePredictions(
+                { input: value },
+                (predictions, status) => {
+                    if (status === window.google.maps.places.PlacesServiceStatus.OK) {
+                        setDropSuggestions(predictions);
+                    }
+                }
+            );
+        } else {
+            setDropSuggestions([]);
+        }
+    };
+
+    const handleSuggestionClick = (placeId, type) => {
+        const service = new window.google.maps.places.PlacesService(document.createElement('div'));
+
+        service.getDetails({ placeId }, (place, status) => {
+            if (status === window.google.maps.places.PlacesServiceStatus.OK) {
+                const location = {
+                    lat: place.geometry.location.lat(),
+                    lng: place.geometry.location.lng(),
+                };
+
+                if (type === 'pickup') {
+                    setSelectedPickupLocation(location);
+                    setPickupLocation(place.formatted_address);
+                    setPickupSuggestions([]);
+                } else if (type === 'drop') {
+                    setSelectedDropLocation(location);
+                    setDropLocation(place.formatted_address);
+                    setDropSuggestions([]);
+                }
+            }
+        });
+    };
+
+    useEffect(() => {
+        const handleResize = () => {
+            setMapContainerStyle({
+                width: '100vw',
+                height: '90vh',
+            });
+        };
+
+        window.addEventListener('resize', handleResize);
+        handleResize();
+
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, []);
+
+    useEffect(() => {
+        // If both locations are selected, fetch directions to draw polyline
+        if (selectedPickupLocation && selectedDropLocation) {
+            const directionsService = new window.google.maps.DirectionsService();
+
+            const request = {
+                origin: selectedPickupLocation,
+                destination: selectedDropLocation,
+                travelMode: window.google.maps.TravelMode.DRIVING, // You can change this to WALKING, BICYCLING, etc.
+            };
+
+            directionsService.route(request, (result, status) => {
+                if (status === window.google.maps.DirectionsStatus.OK) {
+                    console.log("Directions response:", result); // Log the directions response
+                    setDirections(result); // Save the directions result
+                } else {
+                    console.error("Directions request failed:", status); // Log error if request fails
+                }
+            });
+        }
+    }, [selectedPickupLocation, selectedDropLocation]);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -137,7 +238,7 @@ export default function CabBookingLaptop() {
                             <div className="jnjvndv">
                                 <img
                                     src={userPfp}
-                                    alt="User Profile"
+                                    alt=""
                                     height="45px"
                                     width="45px"
                                     style={{ borderRadius: '50%' }}
@@ -150,7 +251,34 @@ export default function CabBookingLaptop() {
             <div className="ejhfjhfd">
                 <div className="fbnbvfnbv">
                     <div className="fhbfnbjfn">
-
+                        <div className="mdnvjnv" style={{ fontSize: '30px', fontWeight: 'bold', fontFamily: 'Avenir', display: 'flex', justifyContent: 'start', alignItems: 'start', flexDirection: 'row' }}>
+                            Find a trip
+                        </div>
+                        <div className="mdnvjnv">
+                            <input
+                                type="text"
+                                className="ebfbebfeh"
+                                placeholder=" Pickup location"
+                                value={pickupLocation}
+                                onChange={handlePickupInputChange}
+                            />
+                        </div>
+                        <div className="mdnvjnv">
+                            <input
+                                type="text"
+                                className="ebfbebfeh"
+                                placeholder=" Dropoff location"
+                                value={dropLocation}
+                                onChange={handleDropInputChange}
+                            />
+                        </div>
+                        <div className="mdnvjnv">
+                            <Link style={{ textDecoration: 'none', color: 'white' }}>
+                                <div className="jffnrn" style={{ backgroundColor: pickupLocation && dropLocation ? 'black' : 'grey' }}>
+                                    Get Started
+                                </div>
+                            </Link>
+                        </div>
                     </div>
                 </div>
                 <LoadScript

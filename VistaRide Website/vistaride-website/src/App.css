@@ -315,7 +315,8 @@ justify-content: space-between;
 .fhbfnbjfn{
   position: absolute; 
   /* left: 100px; */
-  height: 324px;
+  /* height: 324px; */
+  padding-bottom: 20px;
   /* padding: 20px; */
   margin: 20px;
   border :0.5px solid rgb(150, 148, 148);
@@ -323,7 +324,10 @@ justify-content: space-between;
   border-radius: 10px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: start;
   align-items: center;
   background-color: white;
+}
+.mdnvjnv{
+  margin-top: 30px;
 }
