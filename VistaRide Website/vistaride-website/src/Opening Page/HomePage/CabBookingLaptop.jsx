@@ -457,39 +457,15 @@ export default function CabBookingLaptop() {
                                     <img src='https://tb-static.uber.com/prod/wallet/icons/cash_3x.png' alt="" style={{ width: '30px', height: '30px' }} />
                                     ₹{cabmultiplier[index] * parseInt(distanceAndTime.distance)}
                                 </div>
+                                <Link style={{ textDecoration: 'none',color: 'white' }}>
                                 <div className="jjfnvjnf" style={{ backgroundColor: 'black',width: '90%',marginLeft: '5%',marginBottom: '20px',marginTop: '20px' }}
                                     onClick={() => {
-                                        if (drivers.length > 0) {
-                                            const random4DigitNumber = Math.floor(1000 + Math.random() * 9000);
-                                            const randomotp = Math.floor(1000 + Math.random() * 9000);
-
-                                            const bookingData = {
-                                                'Cab Category': cabcategorynames[index],
-                                                "Pickup Latitude": selectedPickupLocation.lat,
-                                                "Pickup Longitude": selectedPickupLocation.lng,
-                                                "Drop Latitude": selectedDropLocation.lat,
-                                                "Drop Longitude": selectedDropLocation.lng,
-                                                "Booking ID": random4DigitNumber,
-                                                "Booking Owner": user,
-                                                "Ride OTP": randomotp,
-                                                "Pickup Location": pickupLocation,
-                                                "Drop Location": dropLocation,
-                                                "Travel Distance": distanceAndTime.distance,
-                                                "Travel Time": distanceAndTime.duration,
-                                                "Booking Time": new Date(),
-                                                'Driver ID': '',
-                                                'Ride Accepted': false,
-                                                'Ride Completed': false,
-                                                "Fare": cabmultiplier[0] * parseInt(distanceAndTime.distance)
-                                            };
-
-                                            // Log the booking data as a JSON string
-                                            console.log(JSON.stringify(bookingData, null, 2));
-                                            setbookingstarted(true);
-                                        }
-                                    }}>
+                                        setbookingstarted(false);
+                                    }}
+                                    >
                                     Cancel Trip
                                 </div>
+                                </Link>
                             </div>
                         }
                     </div>
@@ -530,6 +506,7 @@ export default function CabBookingLaptop() {
 
                                             // Log the booking data as a JSON string
                                             console.log(JSON.stringify(bookingData, null, 2));
+                                            console.log(drivers)
                                             setbookingstarted(true);
                                         }
                                     }}>
