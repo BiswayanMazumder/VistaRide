@@ -487,7 +487,33 @@ export default function CabBookingLaptop() {
                                         Cash
                                     </div>
                                 </div>
-                                <div className="jjfnvjnf">
+                                <div className="jjfnvjnf" style={{backgroundColor:drivers.length>0?'black':'grey',cursor:drivers.length>0?'pointer':'not-allowed'}}
+                                onClick={()=>{
+                                    if(drivers.length>0){
+                                        const random4DigitNumber = Math.floor(1000 + Math.random() * 9000);
+                                                const randomotp = Math.floor(1000 + Math.random() * 9000);
+
+                                                const bookingData = {
+                                                    'Cab Category':cabcategorynames[index],
+                                                    "Pickup Latitude": selectedPickupLocation.lat,
+                                                    "Pickup Longitude": selectedPickupLocation.lng,
+                                                    "Drop Latitude": selectedDropLocation.lat,
+                                                    "Drop Longitude": selectedDropLocation.lng,
+                                                    "Booking ID": random4DigitNumber,
+                                                    "Booking Owner": user,
+                                                    "Ride OTP": randomotp,
+                                                    "Pickup Location": pickupLocation,
+                                                    "Drop Location": dropLocation,
+                                                    "Travel Distance": distanceAndTime.distance,
+                                                    "Travel Time": distanceAndTime.duration,
+                                                    "Booking Time": new Date(),  // Get current timestamp in ISO format
+                                                    "Fare": cabmultiplier[0] * parseInt(distanceAndTime.distance)
+                                                };
+
+                                                // Log the booking data as a JSON string
+                                                console.log(JSON.stringify(bookingData, null, 2));
+                                    }
+                                }}>
                                     Request {cabcategorynames[index]}
                                 </div>
                             </div>
