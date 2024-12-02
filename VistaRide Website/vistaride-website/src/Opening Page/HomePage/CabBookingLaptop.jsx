@@ -241,6 +241,7 @@ export default function CabBookingLaptop() {
                                     className="ebfbebfeh"
                                     placeholder="Pickup location"
                                     value={pickupLocation}
+                                    style={{width:'350px'}}
                                     onChange={handlePickupInputChange}
                                 />
                                 {pickupSuggestions.length > 0 && (
@@ -282,6 +283,7 @@ export default function CabBookingLaptop() {
                                 <input
                                     type="text"
                                     className="ebfbebfeh"
+                                    style={{width:'350px'}}
                                     placeholder="Dropoff location"
                                     value={dropLocation}
                                     onChange={handleDropInputChange}
