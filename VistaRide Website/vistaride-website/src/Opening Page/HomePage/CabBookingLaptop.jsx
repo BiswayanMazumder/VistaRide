@@ -589,7 +589,7 @@ export default function CabBookingLaptop() {
                                 key={driver.id}
                                 position={driver.position}
                                 icon={{
-                                    url: "https://d1a3f4spazzrp4.cloudfront.net/car-types/map70px/product/map-uberx.png",
+                                    url: "https://d1a3f4spazzrp4.cloudfront.net/car-types/map70px/map-blue-uberx.png",
                                     scaledSize: new window.google.maps.Size(40, 40), // Adjust marker size
                                 }}
                             />
