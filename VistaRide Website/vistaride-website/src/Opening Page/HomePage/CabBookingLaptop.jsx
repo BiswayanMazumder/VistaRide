@@ -200,8 +200,8 @@ export default function CabBookingLaptop() {
         const dLon = (destination.lng - origin.lng) * (Math.PI / 180);
 
         const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                  Math.cos(origin.lat * (Math.PI / 180)) * Math.cos(destination.lat * (Math.PI / 180)) *
-                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            Math.cos(origin.lat * (Math.PI / 180)) * Math.cos(destination.lat * (Math.PI / 180)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
 
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         const distance = R * c; // Distance in km
@@ -276,7 +276,41 @@ export default function CabBookingLaptop() {
         streetViewControl: false,
         fullscreenControl: false,
     };
+    const fetchDrivers = (carcategory) => {
+        const driversCollection = collection(db, "VistaRide Driver Details");
 
+        // Set up a real-time listener on the driver details collection
+        const unsubscribe = onSnapshot(driversCollection, (querySnapshot) => {
+            const nearbyDrivers = [];
+            const driverMarkers = [];
+
+            querySnapshot.forEach((doc) => {
+                const driverData = doc.data();
+                const driverLocation = {
+                    lat: parseFloat(driverData['Current Latitude']),  // Convert string to number
+                    lng: parseFloat(driverData['Current Longitude']),
+                };
+                const driverAvailability = driverData['Driver Avaliable'];
+                const driverStatus = driverData['Driver Online'];
+
+                // Check if driver is online, available, and within 15 km
+                if (driverStatus && driverAvailability && isWithin15Km(selectedPickupLocation, driverLocation) && carcategory == driverData['Car Category']) {
+                    nearbyDrivers.push(doc.id); // Push driver UID if they are within range
+                    driverMarkers.push({
+                        id: doc.id,
+                        position: driverLocation,
+                    });
+                }
+            });
+
+            setDrivers(nearbyDrivers); // Update the state with the filtered list of drivers
+            setMarkers(driverMarkers); // Update the state with the list of driver markers
+            console.log("Nearby drivers (within 15 km):", nearbyDrivers);
+        });
+
+        // Cleanup the listener when component unmounts
+        return () => unsubscribe();
+    };
     const mapCenter = selectedDropLocation
         ? {
             lat: (selectedPickupLocation.lat + selectedDropLocation.lat) / 2,
@@ -464,7 +498,10 @@ export default function CabBookingLaptop() {
                                 Recommended
                             </div>
                             <Link style={{ textDecoration: 'none', color: 'black' }}>
-                                <div className="erhfrj" style={{ border: index === 0 ? '2px solid black' : 'white' }} onClick={() => setindex(0)}>
+                                <div className="erhfrj" style={{ border: index === 0 ? '2px solid black' : 'white' }} onClick={() => {  fetchDrivers(cabcategorynames[0])
+                                    setindex(0)
+                                }
+                                }>
                                     <div className="jjnvjfnv">
                                         <img src={carcategoryimages[0]} alt="" style={{ width: '100px', height: '100px' }} />
                                         <div className="jfnv">
@@ -480,7 +517,10 @@ export default function CabBookingLaptop() {
                                 </div>
                             </Link>
                             <Link style={{ textDecoration: 'none', color: 'black' }}>
-                                <div className="erhfrj" style={{ border: index === 1 ? '2px solid black' : 'white' }} onClick={() => setindex(1)}>
+                                <div className="erhfrj" style={{ border: index === 1 ? '2px solid black' : 'white' }} onClick={() => {
+                                    setindex(1)
+                                    fetchDrivers(cabcategorynames[1])
+                                }}>
                                     <div className="jjnvjfnv">
                                         <img src={carcategoryimages[1]} alt="" style={{ width: '100px', height: '100px' }} />
                                         <div className="jfnv">
@@ -496,7 +536,8 @@ export default function CabBookingLaptop() {
                                 </div>
                             </Link>
                             <Link style={{ textDecoration: 'none', color: 'black' }}>
-                                <div className="erhfrj" style={{ border: index === 2 ? '2px solid black' : 'white' }} onClick={() => setindex(2)}>
+                                <div className="erhfrj" style={{ border: index === 2 ? '2px solid black' : 'white' }} onClick={() => {setindex(2)
+                                fetchDrivers(cabcategorynames[2])}}>
                                     <div className="jjnvjfnv">
                                         <img src={carcategoryimages[2]} alt="" style={{ width: '100px', height: '100px' }} />
                                         <div className="jfnv">
@@ -512,7 +553,8 @@ export default function CabBookingLaptop() {
                                 </div>
                             </Link>
                             <Link style={{ textDecoration: 'none', color: 'black' }}>
-                                <div className="erhfrj" style={{ marginBottom: '110px', border: index === 3 ? '2px solid black' : 'white', marginTop: '20px' }} onClick={() => setindex(3)}>
+                                <div className="erhfrj" style={{ marginBottom: '110px', border: index === 3 ? '2px solid black' : 'white', marginTop: '20px' }} onClick={() => {setindex(3) 
+                                fetchDrivers(cabcategorynames[3])}}>
                                     <div className="jjnvjfnv">
                                         <img src={carcategoryimages[3]} alt="" style={{ width: '100px', height: '100px' }} />
                                         <div className="jfnv">
@@ -531,40 +573,40 @@ export default function CabBookingLaptop() {
                     }
                 </div>
                 <LoadScript googleMapsApiKey="AIzaSyApzKC2nq9OCuaVQV2Jbm9cJoOHPy9kzvM" libraries={['places']}>
-            <GoogleMap
-                mapContainerStyle={mapContainerStyle}
-                center={mapCenter}
-                zoom={17}
-                options={mapOptions}
-                onLoad={(map) => (mapRef.current = map)} // Store map instance in the ref
-            >
-                {selectedPickupLocation && <Marker position={selectedPickupLocation} />}
-                {selectedDropLocation && <Marker position={selectedDropLocation} />}
+                    <GoogleMap
+                        mapContainerStyle={mapContainerStyle}
+                        center={mapCenter}
+                        zoom={17}
+                        options={mapOptions}
+                        onLoad={(map) => (mapRef.current = map)} // Store map instance in the ref
+                    >
+                        {selectedPickupLocation && <Marker position={selectedPickupLocation} />}
+                        {selectedDropLocation && <Marker position={selectedDropLocation} />}
 
-                {/* Render markers for each nearby driver */}
-                {markers.map((driver) => (
-                    <Marker
-                        key={driver.id}
-                        position={driver.position}
-                        icon={{
-                            url: "https://d1a3f4spazzrp4.cloudfront.net/car-types/map70px/product/map-uberx.png",
-                            scaledSize: new window.google.maps.Size(40, 40), // Adjust marker size
-                        }}
-                    />
-                ))}
+                        {/* Render markers for each nearby driver */}
+                        {markers.map((driver) => (
+                            <Marker
+                                key={driver.id}
+                                position={driver.position}
+                                icon={{
+                                    url: "https://d1a3f4spazzrp4.cloudfront.net/car-types/map70px/product/map-uberx.png",
+                                    scaledSize: new window.google.maps.Size(40, 40), // Adjust marker size
+                                }}
+                            />
+                        ))}
 
-                {directions && directions.routes[0].overview_path && (
-                    <Polyline
-                        path={directions.routes[0].overview_path}
-                        options={{
-                            strokeColor: 'black',
-                            strokeOpacity: 1,
-                            strokeWeight: 4,
-                        }}
-                    />
-                )}
-            </GoogleMap>
-        </LoadScript>
+                        {directions && directions.routes[0].overview_path && (
+                            <Polyline
+                                path={directions.routes[0].overview_path}
+                                options={{
+                                    strokeColor: 'black',
+                                    strokeOpacity: 1,
+                                    strokeWeight: 4,
+                                }}
+                            />
+                        )}
+                    </GoogleMap>
+                </LoadScript>
 
             </div>
         </div>
