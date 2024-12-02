@@ -454,7 +454,7 @@ export default function CabBookingLaptop() {
                                 </div>
                             </Link>
                             <Link style={{ textDecoration: 'none', color: 'black' }}>
-                                <div className="erhfrj" style={{ marginBottom: '80px', border: index === 3 ? '2px solid black' : 'white', marginTop: '20px' }} onClick={() => setindex(3)}>
+                                <div className="erhfrj" style={{ marginBottom: '110px', border: index === 3 ? '2px solid black' : 'white', marginTop: '20px' }} onClick={() => setindex(3)}>
                                     <div className="jjnvjfnv">
                                         <img src={carcategoryimages[3]} alt="" style={{ width: '100px', height: '100px' }} />
                                         <div className="jfnv">
