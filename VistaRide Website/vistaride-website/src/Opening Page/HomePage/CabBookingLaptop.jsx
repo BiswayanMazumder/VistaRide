@@ -312,6 +312,7 @@ export default function CabBookingLaptop() {
         // Cleanup the listener when component unmounts
         return () => unsubscribe();
     };
+    const [bookedride,setridebooked]=useState(false);
     const mapCenter = selectedDropLocation
         ? {
             lat: (selectedPickupLocation.lat + selectedDropLocation.lat) / 2,
@@ -441,7 +442,7 @@ export default function CabBookingLaptop() {
                                         </ul>
                                     )}
                                 </div>
-                            </div> : <div>
+                            </div> :bookedride?<></> :<div>
                                 <div className="fgfhhggh">
                                     <img src={carcategoryimages[index]} alt="" style={{ marginLeft: '35px' }} />
                                 </div>
