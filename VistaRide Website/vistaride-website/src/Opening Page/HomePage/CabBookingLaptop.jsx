@@ -488,7 +488,7 @@ export default function CabBookingLaptop() {
                                             setbookingstarted(true);
                                         }
                                     }}>
-                                    Request {cabcategorynames[index]}
+                                    Cancel Trip
                                 </div>
                             </div>
                         }
