@@ -437,3 +437,20 @@ justify-content: space-between;
   margin-top: 20px;
   margin-left: 30px;
 }
+.fgfhhggh{
+  height: 150px;
+  width: 150px;
+}
+.ghgggfg{
+  color: black;
+  font-family: 'Avenir Pro', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  margin-left: 20px;
+  display: flex;
+  flex-direction: row;
+  margin-top: 200px;
+  gap: 20px;
+  font-weight: 500;
+  line-height: 20px;
+}

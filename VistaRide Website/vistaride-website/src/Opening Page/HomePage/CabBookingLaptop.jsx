@@ -22,6 +22,7 @@ const defaultLatLng = { lat: 22.5660201, lng: 88.3630783 };
 
 export default function CabBookingLaptop() {
     const mapRef = useRef(null);
+    const [bookingstarted, setbookingstarted] = useState(false);
     const [index, setindex] = useState(0);
     const cabmultiplier = [36, 40, 65, 15];
     const cabcategorynames = ['Mini', 'Prime', 'SUV', 'Non AC Taxi'];
@@ -322,7 +323,7 @@ export default function CabBookingLaptop() {
         <div className="webbody">
             <div className="ehfjfv" style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <div className="hfejfw">
-                <svg width="100" height="30" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="30" fill="black" rx="5"></rect><text x="50%" y="50%" font-family="'Lobster', cursive" font-size="21" fill="white" text-anchor="middle" alignment-baseline="middle" dominant-baseline="middle">VistaRide</text></svg>
+                    <svg width="100" height="30" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="30" fill="black" rx="5"></rect><text x="50%" y="50%" font-family="'Lobster', cursive" font-size="21" fill="white" text-anchor="middle" alignment-baseline="middle" dominant-baseline="middle">VistaRide</text></svg>
                 </div>
                 <div className="hfejfw" style={{ right: '100px', position: 'absolute', flexDirection: 'row', gap: '20px' }}>
                     {loading ? (
@@ -348,140 +349,152 @@ export default function CabBookingLaptop() {
             <div className="ejhfjhfd">
                 <div className="djhfndj" style={{ display: 'flex', flexDirection: 'row' }}>
                     <div className="fbnbvfnbv">
-                        <div className="fhbfnbjfn">
-                            <div className="mdnvjnv" style={{ fontSize: '30px', fontWeight: 'bold', display: 'flex', justifyContent: 'start', alignItems: 'start', flexDirection: 'row' }}>
-                                Find a trip
-                            </div>
-                            <div className="mdnvjnv" style={{ position: 'relative' }}>
-                                <input
-                                    type="text"
-                                    className="ebfbebfeh"
-                                    placeholder="Pickup location"
-                                    value={pickupLocation}
-                                    style={{ width: '350px' }}
-                                    onChange={handlePickupInputChange}
-                                />
-                                {pickupSuggestions.length > 0 && (
-                                    <ul style={{
-                                        listStyleType: 'none',
-                                        padding: '0',
-                                        margin: '0',
-                                        border: '1px solid #ccc',
-                                        borderRadius: '4px',
-                                        maxHeight: '150px',
-                                        overflowY: 'auto',
-                                        backgroundColor: '#fff',
-                                        position: 'absolute',
-                                        top: '100%',
-                                        left: '0',
-                                        right: '0',
-                                        zIndex: 1000,
+                        {
+                            !bookingstarted ? <div className="fhbfnbjfn">
+                                <div className="mdnvjnv" style={{ fontSize: '30px', fontWeight: 'bold', display: 'flex', justifyContent: 'start', alignItems: 'start', flexDirection: 'row' }}>
+                                    Find a trip
+                                </div>
+                                <div className="mdnvjnv" style={{ position: 'relative' }}>
+                                    <input
+                                        type="text"
+                                        className="ebfbebfeh"
+                                        placeholder="Pickup location"
+                                        value={pickupLocation}
+                                        style={{ width: '350px' }}
+                                        onChange={handlePickupInputChange}
+                                    />
+                                    {pickupSuggestions.length > 0 && (
+                                        <ul style={{
+                                            listStyleType: 'none',
+                                            padding: '0',
+                                            margin: '0',
+                                            border: '1px solid #ccc',
+                                            borderRadius: '4px',
+                                            maxHeight: '150px',
+                                            overflowY: 'auto',
+                                            backgroundColor: '#fff',
+                                            position: 'absolute',
+                                            top: '100%',
+                                            left: '0',
+                                            right: '0',
+                                            zIndex: 1000,
+                                        }}>
+                                            {pickupSuggestions.map((suggestion) => (
+                                                <li
+                                                    key={suggestion.place_id}
+                                                    style={{
+                                                        padding: '6px 10px',
+                                                        cursor: 'pointer',
+                                                        borderBottom: '1px solid #f0f0f0',
+                                                        fontSize: '16px',
+                                                        lineHeight: '1.4',
+                                                    }}
+                                                    onClick={() => handleSuggestionClick(suggestion.place_id, 'pickup')}
+                                                >
+                                                    {suggestion.description}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
+
+                                <div className="mdnvjnv" style={{ position: 'relative' }}>
+                                    <input
+                                        type="text"
+                                        className="ebfbebfeh"
+                                        style={{ width: '350px' }}
+                                        placeholder="Dropoff location"
+                                        value={dropLocation}
+                                        onChange={handleDropInputChange}
+                                    />
+                                    {dropSuggestions.length > 0 && (
+                                        <ul style={{
+                                            listStyleType: 'none',
+                                            padding: '0',
+                                            margin: '0',
+                                            border: '1px solid #ccc',
+                                            borderRadius: '4px',
+                                            maxHeight: '150px',
+                                            overflowY: 'auto',
+                                            backgroundColor: '#fff',
+                                            zIndex: 1000,
+                                            position: 'absolute',
+                                            top: '100%',
+                                            left: '0',
+                                            right: '0',
+                                        }}>
+                                            {dropSuggestions.map((suggestion) => (
+                                                <li
+                                                    key={suggestion.place_id}
+                                                    style={{
+                                                        padding: '6px 10px',
+                                                        cursor: 'pointer',
+                                                        borderBottom: '1px solid #f0f0f0',
+                                                        fontSize: '16px',
+                                                        lineHeight: '1.4',
+                                                    }}
+                                                    onClick={() => handleSuggestionClick(suggestion.place_id, 'drop')}
+                                                >
+                                                    {suggestion.description}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
+                            </div> : <div>
+                                <div className="fgfhhggh">
+                                    <img src={carcategoryimages[index]} alt="" style={{ marginLeft: '35px' }} />
+                                </div>
+                                <div className="ghgggfg">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" data-baseweb="icon"><title>search</title><path fill-rule="evenodd" clip-rule="evenodd" d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm5-2a5 5 0 1 1-10 0 5 5 0 0 1 10 0Z" fill="currentColor"></path></svg>
+                                    {pickupLocation}
+                                </div>
+                                <div className="ghgggfg" style={{ marginTop: '50px' }}>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" data-baseweb="icon"><title>search</title><path fill-rule="evenodd" clip-rule="evenodd" d="M14 10h-4v4h4v-4ZM7 7v10h10V7H7Z" fill="currentColor"></path></svg>
+                                    {dropLocation}
+                                </div>
+                                <div className="ghgggfg" style={{ marginTop: '50px' }}>
+                                    <img src='https://tb-static.uber.com/prod/wallet/icons/cash_3x.png' alt="" style={{ width: '30px', height: '30px' }} />
+                                    ₹{cabmultiplier[index] * parseInt(distanceAndTime.distance)}
+                                </div>
+                                <div className="jjfnvjnf" style={{ backgroundColor: 'black',width: '90%',marginLeft: '5%',marginBottom: '20px',marginTop: '20px' }}
+                                    onClick={() => {
+                                        if (drivers.length > 0) {
+                                            const random4DigitNumber = Math.floor(1000 + Math.random() * 9000);
+                                            const randomotp = Math.floor(1000 + Math.random() * 9000);
+
+                                            const bookingData = {
+                                                'Cab Category': cabcategorynames[index],
+                                                "Pickup Latitude": selectedPickupLocation.lat,
+                                                "Pickup Longitude": selectedPickupLocation.lng,
+                                                "Drop Latitude": selectedDropLocation.lat,
+                                                "Drop Longitude": selectedDropLocation.lng,
+                                                "Booking ID": random4DigitNumber,
+                                                "Booking Owner": user,
+                                                "Ride OTP": randomotp,
+                                                "Pickup Location": pickupLocation,
+                                                "Drop Location": dropLocation,
+                                                "Travel Distance": distanceAndTime.distance,
+                                                "Travel Time": distanceAndTime.duration,
+                                                "Booking Time": new Date(),
+                                                'Driver ID': '',
+                                                'Ride Accepted': false,
+                                                'Ride Completed': false,
+                                                "Fare": cabmultiplier[0] * parseInt(distanceAndTime.distance)
+                                            };
+
+                                            // Log the booking data as a JSON string
+                                            console.log(JSON.stringify(bookingData, null, 2));
+                                            setbookingstarted(true);
+                                        }
                                     }}>
-                                        {pickupSuggestions.map((suggestion) => (
-                                            <li
-                                                key={suggestion.place_id}
-                                                style={{
-                                                    padding: '6px 10px',
-                                                    cursor: 'pointer',
-                                                    borderBottom: '1px solid #f0f0f0',
-                                                    fontSize: '16px',
-                                                    lineHeight: '1.4',
-                                                }}
-                                                onClick={() => handleSuggestionClick(suggestion.place_id, 'pickup')}
-                                            >
-                                                {suggestion.description}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
+                                    Request {cabcategorynames[index]}
+                                </div>
                             </div>
-
-                            <div className="mdnvjnv" style={{ position: 'relative' }}>
-                                <input
-                                    type="text"
-                                    className="ebfbebfeh"
-                                    style={{ width: '350px' }}
-                                    placeholder="Dropoff location"
-                                    value={dropLocation}
-                                    onChange={handleDropInputChange}
-                                />
-                                {dropSuggestions.length > 0 && (
-                                    <ul style={{
-                                        listStyleType: 'none',
-                                        padding: '0',
-                                        margin: '0',
-                                        border: '1px solid #ccc',
-                                        borderRadius: '4px',
-                                        maxHeight: '150px',
-                                        overflowY: 'auto',
-                                        backgroundColor: '#fff',
-                                        zIndex: 1000,
-                                        position: 'absolute',
-                                        top: '100%',
-                                        left: '0',
-                                        right: '0',
-                                    }}>
-                                        {dropSuggestions.map((suggestion) => (
-                                            <li
-                                                key={suggestion.place_id}
-                                                style={{
-                                                    padding: '6px 10px',
-                                                    cursor: 'pointer',
-                                                    borderBottom: '1px solid #f0f0f0',
-                                                    fontSize: '16px',
-                                                    lineHeight: '1.4',
-                                                }}
-                                                onClick={() => handleSuggestionClick(suggestion.place_id, 'drop')}
-                                            >
-                                                {suggestion.description}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
-                            </div>
-
-                            {(pickupLocation && dropLocation) ? <></> : <div className="mdnvjnv">
-                                <Link style={{ textDecoration: 'none', color: 'white' }}>
-                                    <div
-                                        className="jffnrn"
-                                        style={{ backgroundColor: pickupLocation && dropLocation ? 'black' : 'grey' }}
-                                        onClick={() => {
-
-                                            if (distanceAndTime.distance && distanceAndTime.duration) {
-                                                const random4DigitNumber = Math.floor(1000 + Math.random() * 9000);
-                                                const randomotp = Math.floor(1000 + Math.random() * 9000);
-
-                                                const bookingData = {
-                                                    "Pickup Latitude": selectedPickupLocation.lat,
-                                                    "Pickup Longitude": selectedPickupLocation.lng,
-                                                    "Drop Latitude": selectedDropLocation.lat,
-                                                    "Drop Longitude": selectedDropLocation.lng,
-                                                    "Booking ID": random4DigitNumber,
-                                                    "Booking Owner": user,
-                                                    "Ride OTP": randomotp,
-                                                    "Pickup Location": pickupLocation,
-                                                    "Drop Location": dropLocation,
-                                                    "Travel Distance": distanceAndTime.distance,
-                                                    "Travel Time": distanceAndTime.duration,
-                                                    "Booking Time": new Date(),  // Get current timestamp in ISO format
-                                                    "Fare": cabmultiplier[0] * parseInt(distanceAndTime.distance)
-                                                };
-
-                                                // Log the booking data as a JSON string
-                                                console.log(JSON.stringify(bookingData, null, 2)); // Pretty print JSON with 2 spaces indentation
-                                            }
-
-                                        }}
-                                    >
-                                        Get Started
-                                    </div>
-
-                                </Link>
-                            </div>}
-                        </div>
+                        }
                     </div>
                     {
-                        (pickupLocation && dropLocation && distanceAndTime.distance) ? <div className="fbnbvfnbv" style={{ width: '30vw', overflowY: 'scroll' }}>
+                        bookingstarted ? <></> : (pickupLocation && dropLocation && distanceAndTime.distance) ? <div className="fbnbvfnbv" style={{ width: '30vw', overflowY: 'scroll' }}>
                             <div className="jrngjn">
                                 <div className="jgnn">
                                     <img src='https://tb-static.uber.com/prod/wallet/icons/cash_3x.png' alt="" style={{ width: '30px', height: '30px', marginLeft: '10px' }} />
@@ -489,36 +502,37 @@ export default function CabBookingLaptop() {
                                         Cash
                                     </div>
                                 </div>
-                                <div className="jjfnvjnf" style={{backgroundColor:drivers.length>0?'black':'grey',cursor:drivers.length>0?'pointer':'not-allowed'}}
-                                onClick={()=>{
-                                    if(drivers.length>0){
-                                        const random4DigitNumber = Math.floor(1000 + Math.random() * 9000);
-                                                const randomotp = Math.floor(1000 + Math.random() * 9000);
+                                <div className="jjfnvjnf" style={{ backgroundColor: drivers.length > 0 ? 'black' : 'grey', cursor: drivers.length > 0 ? 'pointer' : 'not-allowed' }}
+                                    onClick={() => {
+                                        if (drivers.length > 0) {
+                                            const random4DigitNumber = Math.floor(1000 + Math.random() * 9000);
+                                            const randomotp = Math.floor(1000 + Math.random() * 9000);
 
-                                                const bookingData = {
-                                                    'Cab Category':cabcategorynames[index],
-                                                    "Pickup Latitude": selectedPickupLocation.lat,
-                                                    "Pickup Longitude": selectedPickupLocation.lng,
-                                                    "Drop Latitude": selectedDropLocation.lat,
-                                                    "Drop Longitude": selectedDropLocation.lng,
-                                                    "Booking ID": random4DigitNumber,
-                                                    "Booking Owner": user,
-                                                    "Ride OTP": randomotp,
-                                                    "Pickup Location": pickupLocation,
-                                                    "Drop Location": dropLocation,
-                                                    "Travel Distance": distanceAndTime.distance,
-                                                    "Travel Time": distanceAndTime.duration,
-                                                    "Booking Time": new Date(),
-                                                    'Driver ID':'',
-                                                    'Ride Accepted':false,
-                                                    'Ride Completed':false,
-                                                    "Fare": cabmultiplier[0] * parseInt(distanceAndTime.distance)
-                                                };
+                                            const bookingData = {
+                                                'Cab Category': cabcategorynames[index],
+                                                "Pickup Latitude": selectedPickupLocation.lat,
+                                                "Pickup Longitude": selectedPickupLocation.lng,
+                                                "Drop Latitude": selectedDropLocation.lat,
+                                                "Drop Longitude": selectedDropLocation.lng,
+                                                "Booking ID": random4DigitNumber,
+                                                "Booking Owner": user,
+                                                "Ride OTP": randomotp,
+                                                "Pickup Location": pickupLocation,
+                                                "Drop Location": dropLocation,
+                                                "Travel Distance": distanceAndTime.distance,
+                                                "Travel Time": distanceAndTime.duration,
+                                                "Booking Time": new Date(),
+                                                'Driver ID': '',
+                                                'Ride Accepted': false,
+                                                'Ride Completed': false,
+                                                "Fare": cabmultiplier[0] * parseInt(distanceAndTime.distance)
+                                            };
 
-                                                // Log the booking data as a JSON string
-                                                console.log(JSON.stringify(bookingData, null, 2));
-                                    }
-                                }}>
+                                            // Log the booking data as a JSON string
+                                            console.log(JSON.stringify(bookingData, null, 2));
+                                            setbookingstarted(true);
+                                        }
+                                    }}>
                                     Request {cabcategorynames[index]}
                                 </div>
                             </div>
@@ -529,7 +543,8 @@ export default function CabBookingLaptop() {
                                 Recommended
                             </div>
                             <Link style={{ textDecoration: 'none', color: 'black' }}>
-                                <div className="erhfrj" style={{ border: index === 0 ? '2px solid black' : 'white' }} onClick={() => {  fetchDrivers(cabcategorynames[0])
+                                <div className="erhfrj" style={{ border: index === 0 ? '2px solid black' : 'white' }} onClick={() => {
+                                    fetchDrivers(cabcategorynames[0])
                                     setindex(0)
                                 }
                                 }>
@@ -545,6 +560,7 @@ export default function CabBookingLaptop() {
                                     <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
                                         ₹{cabmultiplier[0] * parseInt(distanceAndTime.distance)}
                                     </div>
+                                    
                                 </div>
                             </Link>
                             <Link style={{ textDecoration: 'none', color: 'black' }}>
@@ -567,8 +583,10 @@ export default function CabBookingLaptop() {
                                 </div>
                             </Link>
                             <Link style={{ textDecoration: 'none', color: 'black' }}>
-                                <div className="erhfrj" style={{ border: index === 2 ? '2px solid black' : 'white' }} onClick={() => {setindex(2)
-                                fetchDrivers(cabcategorynames[2])}}>
+                                <div className="erhfrj" style={{ border: index === 2 ? '2px solid black' : 'white' }} onClick={() => {
+                                    setindex(2)
+                                    fetchDrivers(cabcategorynames[2])
+                                }}>
                                     <div className="jjnvjfnv">
                                         <img src={carcategoryimages[2]} alt="" style={{ width: '100px', height: '100px' }} />
                                         <div className="jfnv">
@@ -584,8 +602,10 @@ export default function CabBookingLaptop() {
                                 </div>
                             </Link>
                             <Link style={{ textDecoration: 'none', color: 'black' }}>
-                                <div className="erhfrj" style={{ marginBottom: '110px', border: index === 3 ? '2px solid black' : 'white', marginTop: '20px' }} onClick={() => {setindex(3) 
-                                fetchDrivers(cabcategorynames[3])}}>
+                                <div className="erhfrj" style={{ marginBottom: '110px', border: index === 3 ? '2px solid black' : 'white', marginTop: '20px' }} onClick={() => {
+                                    setindex(3)
+                                    fetchDrivers(cabcategorynames[3])
+                                }}>
                                     <div className="jjnvjfnv">
                                         <img src={carcategoryimages[3]} alt="" style={{ width: '100px', height: '100px' }} />
                                         <div className="jfnv">
