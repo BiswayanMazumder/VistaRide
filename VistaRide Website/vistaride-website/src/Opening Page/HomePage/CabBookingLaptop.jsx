@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { onAuthStateChanged, getAuth } from "firebase/auth";
 import { doc, FieldValue, getDoc, getFirestore, serverTimestamp } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
@@ -21,7 +21,21 @@ const auth = getAuth(app);
 const defaultLatLng = { lat: 22.5660201, lng: 88.3630783 };
 
 export default function CabBookingLaptop() {
+    const mapRef = useRef(null);
+    const [index, setindex] = useState(0);
     const cabmultiplier = [36, 40, 65, 15];
+    const cabcategorynames = ['Mini', 'Prime', 'SUV', 'Non AC Taxi'];
+    const cabcategorydescription = [
+        'Highly Discounted fare',
+        'Spacious sedans, top drivers',
+        'Spacious SUVs',
+        ''];
+    const carcategoryimages = [
+        'https://d1a3f4spazzrp4.cloudfront.net/car-types/haloProductImages/Hatchback.png',
+        'https://d1a3f4spazzrp4.cloudfront.net/car-types/haloProductImages/v1.1/UberX_v1.png',
+        'https://d1a3f4spazzrp4.cloudfront.net/car-types/haloProductImages/package_UberXL_new_2022.png',
+        'https://olawebcdn.com/images/v1/cabs/sl/ic_kp.png'
+    ];
     const [user, setUser] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -123,6 +137,15 @@ export default function CabBookingLaptop() {
 
                     console.log(`Distance: ${distance}, Duration: ${duration}`);
                     setDistanceAndTime({ distance, duration });
+
+                    // Adjust the map bounds to fit the route
+                    if (mapRef.current) {
+                        const bounds = new window.google.maps.LatLngBounds();
+                        result.routes[0].overview_path.forEach((latLng) => {
+                            bounds.extend(latLng);
+                        });
+                        mapRef.current.fitBounds(bounds);
+                    }
                 } else {
                     console.error("Directions request failed:", status);
                 }
@@ -229,7 +252,7 @@ export default function CabBookingLaptop() {
                 </div>
             </div>
             <div className="ejhfjhfd">
-                <div className="djhfndj" style={{display: 'flex', flexDirection: 'row'}}>
+                <div className="djhfndj" style={{ display: 'flex', flexDirection: 'row' }}>
                     <div className="fbnbvfnbv">
                         <div className="fhbfnbjfn">
                             <div className="mdnvjnv" style={{ fontSize: '30px', fontWeight: 'bold', display: 'flex', justifyContent: 'start', alignItems: 'start', flexDirection: 'row' }}>
@@ -241,7 +264,7 @@ export default function CabBookingLaptop() {
                                     className="ebfbebfeh"
                                     placeholder="Pickup location"
                                     value={pickupLocation}
-                                    style={{width:'350px'}}
+                                    style={{ width: '350px' }}
                                     onChange={handlePickupInputChange}
                                 />
                                 {pickupSuggestions.length > 0 && (
@@ -283,7 +306,7 @@ export default function CabBookingLaptop() {
                                 <input
                                     type="text"
                                     className="ebfbebfeh"
-                                    style={{width:'350px'}}
+                                    style={{ width: '350px' }}
                                     placeholder="Dropoff location"
                                     value={dropLocation}
                                     onChange={handleDropInputChange}
@@ -323,7 +346,7 @@ export default function CabBookingLaptop() {
                                 )}
                             </div>
 
-                            <div className="mdnvjnv">
+                            {(pickupLocation && dropLocation) ? <></> : <div className="mdnvjnv">
                                 <Link style={{ textDecoration: 'none', color: 'white' }}>
                                     <div
                                         className="jffnrn"
@@ -360,11 +383,82 @@ export default function CabBookingLaptop() {
                                     </div>
 
                                 </Link>
-                            </div>
+                            </div>}
                         </div>
                     </div>
                     {
-                        (pickupLocation && dropLocation)?<div className="fbnbvfnbv" style={{width: '20vw'}}></div>:<></>
+                        (pickupLocation && dropLocation && distanceAndTime.distance) ? <div className="fbnbvfnbv" style={{ width: '30vw', overflowY: 'scroll' }}>
+                            <div className="jnjvnjv">
+                                Choose a ride
+                            </div>
+                            <div className="jnjvnjv" style={{ fontSize: '20px', }}>
+                                Recommended
+                            </div>
+                            <Link style={{ textDecoration: 'none', color: 'black' }}>
+                                <div className="erhfrj" style={{ border: index === 0 ? '2px solid black' : 'white' }} onClick={() => setindex(0)}>
+                                    <div className="jjnvjfnv">
+                                        <img src={carcategoryimages[0]} alt="" style={{ width: '100px', height: '100px' }} />
+                                        <div className="jfnv">
+                                            {cabcategorynames[0]}
+                                            <div className="jnvn">
+                                                {cabcategorydescription[0]}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
+                                        ₹{cabmultiplier[0] * parseInt(distanceAndTime.distance)}
+                                    </div>
+                                </div>
+                            </Link>
+                            <Link style={{ textDecoration: 'none', color: 'black' }}>
+                            <div className="erhfrj" style={{ border: index === 1 ? '2px solid black' : 'white' }} onClick={() => setindex(1)}>
+                                <div className="jjnvjfnv">
+                                    <img src={carcategoryimages[1]} alt="" style={{ width: '100px', height: '100px' }} />
+                                    <div className="jfnv">
+                                        {cabcategorynames[1]}
+                                        <div className="jnvn">
+                                            {cabcategorydescription[1]}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
+                                    ₹{cabmultiplier[1] * parseInt(distanceAndTime.distance)}
+                                </div>
+                            </div>
+                            </Link>
+                            <Link style={{ textDecoration: 'none', color: 'black' }}>
+                            <div className="erhfrj" style={{ border: index === 2 ? '2px solid black' : 'white' }} onClick={() => setindex(2)}>
+                                <div className="jjnvjfnv">
+                                    <img src={carcategoryimages[2]} alt="" style={{ width: '100px', height: '100px' }} />
+                                    <div className="jfnv">
+                                        {cabcategorynames[2]}
+                                        <div className="jnvn">
+                                            {cabcategorydescription[2]}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
+                                    ₹{cabmultiplier[2] * parseInt(distanceAndTime.distance)}
+                                </div>
+                            </div>
+                            </Link>
+                            <Link style={{ textDecoration: 'none', color: 'black' }}>
+                            <div className="erhfrj" style={{ marginBottom: '20px', border: index === 3 ? '2px solid black' : 'white', marginTop: '20px' }} onClick={() => setindex(3)}>
+                                <div className="jjnvjfnv">
+                                    <img src={carcategoryimages[3]} alt="" style={{ width: '100px', height: '100px' }} />
+                                    <div className="jfnv">
+                                        {cabcategorynames[3]}
+                                        <div className="jnvn">
+                                            {cabcategorydescription[3]}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
+                                    ₹{cabmultiplier[3] * parseInt(distanceAndTime.distance)}
+                                </div>
+                            </div>
+                            </Link>
+                        </div> : <></>
                     }
                 </div>
                 <LoadScript googleMapsApiKey="AIzaSyApzKC2nq9OCuaVQV2Jbm9cJoOHPy9kzvM" libraries={['places']}>
@@ -372,12 +466,8 @@ export default function CabBookingLaptop() {
                         mapContainerStyle={mapContainerStyle}
                         center={mapCenter}
                         zoom={17}
-                        options={{
-                            zoomControl: true,
-                            mapTypeControl: false,
-                            streetViewControl: false,
-                            fullscreenControl: false,
-                        }}
+                        options={mapOptions}
+                        onLoad={(map) => (mapRef.current = map)} // Store map instance in the ref
                     >
                         {selectedPickupLocation && <Marker position={selectedPickupLocation} />}
                         {selectedDropLocation && <Marker position={selectedDropLocation} />}
