@@ -388,6 +388,17 @@ export default function CabBookingLaptop() {
                     </div>
                     {
                         (pickupLocation && dropLocation && distanceAndTime.distance) ? <div className="fbnbvfnbv" style={{ width: '30vw', overflowY: 'scroll' }}>
+                            <div className="jrngjn">
+                                <div className="jgnn">
+                                    <img src='https://tb-static.uber.com/prod/wallet/icons/cash_3x.png' alt="" style={{ width: '30px', height: '30px', marginLeft: '10px' }} />
+                                    <div className="jgjrufj" style={{ fontWeight: 'bolder' }}>
+                                        Cash
+                                    </div>
+                                </div>
+                                <div className="jjfnvjnf">
+                                    Request {cabcategorynames[index]}
+                                </div>
+                            </div>
                             <div className="jnjvnjv">
                                 Choose a ride
                             </div>
@@ -411,52 +422,52 @@ export default function CabBookingLaptop() {
                                 </div>
                             </Link>
                             <Link style={{ textDecoration: 'none', color: 'black' }}>
-                            <div className="erhfrj" style={{ border: index === 1 ? '2px solid black' : 'white' }} onClick={() => setindex(1)}>
-                                <div className="jjnvjfnv">
-                                    <img src={carcategoryimages[1]} alt="" style={{ width: '100px', height: '100px' }} />
-                                    <div className="jfnv">
-                                        {cabcategorynames[1]}
-                                        <div className="jnvn">
-                                            {cabcategorydescription[1]}
+                                <div className="erhfrj" style={{ border: index === 1 ? '2px solid black' : 'white' }} onClick={() => setindex(1)}>
+                                    <div className="jjnvjfnv">
+                                        <img src={carcategoryimages[1]} alt="" style={{ width: '100px', height: '100px' }} />
+                                        <div className="jfnv">
+                                            {cabcategorynames[1]}
+                                            <div className="jnvn">
+                                                {cabcategorydescription[1]}
+                                            </div>
                                         </div>
                                     </div>
+                                    <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
+                                        ₹{cabmultiplier[1] * parseInt(distanceAndTime.distance)}
+                                    </div>
                                 </div>
-                                <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
-                                    ₹{cabmultiplier[1] * parseInt(distanceAndTime.distance)}
-                                </div>
-                            </div>
                             </Link>
                             <Link style={{ textDecoration: 'none', color: 'black' }}>
-                            <div className="erhfrj" style={{ border: index === 2 ? '2px solid black' : 'white' }} onClick={() => setindex(2)}>
-                                <div className="jjnvjfnv">
-                                    <img src={carcategoryimages[2]} alt="" style={{ width: '100px', height: '100px' }} />
-                                    <div className="jfnv">
-                                        {cabcategorynames[2]}
-                                        <div className="jnvn">
-                                            {cabcategorydescription[2]}
+                                <div className="erhfrj" style={{ border: index === 2 ? '2px solid black' : 'white' }} onClick={() => setindex(2)}>
+                                    <div className="jjnvjfnv">
+                                        <img src={carcategoryimages[2]} alt="" style={{ width: '100px', height: '100px' }} />
+                                        <div className="jfnv">
+                                            {cabcategorynames[2]}
+                                            <div className="jnvn">
+                                                {cabcategorydescription[2]}
+                                            </div>
                                         </div>
                                     </div>
+                                    <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
+                                        ₹{cabmultiplier[2] * parseInt(distanceAndTime.distance)}
+                                    </div>
                                 </div>
-                                <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
-                                    ₹{cabmultiplier[2] * parseInt(distanceAndTime.distance)}
-                                </div>
-                            </div>
                             </Link>
                             <Link style={{ textDecoration: 'none', color: 'black' }}>
-                            <div className="erhfrj" style={{ marginBottom: '20px', border: index === 3 ? '2px solid black' : 'white', marginTop: '20px' }} onClick={() => setindex(3)}>
-                                <div className="jjnvjfnv">
-                                    <img src={carcategoryimages[3]} alt="" style={{ width: '100px', height: '100px' }} />
-                                    <div className="jfnv">
-                                        {cabcategorynames[3]}
-                                        <div className="jnvn">
-                                            {cabcategorydescription[3]}
+                                <div className="erhfrj" style={{ marginBottom: '20px', border: index === 3 ? '2px solid black' : 'white', marginTop: '20px' }} onClick={() => setindex(3)}>
+                                    <div className="jjnvjfnv">
+                                        <img src={carcategoryimages[3]} alt="" style={{ width: '100px', height: '100px' }} />
+                                        <div className="jfnv">
+                                            {cabcategorynames[3]}
+                                            <div className="jnvn">
+                                                {cabcategorydescription[3]}
+                                            </div>
                                         </div>
                                     </div>
+                                    <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
+                                        ₹{cabmultiplier[3] * parseInt(distanceAndTime.distance)}
+                                    </div>
                                 </div>
-                                <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
-                                    ₹{cabmultiplier[3] * parseInt(distanceAndTime.distance)}
-                                </div>
-                            </div>
                             </Link>
                         </div> : <></>
                     }
