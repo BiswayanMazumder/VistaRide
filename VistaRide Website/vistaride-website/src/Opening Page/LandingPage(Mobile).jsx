@@ -182,7 +182,7 @@ export default function LandingPageMobile() {
             <div className="jnnvfkvfk">
                 <div className="hvfnvn">
                     <div className="mdnjvn">
-                        VistaRide
+                    <svg width="100" height="30" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="30" fill="black" rx="5"></rect><text x="50%" y="50%" font-family="'Lobster', cursive" font-size="21" fill="white" text-anchor="middle" alignment-baseline="middle" dominant-baseline="middle">VistaRide</text></svg>
                     </div>
                     <Link style={{ textDecoration: 'none', color: 'white' }} onClick={handleLogin}>
                         <div className="eefebfs" style={{ padding: "30px" }}>Log in</div>

@@ -184,7 +184,7 @@ export default function LandingPage_Laptop() {
         <div className="webbody">
             <div className="ehfjfv">
                 <div className="hfejfe">
-                    VistaRide
+                <svg width="100" height="30" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="30" fill="black" rx="5"></rect><text x="50%" y="50%" font-family="'Lobster', cursive" font-size="21" fill="white" text-anchor="middle" alignment-baseline="middle" dominant-baseline="middle">VistaRide</text></svg>
                     <div className="ebfn">
                         <Link style={{ textDecoration: 'none', color: 'white' }}>
                             <div className="eefebf">Ride</div>

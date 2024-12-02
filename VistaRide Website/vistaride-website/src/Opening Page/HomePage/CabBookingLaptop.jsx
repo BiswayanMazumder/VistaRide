@@ -321,7 +321,9 @@ export default function CabBookingLaptop() {
     return (
         <div className="webbody">
             <div className="ehfjfv" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <div className="hfejfw">VistaRide</div>
+                <div className="hfejfw">
+                <svg width="100" height="30" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="30" fill="black" rx="5"></rect><text x="50%" y="50%" font-family="'Lobster', cursive" font-size="21" fill="white" text-anchor="middle" alignment-baseline="middle" dominant-baseline="middle">VistaRide</text></svg>
+                </div>
                 <div className="hfejfw" style={{ right: '100px', position: 'absolute', flexDirection: 'row', gap: '20px' }}>
                     {loading ? (
                         <div></div>
@@ -506,7 +508,10 @@ export default function CabBookingLaptop() {
                                                     "Drop Location": dropLocation,
                                                     "Travel Distance": distanceAndTime.distance,
                                                     "Travel Time": distanceAndTime.duration,
-                                                    "Booking Time": new Date(),  // Get current timestamp in ISO format
+                                                    "Booking Time": new Date(),
+                                                    'Driver ID':'',
+                                                    'Ride Accepted':false,
+                                                    'Ride Completed':false,
                                                     "Fare": cabmultiplier[0] * parseInt(distanceAndTime.distance)
                                                 };
 
