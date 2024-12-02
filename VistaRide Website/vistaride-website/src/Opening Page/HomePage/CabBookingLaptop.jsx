@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { onAuthStateChanged, getAuth } from "firebase/auth";
-import { doc, FieldValue, getDoc, getFirestore, serverTimestamp } from "firebase/firestore";
+import { collection, doc, FieldValue, getDoc, getFirestore, onSnapshot, serverTimestamp } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import { GoogleMap, LoadScript, Marker, Polyline } from '@react-google-maps/api';
 import { Link } from 'react-router-dom';
@@ -192,7 +192,65 @@ export default function CabBookingLaptop() {
     useEffect(() => {
         document.title = 'Request a Ride with VistaRide';
     }, []);
+    const [drivers, setDrivers] = useState([]);
+    const [markers, setMarkers] = useState([]);
+    const isWithin15Km = (origin, destination) => {
+        const R = 6371; // Radius of the Earth in km
+        const dLat = (destination.lat - origin.lat) * (Math.PI / 180);
+        const dLon = (destination.lng - origin.lng) * (Math.PI / 180);
 
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(origin.lat * (Math.PI / 180)) * Math.cos(destination.lat * (Math.PI / 180)) *
+                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distance = R * c; // Distance in km
+
+        return distance <= 15; // Return true if within 15 km
+    };
+
+    // Fetch drivers when the selectedPickupLocation changes
+    useEffect(() => {
+        if (!selectedPickupLocation) return;
+
+        const fetchDrivers = () => {
+            const driversCollection = collection(db, "VistaRide Driver Details");
+
+            // Set up a real-time listener on the driver details collection
+            const unsubscribe = onSnapshot(driversCollection, (querySnapshot) => {
+                const nearbyDrivers = [];
+                const driverMarkers = [];
+
+                querySnapshot.forEach((doc) => {
+                    const driverData = doc.data();
+                    const driverLocation = {
+                        lat: parseFloat(driverData['Current Latitude']),  // Convert string to number
+                        lng: parseFloat(driverData['Current Longitude']),
+                    };
+                    const driverAvailability = driverData['Driver Avaliable'];
+                    const driverStatus = driverData['Driver Online'];
+
+                    // Check if driver is online, available, and within 15 km
+                    if (driverStatus && driverAvailability && isWithin15Km(selectedPickupLocation, driverLocation)) {
+                        nearbyDrivers.push(doc.id); // Push driver UID if they are within range
+                        driverMarkers.push({
+                            id: doc.id,
+                            position: driverLocation,
+                        });
+                    }
+                });
+
+                setDrivers(nearbyDrivers); // Update the state with the filtered list of drivers
+                setMarkers(driverMarkers); // Update the state with the list of driver markers
+                console.log("Nearby drivers (within 15 km):", nearbyDrivers);
+            });
+
+            // Cleanup the listener when component unmounts
+            return () => unsubscribe();
+        };
+
+        fetchDrivers();
+    }, [selectedPickupLocation]);
     useEffect(() => {
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
@@ -473,28 +531,40 @@ export default function CabBookingLaptop() {
                     }
                 </div>
                 <LoadScript googleMapsApiKey="AIzaSyApzKC2nq9OCuaVQV2Jbm9cJoOHPy9kzvM" libraries={['places']}>
-                    <GoogleMap
-                        mapContainerStyle={mapContainerStyle}
-                        center={mapCenter}
-                        zoom={17}
-                        options={mapOptions}
-                        onLoad={(map) => (mapRef.current = map)} // Store map instance in the ref
-                    >
-                        {selectedPickupLocation && <Marker position={selectedPickupLocation} />}
-                        {selectedDropLocation && <Marker position={selectedDropLocation} />}
-                        {directions && directions.routes[0].overview_path && (
-                            <Polyline
-                                path={directions.routes[0].overview_path}
-                                options={{
-                                    strokeColor: 'black',
-                                    strokeOpacity: 1,
-                                    strokeWeight: 4,
-                                }}
-                            />
-                        )}
-                    </GoogleMap>
-                </LoadScript>
+            <GoogleMap
+                mapContainerStyle={mapContainerStyle}
+                center={mapCenter}
+                zoom={17}
+                options={mapOptions}
+                onLoad={(map) => (mapRef.current = map)} // Store map instance in the ref
+            >
+                {selectedPickupLocation && <Marker position={selectedPickupLocation} />}
+                {selectedDropLocation && <Marker position={selectedDropLocation} />}
 
+                {/* Render markers for each nearby driver */}
+                {markers.map((driver) => (
+                    <Marker
+                        key={driver.id}
+                        position={driver.position}
+                        icon={{
+                            url: "https://d1a3f4spazzrp4.cloudfront.net/car-types/map70px/product/map-uberx.png",
+                            scaledSize: new window.google.maps.Size(40, 40), // Adjust marker size
+                        }}
+                    />
+                ))}
+
+                {directions && directions.routes[0].overview_path && (
+                    <Polyline
+                        path={directions.routes[0].overview_path}
+                        options={{
+                            strokeColor: 'black',
+                            strokeOpacity: 1,
+                            strokeWeight: 4,
+                        }}
+                    />
+                )}
+            </GoogleMap>
+        </LoadScript>
 
             </div>
         </div>

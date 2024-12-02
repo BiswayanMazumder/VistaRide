@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { GoogleMap, LoadScript, Marker, Polyline } from '@react-google-maps/api';
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "firebase/auth";
 
 const provider = new GoogleAuthProvider();
 const firebaseConfig = {
@@ -25,12 +25,24 @@ const defaultLatLng = { lat: 22.5660201, lng: 88.3630783 };
 export default function LandingPageMobile() {
     const [user, setUser] = useState(null);
     const [error, setError] = useState(null);
-
+    useEffect(() => {
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+              window.location.replace('/go/home');
+              const uid = user.uid;
+              // ...
+            } else {
+              // User is signed out
+              // ...
+            }
+          });
+    })
     const handleLogin = async () => {
         try {
             const result = await signInWithPopup(auth, googleProvider);
             const user = result.user;
             setUser(user);
+            window.location.replace('/go/home');
         } catch (err) {
             setError(err.message);
         }

@@ -404,10 +404,36 @@ justify-content: space-between;
   align-items: center;
   font-weight: 600;
 }
+.kbkkbfb{
+  width: 100vw;
+  height: 100vh;
+  font-family: 'Avenir', sans-serif;
+}
+.hbfff{
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: black;
+  font-size: 35px;
+  font-weight: bold;
+  font-family: 'Avenir Pro', sans-serif;
+  margin-top: 20px;
+}
 .jnvn{
   font-size: 12px;
   font-weight: 300;
 }
 .fbnbvfnbv::-webkit-scrollbar{
   display: none;
+}
+.mmnvnkv{
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: start;
+  margin-top: 20px;
+  margin-left: 30px;
 }
