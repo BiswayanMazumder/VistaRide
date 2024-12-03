@@ -7,6 +7,7 @@ import {
 } from 'react-router-dom';
 import LandingPage from './Opening Page/LandingPage';
 import Cabbookingpage from './Opening Page/HomePage/cabbookingpage';
+import Activeride from './Active Ride Page/activeride';
 function App() {
   return (
     <BrowserRouter>
@@ -15,6 +16,9 @@ function App() {
       </Routes>
       <Routes>
         <Route path="/go/home" element={<Cabbookingpage />} />
+      </Routes>
+      <Routes>
+        <Route path="/ride/:RideID" element={<Activeride />} />
       </Routes>
     </BrowserRouter>
   );

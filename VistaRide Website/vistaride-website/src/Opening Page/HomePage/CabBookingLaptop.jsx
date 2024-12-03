@@ -55,7 +55,37 @@ export default function CabBookingLaptop() {
     });
     const [directions, setDirections] = useState(null);
     const [distanceAndTime, setDistanceAndTime] = useState({ distance: '', duration: '' });
-
+    const [RideID,setRideID]=useState('');
+    useEffect(() => {
+        const fetchactiveride = async () => {
+            try {
+                let rideid = []; // Use `let` instead of `const` for reassignment
+                const docRef = doc(db, "Booking IDs", user); // Ensure `db` and `user` are defined
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    rideid = docSnap.data().IDs; // Use `.data()` method and properly access fields
+                }
+                console.log('Ride ID:', rideid);
+                for(var i=0;i<rideid.length;i++) {
+                    const RideRef=doc(db,"Ride Details",rideid[i].toString());
+                    const docsnap = await getDoc(RideRef);
+                    if (docsnap.exists()) {
+                        if(docsnap.data()['Ride Accepted']){
+                            setRideID(rideid[i]);
+                            window.location.replace(`/ride/${rideid[i]}`);
+                        }
+                    }
+                }
+                console.log("Ride ID:", RideID);
+                localStorage.setItem('Active Ride ID',RideID);
+                
+            } catch (error) {
+                console.error("Error fetching active ride:", error);
+            }
+        };
+    
+        fetchactiveride();
+    }, [db, user]); 
     const handlePickupInputChange = (e) => {
         const value = e.target.value;
         setPickupLocation(value);
@@ -356,6 +386,7 @@ export default function CabBookingLaptop() {
         }
 
     };
+    
     const writeRideDetails = async (rideId) => {
         const randomotp = Math.floor(1000 + Math.random() * 9000);
         const docref = doc(db, "Ride Details", rideId.toString()); // Define docRef outside of the try-);
