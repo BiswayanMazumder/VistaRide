@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { onAuthStateChanged, getAuth } from "firebase/auth";
-import { collection, doc, FieldValue, getDoc, getFirestore, onSnapshot, serverTimestamp } from "firebase/firestore";
+import { arrayRemove, arrayUnion, collection, deleteField, doc, FieldValue, getDoc, getFirestore, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import { GoogleMap, LoadScript, Marker, Polyline } from '@react-google-maps/api';
 import { Link } from 'react-router-dom';
@@ -312,7 +312,81 @@ export default function CabBookingLaptop() {
         // Cleanup the listener when component unmounts
         return () => unsubscribe();
     };
-    const [bookedride,setridebooked]=useState(false);
+    const writeRideDetailsToDB = async (rideId) => {
+        const docRef = doc(db, "Booking IDs", user); // Define docRef outside of the try-catch block
+        try {
+            await updateDoc(docRef, {
+                IDs: arrayUnion(rideId), // Append the rideId to the array
+            });
+            console.log("Document successfully updated!");
+        } catch (error) {
+            if (error.code === "not-found") {
+                // If the document doesn't exist, create it with the initial array
+                await setDoc(docRef, { IDs: [rideId] });
+                console.log("Document created successfully!");
+            } else {
+                console.error("Error updating document: ", error);
+            }
+        }
+    };
+    const removeridfromdb = async (rideId) => {
+        const docRef = doc(db, "Booking IDs", user); // Define docRef outside of the try-catch block
+        await updateDoc(docRef, {
+            IDs: arrayRemove(rideId), // Append the rideId to the array
+        });
+        console.log("Document successfully updated!");
+
+    };
+    const writeRideDetails = async (rideId) => {
+        const randomotp = Math.floor(1000 + Math.random() * 9000);
+        const docref = doc(db, "Ride Details", rideId.toString()); // Define docRef outside of the try-);
+        await setDoc(docref, {
+            'Cab Category': cabcategorynames[index],
+            "Pickup Latitude": selectedPickupLocation.lat,
+            "Pick Longitude": selectedPickupLocation.lng,
+            "Drop Latitude": selectedDropLocation.lat,
+            "Drop Longitude": selectedDropLocation.lng,
+            "Booking ID": rideId,
+            // "Booking Owner": user,
+            "Ride OTP": randomotp,
+            "Pickup Location": pickupLocation,
+            "Drop Location": dropLocation,
+            "Travel Distance": distanceAndTime.distance,
+            "Travel Time": distanceAndTime.duration,
+            "Booking Time": new Date(),
+            'Driver ID': '',
+            'Ride Accepted': false,
+            'Ride Completed': false,
+            "Fare": parseFloat(cabmultiplier[index]) * parseFloat(distanceAndTime.distance)
+        })
+    };
+    const sendriderequesttodriver = async (rideid) => {
+        // Loop through each driver in the "drivers" array
+        for (let i = 0; i < drivers.length; i++) {
+            // Get the document reference for the driver
+            const docref = doc(db, "VistaRide Driver Details", drivers[i]);
+    
+            try {
+                // Update the document by adding 'Ride Requested' field
+                await updateDoc(docref, {
+                    'Ride Requested': rideid
+                });
+    
+                console.log(`Ride requested for driver ${drivers[i]}`);
+    
+                // After 10 seconds, remove the 'Ride Requested' field
+                setTimeout(async () => {
+                    await updateDoc(docref, {
+                        'Ride Requested': deleteField()  // This removes the field
+                    });
+                    console.log(`'Ride Requested' field removed for driver ${drivers[i]}`);
+                }, 10000); // 10000 milliseconds = 10 seconds
+    
+            } catch (error) {
+                console.error(`Error updating document for driver ${drivers[i]}:`, error);
+            }
+        }
+    };
     const mapCenter = selectedDropLocation
         ? {
             lat: (selectedPickupLocation.lat + selectedDropLocation.lat) / 2,
@@ -442,7 +516,7 @@ export default function CabBookingLaptop() {
                                         </ul>
                                     )}
                                 </div>
-                            </div> :bookedride?<></> :<div>
+                            </div> : <div>
                                 <div className="fgfhhggh">
                                     <img src={carcategoryimages[index]} alt="" style={{ marginLeft: '35px' }} />
                                 </div>
@@ -458,14 +532,15 @@ export default function CabBookingLaptop() {
                                     <img src='https://tb-static.uber.com/prod/wallet/icons/cash_3x.png' alt="" style={{ width: '30px', height: '30px' }} />
                                     ₹{cabmultiplier[index] * parseInt(distanceAndTime.distance)}
                                 </div>
-                                <Link style={{ textDecoration: 'none',color: 'white' }}>
-                                <div className="jjfnvjnf" style={{ backgroundColor: 'black',width: '90%',marginLeft: '5%',marginBottom: '20px',marginTop: '20px' }}
-                                    onClick={() => {
-                                        setbookingstarted(false);
-                                    }}
+                                <Link style={{ textDecoration: 'none', color: 'white' }}>
+                                    <div className="jjfnvjnf" style={{ backgroundColor: 'black', width: '90%', marginLeft: '5%', marginBottom: '20px', marginTop: '20px' }}
+                                        onClick={() => {
+                                            removeridfromdb(localStorage.getItem('Ride ID').toString());
+                                            setbookingstarted(false);
+                                        }}
                                     >
-                                    Cancel Trip
-                                </div>
+                                        Cancel Trip
+                                    </div>
                                 </Link>
                             </div>
                         }
@@ -482,32 +557,13 @@ export default function CabBookingLaptop() {
                                 <div className="jjfnvjnf" style={{ backgroundColor: drivers.length > 0 ? 'black' : 'grey', cursor: drivers.length > 0 ? 'pointer' : 'not-allowed' }}
                                     onClick={() => {
                                         if (drivers.length > 0) {
-                                            const random4DigitNumber = Math.floor(1000 + Math.random() * 9000);
-                                            const randomotp = Math.floor(1000 + Math.random() * 9000);
-
-                                            const bookingData = {
-                                                'Cab Category': cabcategorynames[index],
-                                                "Pickup Latitude": selectedPickupLocation.lat,
-                                                "Pickup Longitude": selectedPickupLocation.lng,
-                                                "Drop Latitude": selectedDropLocation.lat,
-                                                "Drop Longitude": selectedDropLocation.lng,
-                                                "Booking ID": random4DigitNumber,
-                                                "Booking Owner": user,
-                                                "Ride OTP": randomotp,
-                                                "Pickup Location": pickupLocation,
-                                                "Drop Location": dropLocation,
-                                                "Travel Distance": distanceAndTime.distance,
-                                                "Travel Time": distanceAndTime.duration,
-                                                "Booking Time": new Date(),
-                                                'Driver ID': '',
-                                                'Ride Accepted': false,
-                                                'Ride Completed': false,
-                                                "Fare": cabmultiplier[0] * parseInt(distanceAndTime.distance)
-                                            };
-
-                                            // Log the booking data as a JSON string
-                                            console.log(JSON.stringify(bookingData, null, 2));
+                                            const random4DigitNumber = Math.floor(10000 + Math.random() * 90000);
                                             console.log(drivers)
+                                            localStorage.setItem('Ride ID', random4DigitNumber);
+                                            console.log(drivers);
+                                            writeRideDetailsToDB(random4DigitNumber.toString());
+                                            writeRideDetails(random4DigitNumber.toString());
+                                            sendriderequesttodriver(random4DigitNumber.toString())
                                             setbookingstarted(true);
                                         }
                                     }}>
@@ -538,7 +594,7 @@ export default function CabBookingLaptop() {
                                     <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
                                         ₹{cabmultiplier[0] * parseInt(distanceAndTime.distance)}
                                     </div>
-                                    
+
                                 </div>
                             </Link>
                             <Link style={{ textDecoration: 'none', color: 'black' }}>
