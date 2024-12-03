@@ -53,42 +53,6 @@ export default function Activeride_laptop() {
     });
     const [directions, setDirections] = useState(null);
     const [distanceAndTime, setDistanceAndTime] = useState({ distance: '', duration: '' });
-    useEffect(() => {
-        setDirections(null);
-
-        if (selectedPickupLocation && selectedDropLocation) {
-            const directionsService = new window.google.maps.DirectionsService();
-
-            const request = {
-                origin: selectedPickupLocation,
-                destination: selectedDropLocation,
-                travelMode: window.google.maps.TravelMode.DRIVING,
-            };
-
-            directionsService.route(request, (result, status) => {
-                if (status === window.google.maps.DirectionsStatus.OK) {
-                    console.log("Directions response:", result);
-                    setDirections(result);
-                    const distance = result.routes[0].legs[0].distance.text;
-                    const duration = result.routes[0].legs[0].duration.text;
-
-                    console.log(`Distance: ${distance}, Duration: ${duration}`);
-                    setDistanceAndTime({ distance, duration });
-
-                    // Adjust the map bounds to fit the route
-                    if (mapRef.current) {
-                        const bounds = new window.google.maps.LatLngBounds();
-                        result.routes[0].overview_path.forEach((latLng) => {
-                            bounds.extend(latLng);
-                        });
-                        mapRef.current.fitBounds(bounds);
-                    }
-                } else {
-                    console.error("Directions request failed:", status);
-                }
-            });
-        }
-    }, [selectedPickupLocation, selectedDropLocation]);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -124,9 +88,10 @@ export default function Activeride_laptop() {
     const [carimage, setcarimage] = useState('');
     const { RideID } = useParams();
     const [fare, setfare] = useState(0);
+    const [mapCenter, setMapCenter] = useState(null);
     const [driverlat, setdriverlat] = useState(0);
     const [driverlong, setdriverlong] = useState(0);
-    // const [loading, setLoading] = useState(true);
+    const [dataFetched, setDataFetched] = useState(false); // Track if data is fetched
     useEffect(() => {
         const fetchdata = async () => {
             try {
@@ -138,6 +103,10 @@ export default function Activeride_laptop() {
                     setpickuplocations(docSnap.data()['Pickup Location']);
                     setpickuplong(docSnap.data()['Pick Longitude']);
                     setpickuplat(docSnap.data()['Pickup Latitude']);
+                    const pickupLocation = docSnap.data()['Pickup Location'];
+                    const pickupLongitude = docSnap.data()['Pick Longitude'];
+                    const pickupLatitude = docSnap.data()['Pickup Latitude'];
+                    const dropLocation = docSnap.data()['Drop Location'];
                     setdroplocations(docSnap.data()['Drop Location']);
                     setdroplong(docSnap.data()['Drop Longitude']);
                     setdroplat(docSnap.data()['Drop Latitude']);
@@ -146,6 +115,7 @@ export default function Activeride_laptop() {
                     setrideveried(docSnap.data()['Ride Verified']);
                     setOTP(docSnap.data()['Ride OTP']);
                     setfare(docSnap.data()['Fare']);
+                    setMapCenter({ lat: pickupLatitude, lng: pickupLongitude });
                     document.title = `Journey To ${docSnap.data()['Drop Location']} | VistaRide`;
                     // console.log('Pickup Latitude: ' + docSnap.data()[')
                     // Fetch Driver Details only if DriverID is valid
@@ -160,8 +130,9 @@ export default function Activeride_laptop() {
                             setcarregnumber(driverSnap.data()['Car Number Plate']);
                             setCarmodel(driverSnap.data()['Car Name']);
                             setCarcategory(driverSnap.data()['Car Category']);
-                            setdriverlat(driverSnap.data()['Current Latitude']);
-                            setdriverlong(driverSnap.data()['Current Longitude']);
+                            setdriverlat(parseFloat(driverSnap.data()['Current Latitude']));
+                            setdriverlong(parseFloat(driverSnap.data()['Current Longitude']));
+                            console.log(driverSnap.data()['Driver Latitude']);
                         } else {
                             console.error('Driver details not found for ID:', DriverID);
                         }
@@ -173,20 +144,38 @@ export default function Activeride_laptop() {
                 }
             } catch (error) {
                 console.error('Error fetching data:', error);
-            }finally{
-                setLoading(false); 
+            } finally {
+                setLoading(false);
+                setDataFetched(true);
             }
         };
 
         fetchdata();
     }, [user, db]); // Trigger this effect when 'user' or 'db' changes
+    const [directionsPath, setDirectionsPath] = useState([]);
+    useEffect(() => {
+        if (pickuplat && pickuplong && driverlat && driverlong) {
+            const directionsService = new window.google.maps.DirectionsService();
+            const request = {
+                origin: { lat: pickuplat, lng: pickuplong },
+                destination: { lat: driverlat, lng: driverlong },
+                travelMode: window.google.maps.TravelMode.DRIVING,
+            };
 
-    const mapCenter = selectedDropLocation
-        ? {
-            lat: (selectedPickupLocation.lat + selectedDropLocation.lat) / 2,
-            lng: (selectedPickupLocation.lng + selectedDropLocation.lng) / 2,
+            directionsService.route(request, (result, status) => {
+                if (status === window.google.maps.DirectionsStatus.OK) {
+                    const path = result.routes[0].overview_path;
+                    setDirectionsPath(path); // Set the road-following polyline
+                    const distance = result.routes[0].legs[0].distance.text;
+                    const duration = result.routes[0].legs[0].duration.text;
+                    setDistanceAndTime({ distance, duration });
+                    setMapCenter({ lat: pickuplat, lng: pickuplong });
+                } else {
+                    console.error("Directions request failed due to " + status);
+                }
+            });
         }
-        : selectedPickupLocation || defaultLatLng;
+    }, [pickuplat, pickuplong, driverlat, driverlong]);
     return (
         <div className='webbody'>
             <div className="ejhfjhfd">
@@ -224,61 +213,35 @@ export default function Activeride_laptop() {
                         </div>
                     </div>
                 </div>
-                {loading ? (
-                <div>Loading...</div> // Show loading message while fetching data
-            ) :(<LoadScript googleMapsApiKey="AIzaSyApzKC2nq9OCuaVQV2Jbm9cJoOHPy9kzvM" libraries={['places']}>
+                {/* maps */}
+                <LoadScript googleMapsApiKey="AIzaSyApzKC2nq9OCuaVQV2Jbm9cJoOHPy9kzvM">
                     <GoogleMap
-                        mapContainerStyle={mapContainerStyle}
+                        mapContainerStyle={{ height: '100vh', width: '100vw' }}
                         center={mapCenter}
-                        zoom={17}
-                        options={mapOptions}
-                        onLoad={(map) => (mapRef.current = map)} // Store map instance in the ref
+                        zoom={14}
                     >
-                        {selectedPickupLocation && <Marker position={selectedPickupLocation} />}
-                        {selectedDropLocation && <Marker position={selectedDropLocation} />}
+                        {/* Pickup Location Marker */}
+                        {pickuplat && pickuplong && (
+                            <Marker position={{ lat: pickuplat, lng: pickuplong }} label="" />
+                        )}
+                        {/* Driver Location Marker */}
+                        {driverlat && driverlong && (
+                            <Marker position={{ lat: driverlat, lng: driverlong }} label="" />
+                        )}
 
-                        {/* Render markers for each nearby driver */}
-                        {markers.map((driver) => (
-                            <Marker
-                                key={driver.id}
-                                position={driver.position}
-                                icon={{
-                                    url: "https://d1a3f4spazzrp4.cloudfront.net/car-types/map70px/map-blue-uberx.png",
-                                    scaledSize: new window.google.maps.Size(40, 40), // Adjust marker size
-                                }}
-                            />
-                        ))}
-
-                        {directions && directions.routes[0].overview_path && (
+                        {/* Polyline based on Directions */}
+                        {directionsPath.length > 0 && (
                             <Polyline
-                                path={directions.routes[0].overview_path}
+                                path={directionsPath}
                                 options={{
                                     strokeColor: 'black',
-                                    strokeOpacity: 1,
+                                    strokeOpacity: 0.7,
                                     strokeWeight: 4,
                                 }}
                             />
                         )}
-
-                        {/* Polyline between Pickup Location and Driver Location */}
-                        {(pickuplat && pickuplong && driverlat && driverlong) && (
-                            <Polyline
-                                path={[
-                                    { lat: parseFloat(pickuplat), lng: parseFloat(pickuplong) }, // Pickup Location
-                                    { lat: parseFloat(driverlat), lng: parseFloat(driverlong) }, // Driver's Location
-                                ]}
-                                options={{
-                                    strokeColor: 'blue',
-                                    strokeOpacity: 1,
-                                    strokeWeight: 4,
-                                }}
-                            />
-                        )}
-
-
                     </GoogleMap>
-                </LoadScript>)}
-
+                </LoadScript>
             </div>
 
         </div>
