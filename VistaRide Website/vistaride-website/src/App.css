@@ -464,3 +464,33 @@ justify-content: space-between;
 .jnjndjvnjdv::-webkit-scrollbar{
   display: none;
 }
+.knfvnfv{
+  width: 40vw;
+  height: 45vh;
+  margin-top: 40px;
+  color: black;
+  justify-content: center;
+  /* align-items:  */
+  display: flex;
+  /* background-color: red; */
+}
+.jdnvjndvjn{
+  width: 30vh;
+  color: #000;
+  font-family: 'Avenir',sans-serif;
+  font-weight: 600;
+  margin-left: 30px;
+  font-size: 18px;
+}
+.dnjndjv{
+  width: 35vw;
+  color: grey;
+  font-family: 'Avenir',sans-serif;
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  font-size: 15px;
+  font-weight: 400;
+  margin-top: 15px;
+  gap: 10px;
+}

@@ -55,7 +55,7 @@ export default function CabBookingLaptop() {
     });
     const [directions, setDirections] = useState(null);
     const [distanceAndTime, setDistanceAndTime] = useState({ distance: '', duration: '' });
-    const [RideID,setRideID]=useState('');
+    const [RideID, setRideID] = useState('');
     useEffect(() => {
         const fetchactiveride = async () => {
             try {
@@ -66,26 +66,26 @@ export default function CabBookingLaptop() {
                     rideid = docSnap.data().IDs; // Use `.data()` method and properly access fields
                 }
                 console.log('Ride ID:', rideid);
-                for(var i=0;i<rideid.length;i++) {
-                    const RideRef=doc(db,"Ride Details",rideid[i].toString());
+                for (var i = 0; i < rideid.length; i++) {
+                    const RideRef = doc(db, "Ride Details", rideid[i].toString());
                     const docsnap = await getDoc(RideRef);
                     if (docsnap.exists()) {
-                        if(docsnap.data()['Ride Accepted']){
+                        if (docsnap.data()['Ride Accepted']) {
                             setRideID(rideid[i]);
                             window.location.replace(`/ride/${rideid[i]}`);
                         }
                     }
                 }
                 // console.log("Ride ID:", RideID);
-                localStorage.setItem('Active Ride ID',RideID);
-                
+                localStorage.setItem('Active Ride ID', RideID);
+
             } catch (error) {
                 console.error("Error fetching active ride:", error);
             }
         };
-    
+
         fetchactiveride();
-    }, [db, user]); 
+    }, [db, user]);
     const handlePickupInputChange = (e) => {
         const value = e.target.value;
         setPickupLocation(value);
@@ -371,60 +371,79 @@ export default function CabBookingLaptop() {
         for (let i = 0; i < drivers.length; i++) {
             // Get the document reference for the driver
             const docref = doc(db, "VistaRide Driver Details", drivers[i]);
-    
+
             try {
-                
-                    await updateDoc(docref, {
-                        'Ride Requested': deleteField()  // This removes the field
-                    });
-                    console.log(`'Ride Requested' field removed for driver ${drivers[i]}`);
+
+                await updateDoc(docref, {
+                    'Ride Requested': deleteField()  // This removes the field
+                });
+                console.log(`'Ride Requested' field removed for driver ${drivers[i]}`);
                 // 10000 milliseconds = 10 seconds
-    
+
             } catch (error) {
                 console.error(`Error updating document for driver ${drivers[i]}:`, error);
             }
         }
 
     };
-    
+
     const writeRideDetails = async (rideId) => {
         const randomotp = Math.floor(1000 + Math.random() * 9000);
         const docref = doc(db, "Ride Details", rideId.toString()); // Define docRef outside of the try-);
-        await setDoc(docref, {
-            'Cab Category': cabcategorynames[index],
-            "Pickup Latitude": parseFloat(selectedPickupLocation.lat),
-            "Pick Longitude": parseFloat(selectedPickupLocation.lng),
-            "Drop Latitude": parseFloat(selectedDropLocation.lat),
-            "Drop Longitude": parseFloat(selectedDropLocation.lng),
-            "Booking ID": rideId,
-            // "Booking Owner": user,
-            "Ride OTP": randomotp,
-            "Pickup Location": pickupLocation,
-            "Drop Location": dropLocation,
-            "Travel Distance": distanceAndTime.distance,
-            "Travel Time": distanceAndTime.duration,
-            "Booking Time": new Date(),
-            'Driver ID': '',
-            'Ride Verified':false,
-            'Ride Accepted': false,
-            'Ride Completed': false,
-            "Fare": parseFloat(cabmultiplier[index]) * parseFloat(distanceAndTime.distance)
-        })
+        let Fare = parseFloat(parseFloat(cabmultiplier[index]) * parseFloat(distanceAndTime.distance));
+
+        // Ensure the Fare is sent as a double:
+        Fare = Number(Fare.toFixed(2));
+        try {
+            // Write the initial ride details to Firestore
+            await setDoc(docref, {
+                'Cab Category': cabcategorynames[index],
+                "Pickup Latitude": parseFloat(selectedPickupLocation.lat),
+                "Pick Longitude": parseFloat(selectedPickupLocation.lng),
+                "Drop Latitude": parseFloat(selectedDropLocation.lat),
+                "Drop Longitude": parseFloat(selectedDropLocation.lng),
+                "Booking ID": rideId,
+                // "Booking Owner": user,
+                "Ride OTP": randomotp,
+                "Pickup Location": pickupLocation,
+                "Drop Location": dropLocation,
+                "Travel Distance": distanceAndTime.distance,
+                "Travel Time": distanceAndTime.duration,
+                "Booking Time": new Date(),
+                'Driver ID': '',
+                'Ride Verified': false,
+                'Ride Accepted': false,
+                'Ride Completed': false,
+                "Fare": Fare,
+            });
+
+            // Set up a listener to monitor changes in the 'Ride Verified' field
+            onSnapshot(docref, (docSnapshot) => {
+                const data = docSnapshot.data();
+                if (data && data['Ride Accepted'] === true) {
+                    // Redirect to the ride details page when 'Ride Verified' becomes true
+                    window.location.replace(`/ride/${rideId}`);
+                }
+            });
+
+        } catch (error) {
+            console.error("Error writing ride details:", error);
+        }
     };
     const sendriderequesttodriver = async (rideid) => {
         // Loop through each driver in the "drivers" array
         for (let i = 0; i < drivers.length; i++) {
             // Get the document reference for the driver
             const docref = doc(db, "VistaRide Driver Details", drivers[i]);
-    
+
             try {
                 // Update the document by adding 'Ride Requested' field
                 await updateDoc(docref, {
                     'Ride Requested': rideid
                 });
-    
+
                 console.log(`Ride requested for driver ${drivers[i]}`);
-    
+
                 // After 10 seconds, remove the 'Ride Requested' field
                 setTimeout(async () => {
                     await updateDoc(docref, {
@@ -432,7 +451,7 @@ export default function CabBookingLaptop() {
                     });
                     console.log(`'Ride Requested' field removed for driver ${drivers[i]}`);
                 }, 10000); // 10000 milliseconds = 10 seconds
-    
+
             } catch (error) {
                 console.error(`Error updating document for driver ${drivers[i]}:`, error);
             }

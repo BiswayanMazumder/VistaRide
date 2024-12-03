@@ -107,8 +107,8 @@ export default function Activeride_laptop() {
         streetViewControl: false,
         fullscreenControl: false,
     };
-    const [pickuplocation, setpickuplocation] = useState('');
-    const [droplocation, setdroplocation] = useState('');
+    const [pickuplocations, setpickuplocations] = useState('');
+    const [droplocations, setdroplocations] = useState('');
     const [pickuplong, setpickuplong] = useState(0);
     const [droplong, setdroplong] = useState(0);
     const [driver, setDriver] = useState('');
@@ -123,28 +123,64 @@ export default function Activeride_laptop() {
     const [rideverified, setrideveried] = useState(false);
     const [carimage, setcarimage] = useState('');
     const { RideID } = useParams();
-    const [fare,setfare]=useState(0);
+    const [fare, setfare] = useState(0);
+    const [driverlat, setdriverlat] = useState(0);
+    const [driverlong, setdriverlong] = useState(0);
+    // const [loading, setLoading] = useState(true);
     useEffect(() => {
-        const fetchdata = async() => {
-            const DriverID='';
-            const docRef=doc(db,'Booking Details',RideID);
-            const docSnap=await getDoc(docRef);
-            if(docSnap.exists()){
-                setpickuplocation(docSnap.data()['Pickup Location']);
-                setpickuplong(docSnap.data()['Pick Longitude']);
-                setpickuplat(docSnap.data()['Pickup Latitude']);
-                setdroplocation(docSnap.data()['Drop Location']);
-                setdroplong(docSnap.data()['Drop Longitude']);
-                setdroplat(docSnap.data()['Drop Latitude']);
-                DriverID=docSnap.data()['Driver ID'];
-                setDriver(docSnap.data()['Driver ID']);
-                setrideveried(docSnap.data()['Ride Verified']);
-                setOTP(docSnap.data()['Ride OTP']);
-                setfare(docSnap.data()['Fare']);
+        const fetchdata = async () => {
+            try {
+                // Fetch Booking Details
+                const docRef = doc(db, 'Ride Details', RideID);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    setpickuplocations(docSnap.data()['Pickup Location']);
+                    setpickuplong(docSnap.data()['Pick Longitude']);
+                    setpickuplat(docSnap.data()['Pickup Latitude']);
+                    setdroplocations(docSnap.data()['Drop Location']);
+                    setdroplong(docSnap.data()['Drop Longitude']);
+                    setdroplat(docSnap.data()['Drop Latitude']);
+                    const DriverID = docSnap.data()['Driver ID'];
+                    setDriver(DriverID);
+                    setrideveried(docSnap.data()['Ride Verified']);
+                    setOTP(docSnap.data()['Ride OTP']);
+                    setfare(docSnap.data()['Fare']);
+                    document.title = `Journey To ${docSnap.data()['Drop Location']} | VistaRide`;
+                    // console.log('Pickup Latitude: ' + docSnap.data()[')
+                    // Fetch Driver Details only if DriverID is valid
+                    if (DriverID) {
+                        const DriverRef = doc(db, 'VistaRide Driver Details', DriverID);
+                        const driverSnap = await getDoc(DriverRef);
+
+                        if (driverSnap.exists()) {
+                            setdrivername(driverSnap.data()['Name']);
+                            setdriverphone(driverSnap.data()['Contact Number']);
+                            setcarimage(driverSnap.data()['Car Photo']);
+                            setcarregnumber(driverSnap.data()['Car Number Plate']);
+                            setCarmodel(driverSnap.data()['Car Name']);
+                            setCarcategory(driverSnap.data()['Car Category']);
+                            setdriverlat(driverSnap.data()['Current Latitude']);
+                            setdriverlong(driverSnap.data()['Current Longitude']);
+                        } else {
+                            console.error('Driver details not found for ID:', DriverID);
+                        }
+                    } else {
+                        console.error('Invalid Driver ID:', DriverID);
+                    }
+                } else {
+                    console.error('Booking details not found for RideID:', RideID);
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }finally{
+                setLoading(false); 
             }
         };
+
         fetchdata();
-    }, [user])
+    }, [user, db]); // Trigger this effect when 'user' or 'db' changes
+
     const mapCenter = selectedDropLocation
         ? {
             lat: (selectedPickupLocation.lat + selectedDropLocation.lat) / 2,
@@ -154,10 +190,43 @@ export default function Activeride_laptop() {
     return (
         <div className='webbody'>
             <div className="ejhfjhfd">
-            <div className="jnjndjvnjdv">
-
-            </div>
-                <LoadScript googleMapsApiKey="AIzaSyApzKC2nq9OCuaVQV2Jbm9cJoOHPy9kzvM" libraries={['places']}>
+                <div className="jnjndjvnjdv">
+                    <div className="mdmndv">
+                        <div className="knfvnfv">
+                            <img src={carimage} alt="" width={'80%'} height={'80%'} />
+                        </div>
+                        <div className="jdnvjndvjn">
+                            {carregnumber}
+                            <div className="dnjndjv">
+                                <div>
+                                    {carmodel}
+                                </div>
+                                <div>
+                                    {drivername}
+                                </div>
+                            </div>
+                            <div className="dnjndjv" style={{ color: 'black', marginTop: '50px' }}>
+                                <div>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" data-baseweb="icon"><title>search</title><path fill-rule="evenodd" clip-rule="evenodd" d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm5-2a5 5 0 1 1-10 0 5 5 0 0 1 10 0Z" fill="currentColor"></path></svg>
+                                </div>
+                                <div>
+                                    {pickuplocations}
+                                </div>
+                            </div>
+                            <div className="dnjndjv" style={{ color: 'black', marginTop: '50px' }}>
+                                <div>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" data-baseweb="icon"><title>search</title><path fill-rule="evenodd" clip-rule="evenodd" d="M14 10h-4v4h4v-4ZM7 7v10h10V7H7Z" fill="currentColor"></path></svg>
+                                </div>
+                                <div>
+                                    {droplocations}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {loading ? (
+                <div>Loading...</div> // Show loading message while fetching data
+            ) :(<LoadScript googleMapsApiKey="AIzaSyApzKC2nq9OCuaVQV2Jbm9cJoOHPy9kzvM" libraries={['places']}>
                     <GoogleMap
                         mapContainerStyle={mapContainerStyle}
                         center={mapCenter}
@@ -190,8 +259,26 @@ export default function Activeride_laptop() {
                                 }}
                             />
                         )}
+
+                        {/* Polyline between Pickup Location and Driver Location */}
+                        {(pickuplat && pickuplong && driverlat && driverlong) && (
+                            <Polyline
+                                path={[
+                                    { lat: parseFloat(pickuplat), lng: parseFloat(pickuplong) }, // Pickup Location
+                                    { lat: parseFloat(driverlat), lng: parseFloat(driverlong) }, // Driver's Location
+                                ]}
+                                options={{
+                                    strokeColor: 'blue',
+                                    strokeOpacity: 1,
+                                    strokeWeight: 4,
+                                }}
+                            />
+                        )}
+
+
                     </GoogleMap>
-                </LoadScript>
+                </LoadScript>)}
+
             </div>
 
         </div>
