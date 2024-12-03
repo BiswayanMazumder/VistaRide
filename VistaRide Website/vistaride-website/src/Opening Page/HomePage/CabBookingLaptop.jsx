@@ -76,7 +76,7 @@ export default function CabBookingLaptop() {
                         }
                     }
                 }
-                console.log("Ride ID:", RideID);
+                // console.log("Ride ID:", RideID);
                 localStorage.setItem('Active Ride ID',RideID);
                 
             } catch (error) {
