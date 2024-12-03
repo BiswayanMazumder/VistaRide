@@ -337,15 +337,34 @@ export default function CabBookingLaptop() {
         console.log("Document successfully updated!");
 
     };
+    const removeridfromdriver = async (rideId) => {
+        for (let i = 0; i < drivers.length; i++) {
+            // Get the document reference for the driver
+            const docref = doc(db, "VistaRide Driver Details", drivers[i]);
+    
+            try {
+                
+                    await updateDoc(docref, {
+                        'Ride Requested': deleteField()  // This removes the field
+                    });
+                    console.log(`'Ride Requested' field removed for driver ${drivers[i]}`);
+                // 10000 milliseconds = 10 seconds
+    
+            } catch (error) {
+                console.error(`Error updating document for driver ${drivers[i]}:`, error);
+            }
+        }
+
+    };
     const writeRideDetails = async (rideId) => {
         const randomotp = Math.floor(1000 + Math.random() * 9000);
         const docref = doc(db, "Ride Details", rideId.toString()); // Define docRef outside of the try-);
         await setDoc(docref, {
             'Cab Category': cabcategorynames[index],
-            "Pickup Latitude": selectedPickupLocation.lat,
-            "Pick Longitude": selectedPickupLocation.lng,
-            "Drop Latitude": selectedDropLocation.lat,
-            "Drop Longitude": selectedDropLocation.lng,
+            "Pickup Latitude": parseFloat(selectedPickupLocation.lat),
+            "Pick Longitude": parseFloat(selectedPickupLocation.lng),
+            "Drop Latitude": parseFloat(selectedDropLocation.lat),
+            "Drop Longitude": parseFloat(selectedDropLocation.lng),
             "Booking ID": rideId,
             // "Booking Owner": user,
             "Ride OTP": randomotp,
@@ -355,6 +374,7 @@ export default function CabBookingLaptop() {
             "Travel Time": distanceAndTime.duration,
             "Booking Time": new Date(),
             'Driver ID': '',
+            'Ride Verified':false,
             'Ride Accepted': false,
             'Ride Completed': false,
             "Fare": parseFloat(cabmultiplier[index]) * parseFloat(distanceAndTime.distance)
@@ -536,6 +556,7 @@ export default function CabBookingLaptop() {
                                     <div className="jjfnvjnf" style={{ backgroundColor: 'black', width: '90%', marginLeft: '5%', marginBottom: '20px', marginTop: '20px' }}
                                         onClick={() => {
                                             removeridfromdb(localStorage.getItem('Ride ID').toString());
+                                            removeridfromdriver(localStorage.getItem('Ride ID').toString());
                                             setbookingstarted(false);
                                         }}
                                     >
