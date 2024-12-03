@@ -254,6 +254,7 @@ export default function Activeride_laptop() {
                         mapContainerStyle={{ height: '100vh', width: '100vw' }}
                         center={mapCenter}
                         zoom={14}
+                        options={mapOptions}
                     >
                         {/* Pickup Location Marker */}
                         {pickuplat && pickuplong && (
