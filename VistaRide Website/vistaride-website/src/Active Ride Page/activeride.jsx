@@ -1,5 +1,6 @@
 import React from 'react'
 import Activeride_laptop from './activeride_laptop'
+import Activeride_mobile from './activeride_mobile'
 
 export default function Activeride() {
     return (
@@ -8,8 +9,8 @@ export default function Activeride() {
             <Activeride_laptop />
           </div>
           <div className="jnvjnfjn">
-                    {/* <Cabbookingpagemobile/> */}
-                </div>
+                <Activeride_mobile/>
+            </div>
         </div>
       )
 }

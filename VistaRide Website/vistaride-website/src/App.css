@@ -520,6 +520,7 @@ justify-content: space-between;
   position: fixed;
   bottom: 0;
   height: 40vh;
+  font-family: 'Avenir', sans-serif;
   width: 100vw;
   background-color: white;
   overflow: scroll;
