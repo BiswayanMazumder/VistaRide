@@ -468,28 +468,42 @@ export default function Cabbookingpagemobile() {
         <div className='webbody'>
             <div className="kbkkbfb">
                 <div>
-                    <LoadScript googleMapsApiKey="AIzaSyApzKC2nq9OCuaVQV2Jbm9cJoOHPy9kzvM" libraries={['places']}>
-                        <GoogleMap
-                            mapContainerStyle={mapContainerStyle}
-                            center={mapCenter}
-                            zoom={17}
-                            options={mapOptions}
-                            onLoad={(map) => (mapRef.current = map)} // Store map instance in the ref
-                        >
-                            {selectedPickupLocation && <Marker position={selectedPickupLocation} />}
-                            {selectedDropLocation && <Marker position={selectedDropLocation} />}
-                            {directions && directions.routes[0].overview_path && (
-                                <Polyline
-                                    path={directions.routes[0].overview_path}
-                                    options={{
-                                        strokeColor: 'black',
-                                        strokeOpacity: 1,
-                                        strokeWeight: 4,
-                                    }}
-                                />
-                            )}
-                        </GoogleMap>
-                    </LoadScript>
+                <LoadScript googleMapsApiKey="AIzaSyApzKC2nq9OCuaVQV2Jbm9cJoOHPy9kzvM" libraries={['places']}>
+                    <GoogleMap
+                        mapContainerStyle={mapContainerStyle}
+                        center={mapCenter}
+                        zoom={17}
+                        options={mapOptions}
+                        onLoad={(map) => (mapRef.current = map)} // Store map instance in the ref
+                    >
+                        {selectedPickupLocation && <Marker position={selectedPickupLocation} />}
+                        {selectedDropLocation && <Marker position={selectedDropLocation} />}
+
+                        {/* Render markers for each nearby driver */}
+                        {markers.map((driver) => (
+                            <Marker
+                                key={driver.id}
+                                position={driver.position}
+                                icon={{
+                                    url: "https://d1a3f4spazzrp4.cloudfront.net/car-types/map70px/map-blue-uberx.png",
+                                    scaledSize: new window.google.maps.Size(40, 40), // Adjust marker size
+                                }}
+                            />
+                        ))}
+
+                        {directions && directions.routes[0].overview_path && (
+                            <Polyline
+                                path={directions.routes[0].overview_path}
+                                options={{
+                                    strokeColor: 'black',
+                                    strokeOpacity: 1,
+                                    strokeWeight: 4,
+                                }}
+                            />
+                        )}
+                    </GoogleMap>
+                </LoadScript>
+
                 </div>
                 {
                     (pickupLocation && dropLocation && distanceAndTime.distance)?<div className="dfnjvnvn">
