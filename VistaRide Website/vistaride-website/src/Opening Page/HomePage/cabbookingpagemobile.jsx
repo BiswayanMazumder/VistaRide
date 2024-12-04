@@ -603,7 +603,7 @@ export default function Cabbookingpagemobile() {
                             </div>
 
                 </div>:<div className='dfnjvnvn'>
-                <div className="mdnvjnv" style={{ fontSize: '15px', fontWeight: 'bold', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
+                <div className="mdnvjnv" style={{ fontSize: '20px', fontWeight: 'bold', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
                         Find a trip
                     </div>
                     <div className="mdnvjnv" style={{ position: 'relative', marginLeft: '10px', marginRight: '20px' }}>
