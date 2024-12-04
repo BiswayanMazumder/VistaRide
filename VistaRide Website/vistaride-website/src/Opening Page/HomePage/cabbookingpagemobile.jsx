@@ -506,7 +506,28 @@ export default function Cabbookingpagemobile() {
 
                 </div>
                 {
-                    (pickupLocation && dropLocation && distanceAndTime.distance)?<div className="dfnjvnvn">
+                  bookingstarted?<div className='dfnjvnvn'>
+                  <div className="mdnvjnv" style={{ fontSize: '18px', fontWeight: 'bold', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
+                        Contacting drivers nearby...
+                    </div>
+                    <div style={{ position: 'relative', marginLeft: '10px', marginRight: '20px' }} className='mdnvjnv'>
+                        <input type="text" className='ebfbebfeh' disabled value={pickupLocation} style={{ width: '90vw', height: '40px', fontSize: '15px',color:'black' }}/>
+                    </div>
+                    <div style={{ position: 'relative', marginLeft: '10px', marginRight: '20px' }} className='mdnvjnv'>
+                        <input type="text" className='ebfbebfeh' disabled value={dropLocation} style={{ width: '90vw', height: '40px', fontSize: '15px',color:'black' }}/>
+                    </div>
+                    <Link style={{ textDecoration: 'none', color: 'white' }}>
+                                    <div className="jjfnvjnf" style={{ backgroundColor: 'black', width: '90%', marginLeft: '5%', marginBottom: '20px', marginTop: '20px' }}
+                                        onClick={() => {
+                                            removeridfromdb(localStorage.getItem('Ride ID').toString());
+                                            removeridfromdriver(localStorage.getItem('Ride ID').toString());
+                                            setbookingstarted(false);
+                                        }}
+                                    >
+                                        Cancel Request
+                                    </div>
+                                </Link>
+                  </div>:  (pickupLocation && dropLocation && distanceAndTime.distance)?<div className="dfnjvnvn">
                     <Link style={{ textDecoration: 'none', color: 'black' }}>
                                 <div className="erhfrj" style={{ border: index === 0 ? '2px solid black' : 'white',width:'100vw' }} onClick={() => {
                                     fetchDrivers(cabcategorynames[0])
@@ -592,10 +613,10 @@ export default function Cabbookingpagemobile() {
                                             console.log(drivers)
                                             localStorage.setItem('Ride ID', random4DigitNumber);
                                             console.log(drivers);
-                                            // writeRideDetailsToDB(random4DigitNumber.toString());
-                                            // writeRideDetails(random4DigitNumber.toString());
-                                            // sendriderequesttodriver(random4DigitNumber.toString())
-                                            // setbookingstarted(true);
+                                            writeRideDetailsToDB(random4DigitNumber.toString());
+                                            writeRideDetails(random4DigitNumber.toString());
+                                            sendriderequesttodriver(random4DigitNumber.toString())
+                                            setbookingstarted(true);
                                         }
                                     }}>
                                 Request {cabcategorynames[index]}

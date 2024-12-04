@@ -611,7 +611,7 @@ export default function CabBookingLaptop() {
                                             setbookingstarted(false);
                                         }}
                                     >
-                                        Cancel Trip
+                                        Cancel Request
                                     </div>
                                 </Link>
                             </div>
