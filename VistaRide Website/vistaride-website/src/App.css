@@ -494,3 +494,25 @@ justify-content: space-between;
   margin-top: 15px;
   gap: 10px;
 }
+.rnnfbnfmbn{
+  width: 40vw;
+  display: flex;
+  height: 60px;
+  margin-top: 40px;
+}
+.mnbngb{
+  height: 50px;
+  width: 90%;
+  border-radius: 10px;
+  background-color: white;
+  border: 1px solid red;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: red;
+  cursor: pointer;
+}
+.mnbngb:hover{
+  background-color: red;
+  color: white;
+}

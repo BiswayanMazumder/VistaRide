@@ -92,15 +92,18 @@ export default function Activeride_laptop() {
     const [driverlat, setdriverlat] = useState(0);
     const [driverlong, setdriverlong] = useState(0);
     const [dataFetched, setDataFetched] = useState(false); // Track if data is fetched
+    const [isridecancelled,setridecancelled]=useState(false);
+    const [ridecompleted,setridecompleted]=useState(false);
+    const [rideaccepted,setrideaccepted]=useState(false);
     useEffect(() => {
         let unsubscribe = null;  // Declare unsubscribe variable here
-    
+
         const fetchData = async () => {
             try {
                 // Fetch Booking Details
                 const docRef = doc(db, 'Ride Details', RideID);
                 const docSnap = await getDoc(docRef);
-    
+
                 if (docSnap.exists()) {
                     setpickuplocations(docSnap.data()['Pickup Location']);
                     setpickuplong(docSnap.data()['Pick Longitude']);
@@ -112,6 +115,7 @@ export default function Activeride_laptop() {
                     setdroplocations(docSnap.data()['Drop Location']);
                     setdroplong(docSnap.data()['Drop Longitude']);
                     setdroplat(docSnap.data()['Drop Latitude']);
+                    setridecompleted(docSnap.data()['Ride Completed']);
                     const DriverID = docSnap.data()['Driver ID'];
                     setDriver(DriverID);
                     setrideveried(docSnap.data()['Ride Verified']);
@@ -119,21 +123,29 @@ export default function Activeride_laptop() {
                     setfare(docSnap.data()['Fare']);
                     setMapCenter({ lat: pickupLatitude, lng: pickupLongitude });
                     document.title = `Journey To ${docSnap.data()['Drop Location']} | VistaRide`;
-    
+
                     // Add real-time listener for Ride Verified field
                     unsubscribe = onSnapshot(docRef, (docSnapshot) => {
                         const data = docSnapshot.data();
                         if (data && data['Ride Verified'] !== undefined) {
+                            setrideaccepted(data['Ride Accepted']);
+                            setridecompleted(data['Ride Completed']);
                             setrideveried(data['Ride Verified']);
-                            console.log('Ride Verified status changed:', data['Ride Verified']);
+                            if(data['Ride Accepted']==false){
+                                window.location.replace('/go/home');
+                            }
+                            // console.log('Ride Verified status changed:', data['Ride Completed']);
                         }
                     });
-    
+
                     // Fetch Driver Details if Driver ID exists
                     if (DriverID) {
                         const DriverRef = doc(db, 'VistaRide Driver Details', DriverID);
+                        await updateDoc(DriverRef,{
+                            'Ride Requested':deleteField()
+                        })
                         const driverSnap = await getDoc(DriverRef);
-    
+
                         if (driverSnap.exists()) {
                             setdrivername(driverSnap.data()['Name']);
                             setdriverphone(driverSnap.data()['Contact Number']);
@@ -160,22 +172,43 @@ export default function Activeride_laptop() {
                 setDataFetched(true);
             }
         };
-    
+
         fetchData();
-    
+
         // Cleanup function to unsubscribe from the listener
         return () => {
             if (unsubscribe) {
                 unsubscribe(); // Unsubscribe from the snapshot listener
             }
         };
-    }, [user, db, RideID]); // Add RideID to dependency array to refetch data on change
-     // Trigger this effect when 'user' or 'db' changes
+    }, [user, db, RideID]);
+        const cancelride=async()=>{
+            try{
+                const docRef = doc(db, 'Ride Details', RideID);
+                await updateDoc(docRef, {
+                    'Ride Accepted': false,
+                    'Ride Cancelled':true,
+                    'Cancellation Time':new Date(),
+                });
+                // console.log('Ride cancelled:', updateDoc);
+                const driverRef=doc(db,'VistaRide Driver Details',driver);
+                await updateDoc(driverRef, {
+                    'Ride Doing':deleteField(),
+                    'Driver Avaliable':true
+                });
+                setridecancelled(true);
+                window.location.replace('/go/home')
+            }catch(error){
+                console.error('Error cancelling ride:', error);
+            }
+        };
+        
+    // Trigger this effect when 'user' or 'db' changes
     const [directionsPath, setDirectionsPath] = useState([]);
     useEffect(() => {
         if (pickuplat && pickuplong && driverlat && driverlong && droplat && droplong) {
             const directionsService = new window.google.maps.DirectionsService();
-            
+
             // Determine the origin and destination based on the `rideverified` status
             const request = {
                 origin: {
@@ -188,21 +221,21 @@ export default function Activeride_laptop() {
                 },
                 travelMode: window.google.maps.TravelMode.DRIVING,
             };
-    
+
             // Request directions
             directionsService.route(request, (result, status) => {
                 if (status === window.google.maps.DirectionsStatus.OK) {
                     const path = result.routes[0].overview_path;
                     setDirectionsPath(path); // Set the road-following polyline
-                    
+
                     const distance = result.routes[0].legs[0].distance.text;
                     const duration = result.routes[0].legs[0].duration.text;
                     setDistanceAndTime({ distance, duration });
-                    
+
                     // Set the map center based on the updated origin (either the driver or the pickup)
-                    setMapCenter({ 
-                        lat: rideverified ? driverlat : pickuplat, 
-                        lng: rideverified ? driverlong : pickuplong 
+                    setMapCenter({
+                        lat: rideverified ? driverlat : pickuplat,
+                        lng: rideverified ? driverlong : pickuplong
                     });
                 } else {
                     console.error("Directions request failed due to " + status);
@@ -210,7 +243,7 @@ export default function Activeride_laptop() {
             });
         }
     }, [pickuplat, pickuplong, driverlat, driverlong, droplat, droplong, rideverified]);
-    
+
     return (
         <div className='webbody'>
             <div className="ejhfjhfd">
@@ -219,7 +252,11 @@ export default function Activeride_laptop() {
                         <div className="knfvnfv">
                             <img src={carimage} alt="" width={'80%'} height={'80%'} />
                         </div>
+                        
                         <div className="jdnvjndvjn">
+                        <div className="dnjndjv" style={{color:'black',fontWeight:'600'}}>
+                                {rideverified?ridecompleted?(`Please pay ₹${fare} to the driver`):(`Ride verified. Have a safe journey.`):(`Please share the OTP ${OTP} to start trip.`)}
+                            </div><br />
                             {carregnumber}
                             <div className="dnjndjv">
                                 <div>
@@ -245,9 +282,16 @@ export default function Activeride_laptop() {
                                     {droplocations}
                                 </div>
                             </div>
+                            {rideverified?<></>:(<div className="rnnfbnfmbn" onClick={cancelride}>
+                                <div className="mnbngb">
+                                    Cancel Ride
+                                </div>
+                            </div>)}
                         </div>
                     </div>
+                    
                 </div>
+                
                 {/* maps */}
                 <LoadScript googleMapsApiKey="AIzaSyApzKC2nq9OCuaVQV2Jbm9cJoOHPy9kzvM">
                     <GoogleMap
@@ -258,17 +302,17 @@ export default function Activeride_laptop() {
                     >
                         {/* Pickup Location Marker */}
                         {pickuplat && pickuplong && (
-                            <Marker position={{ lat:rideverified?droplat: pickuplat, lng:rideverified?droplong: pickuplong }} label="" icon={{
-                                    url: `https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2Fpngimg.com%20-%20pin_PNG27.png?alt=media&token=a7926167-44dd-4938-b74f-030f0487e5b4`,
-                                    scaledSize: new window.google.maps.Size(50, 50), // Adjust marker size
-                                }} />
+                            <Marker position={{ lat: rideverified ? droplat : pickuplat, lng: rideverified ? droplong : pickuplong }} label="" icon={{
+                                url: `https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2Fpngimg.com%20-%20pin_PNG27.png?alt=media&token=a7926167-44dd-4938-b74f-030f0487e5b4`,
+                                scaledSize: new window.google.maps.Size(50, 50), // Adjust marker size
+                            }} />
                         )}
                         {/* Driver Location Marker */}
                         {driverlat && driverlong && (
                             <Marker position={{ lat: driverlat, lng: driverlong }} label="" icon={{
-                                    url: `${carimage}`,
-                                    scaledSize: new window.google.maps.Size(50, 50), // Adjust marker size
-                                }} />
+                                url: `${carimage}`,
+                                scaledSize: new window.google.maps.Size(50, 50), // Adjust marker size
+                            }} />
                         )}
 
                         {/* Polyline based on Directions */}

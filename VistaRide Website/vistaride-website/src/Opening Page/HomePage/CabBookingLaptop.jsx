@@ -421,6 +421,7 @@ export default function CabBookingLaptop() {
             onSnapshot(docref, (docSnapshot) => {
                 const data = docSnapshot.data();
                 if (data && data['Ride Accepted'] === true) {
+                    
                     // Redirect to the ride details page when 'Ride Verified' becomes true
                     window.location.replace(`/ride/${rideId}`);
                 }
