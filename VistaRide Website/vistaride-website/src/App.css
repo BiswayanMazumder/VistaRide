@@ -500,7 +500,7 @@ justify-content: space-between;
   height: 60px;
   margin-top: 40px;
 }
-.mnbngb{
+.mnbngb,.jhdcj{
   height: 50px;
   width: 90%;
   border-radius: 10px;
@@ -515,4 +515,12 @@ justify-content: space-between;
 .mnbngb:hover{
   background-color: red;
   color: white;
+}
+.dfnjvnvn{
+  position: fixed;
+  bottom: 0;
+  height: 40vh;
+  width: 100vw;
+  background-color: white;
+  overflow: scroll;
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { onAuthStateChanged, getAuth } from "firebase/auth";
-import { collection, doc, FieldValue, getDoc, getDocs, getFirestore, onSnapshot, serverTimestamp } from "firebase/firestore";
+import { arrayRemove, arrayUnion, collection, deleteField, doc, FieldValue, getDoc, getDocs, getFirestore, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import { GoogleMap, LoadScript, Marker, Polyline } from '@react-google-maps/api';
 import { Link } from 'react-router-dom';
@@ -22,6 +22,7 @@ const defaultLatLng = { lat: 22.5660201, lng: 88.3630783 };
 
 export default function Cabbookingpagemobile() {
     const mapRef = useRef(null);
+    const [bookingstarted, setbookingstarted] = useState(false);
     const [index, setindex] = useState(0);
     const cabmultiplier = [36, 40, 65, 15];
     const cabcategorynames = ['Mini', 'Prime', 'SUV', 'Non AC Taxi'];
@@ -41,7 +42,7 @@ export default function Cabbookingpagemobile() {
     const [error, setError] = useState(null);
     const [userName, setUserName] = useState(null);
     const [userPfp, setUserPfp] = useState(null);
-    const [drivers, setDrivers] = useState([]);
+
     const [pickupLocation, setPickupLocation] = useState('');
     const [dropLocation, setDropLocation] = useState('');
     const [pickupSuggestions, setPickupSuggestions] = useState([]);
@@ -50,10 +51,41 @@ export default function Cabbookingpagemobile() {
     const [selectedDropLocation, setSelectedDropLocation] = useState(null);
     const [mapContainerStyle, setMapContainerStyle] = useState({
         width: '100vw',
-        height: '100vh',
+        height: '89vh',
     });
     const [directions, setDirections] = useState(null);
     const [distanceAndTime, setDistanceAndTime] = useState({ distance: '', duration: '' });
+    const [RideID, setRideID] = useState('');
+    useEffect(() => {
+        const fetchactiveride = async () => {
+            try {
+                let rideid = []; // Use `let` instead of `const` for reassignment
+                const docRef = doc(db, "Booking IDs", user); // Ensure `db` and `user` are defined
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    rideid = docSnap.data().IDs; // Use `.data()` method and properly access fields
+                }
+                console.log('Ride ID:', rideid);
+                for (var i = 0; i < rideid.length; i++) {
+                    const RideRef = doc(db, "Ride Details", rideid[i].toString());
+                    const docsnap = await getDoc(RideRef);
+                    if (docsnap.exists()) {
+                        if (docsnap.data()['Ride Accepted']) {
+                            setRideID(rideid[i]);
+                            window.location.replace(`/ride/${rideid[i]}`);
+                        }
+                    }
+                }
+                // console.log("Ride ID:", RideID);
+                localStorage.setItem('Active Ride ID', RideID);
+
+            } catch (error) {
+                console.error("Error fetching active ride:", error);
+            }
+        };
+
+        fetchactiveride();
+    }, [db, user]);
     const handlePickupInputChange = (e) => {
         const value = e.target.value;
         setPickupLocation(value);
@@ -191,6 +223,65 @@ export default function Cabbookingpagemobile() {
     useEffect(() => {
         document.title = 'Request a Ride with VistaRide';
     }, []);
+    const [drivers, setDrivers] = useState([]);
+    const [markers, setMarkers] = useState([]);
+    const isWithin15Km = (origin, destination) => {
+        const R = 6371; // Radius of the Earth in km
+        const dLat = (destination.lat - origin.lat) * (Math.PI / 180);
+        const dLon = (destination.lng - origin.lng) * (Math.PI / 180);
+
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(origin.lat * (Math.PI / 180)) * Math.cos(destination.lat * (Math.PI / 180)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distance = R * c; // Distance in km
+
+        return distance <= 15; // Return true if within 15 km
+    };
+
+    // Fetch drivers when the selectedPickupLocation changes
+    useEffect(() => {
+        if (!selectedPickupLocation) return;
+
+        const fetchDrivers = () => {
+            const driversCollection = collection(db, "VistaRide Driver Details");
+
+            // Set up a real-time listener on the driver details collection
+            const unsubscribe = onSnapshot(driversCollection, (querySnapshot) => {
+                const nearbyDrivers = [];
+                const driverMarkers = [];
+
+                querySnapshot.forEach((doc) => {
+                    const driverData = doc.data();
+                    const driverLocation = {
+                        lat: parseFloat(driverData['Current Latitude']),  // Convert string to number
+                        lng: parseFloat(driverData['Current Longitude']),
+                    };
+                    const driverAvailability = driverData['Driver Avaliable'];
+                    const driverStatus = driverData['Driver Online'];
+
+                    // Check if driver is online, available, and within 15 km
+                    if (driverStatus && driverAvailability && isWithin15Km(selectedPickupLocation, driverLocation)) {
+                        nearbyDrivers.push(doc.id); // Push driver UID if they are within range
+                        driverMarkers.push({
+                            id: doc.id,
+                            position: driverLocation,
+                        });
+                    }
+                });
+
+                setDrivers(nearbyDrivers); // Update the state with the filtered list of drivers
+                setMarkers(driverMarkers); // Update the state with the list of driver markers
+                console.log("Nearby drivers (within 15 km):", nearbyDrivers);
+            });
+
+            // Cleanup the listener when component unmounts
+            return () => unsubscribe();
+        };
+
+        fetchDrivers();
+    }, [selectedPickupLocation]);
     useEffect(() => {
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
@@ -216,7 +307,157 @@ export default function Cabbookingpagemobile() {
         streetViewControl: false,
         fullscreenControl: false,
     };
+    const fetchDrivers = (carcategory) => {
+        const driversCollection = collection(db, "VistaRide Driver Details");
 
+        // Set up a real-time listener on the driver details collection
+        const unsubscribe = onSnapshot(driversCollection, (querySnapshot) => {
+            const nearbyDrivers = [];
+            const driverMarkers = [];
+
+            querySnapshot.forEach((doc) => {
+                const driverData = doc.data();
+                const driverLocation = {
+                    lat: parseFloat(driverData['Current Latitude']),  // Convert string to number
+                    lng: parseFloat(driverData['Current Longitude']),
+                };
+                const driverAvailability = driverData['Driver Avaliable'];
+                const driverStatus = driverData['Driver Online'];
+
+                // Check if driver is online, available, and within 15 km
+                if (driverStatus && driverAvailability && isWithin15Km(selectedPickupLocation, driverLocation) && carcategory == driverData['Car Category']) {
+                    nearbyDrivers.push(doc.id); // Push driver UID if they are within range
+                    driverMarkers.push({
+                        id: doc.id,
+                        position: driverLocation,
+                    });
+                }
+            });
+
+            setDrivers(nearbyDrivers); // Update the state with the filtered list of drivers
+            setMarkers(driverMarkers); // Update the state with the list of driver markers
+            console.log("Nearby drivers (within 15 km):", nearbyDrivers);
+        });
+
+        // Cleanup the listener when component unmounts
+        return () => unsubscribe();
+    };
+    const writeRideDetailsToDB = async (rideId) => {
+        const docRef = doc(db, "Booking IDs", user); // Define docRef outside of the try-catch block
+        try {
+            await updateDoc(docRef, {
+                IDs: arrayUnion(rideId), // Append the rideId to the array
+            });
+            console.log("Document successfully updated!");
+        } catch (error) {
+            if (error.code === "not-found") {
+                // If the document doesn't exist, create it with the initial array
+                await setDoc(docRef, { IDs: [rideId] });
+                console.log("Document created successfully!");
+            } else {
+                console.error("Error updating document: ", error);
+            }
+        }
+    };
+    const removeridfromdb = async (rideId) => {
+        const docRef = doc(db, "Booking IDs", user); // Define docRef outside of the try-catch block
+        await updateDoc(docRef, {
+            IDs: arrayRemove(rideId), // Append the rideId to the array
+        });
+        console.log("Document successfully updated!");
+
+    };
+    const removeridfromdriver = async (rideId) => {
+        for (let i = 0; i < drivers.length; i++) {
+            // Get the document reference for the driver
+            const docref = doc(db, "VistaRide Driver Details", drivers[i]);
+
+            try {
+
+                await updateDoc(docref, {
+                    'Ride Requested': deleteField()  // This removes the field
+                });
+                console.log(`'Ride Requested' field removed for driver ${drivers[i]}`);
+                // 10000 milliseconds = 10 seconds
+
+            } catch (error) {
+                console.error(`Error updating document for driver ${drivers[i]}:`, error);
+            }
+        }
+
+    };
+
+    const writeRideDetails = async (rideId) => {
+        const randomotp = Math.floor(1000 + Math.random() * 9000);
+        const docref = doc(db, "Ride Details", rideId.toString()); // Define docRef outside of the try-);
+        let Fare = parseFloat(parseFloat(cabmultiplier[index]) * parseFloat(distanceAndTime.distance));
+
+        // Ensure the Fare is sent as a double:
+        Fare = Number(Fare.toFixed(2));
+        try {
+            // Write the initial ride details to Firestore
+            await setDoc(docref, {
+                'Cab Category': cabcategorynames[index],
+                "Pickup Latitude": parseFloat(selectedPickupLocation.lat),
+                "Pick Longitude": parseFloat(selectedPickupLocation.lng),
+                "Drop Latitude": parseFloat(selectedDropLocation.lat),
+                "Drop Longitude": parseFloat(selectedDropLocation.lng),
+                "Booking ID": rideId,
+                // "Booking Owner": user,
+                "Ride OTP": randomotp,
+                "Pickup Location": pickupLocation,
+                "Drop Location": dropLocation,
+                "Travel Distance": distanceAndTime.distance,
+                "Travel Time": distanceAndTime.duration,
+                "Booking Time": new Date(),
+                'Driver ID': '',
+                'Ride Verified': false,
+                'Ride Accepted': false,
+                'Ride Completed': false,
+                "Fare": Fare,
+            });
+
+            // Set up a listener to monitor changes in the 'Ride Verified' field
+            onSnapshot(docref, (docSnapshot) => {
+                const data = docSnapshot.data();
+                if (data && data['Ride Accepted'] === true) {
+
+                    // Redirect to the ride details page when 'Ride Verified' becomes true
+                    window.location.replace(`/ride/${rideId}`);
+                }
+            });
+
+        } catch (error) {
+            console.error("Error writing ride details:", error);
+        }
+    };
+    const sendriderequesttodriver = async (rideid) => {
+        // Loop through each driver in the "drivers" array
+        for (let i = 0; i < drivers.length; i++) {
+            // Get the document reference for the driver
+            const docref = doc(db, "VistaRide Driver Details", drivers[i]);
+
+            try {
+                // Update the document by adding 'Ride Requested' field
+                await updateDoc(docref, {
+                    'Ride Requested': rideid
+                });
+
+                console.log(`Ride requested for driver ${drivers[i]}`);
+
+                // After 10 seconds, remove the 'Ride Requested' field
+                setTimeout(async () => {
+                    await updateDoc(docref, {
+                        'Ride Requested': deleteField()  // This removes the field
+                    });
+                    console.log(`'Ride Requested' field removed for driver ${drivers[i]}`);
+                }, 10000); // 10000 milliseconds = 10 seconds
+
+            } catch (error) {
+                console.error(`Error updating document for driver ${drivers[i]}:`, error);
+            }
+        }
+    };
     const mapCenter = selectedDropLocation
         ? {
             lat: (selectedPickupLocation.lat + selectedDropLocation.lat) / 2,
@@ -250,6 +491,196 @@ export default function Cabbookingpagemobile() {
                         </GoogleMap>
                     </LoadScript>
                 </div>
+                {
+                    (pickupLocation && dropLocation && distanceAndTime.distance)?<div className="dfnjvnvn">
+                    <Link style={{ textDecoration: 'none', color: 'black' }}>
+                                <div className="erhfrj" style={{ border: index === 0 ? '2px solid black' : 'white',width:'100vw' }} onClick={() => {
+                                    fetchDrivers(cabcategorynames[0])
+                                    setindex(0)
+                                }
+                                }>
+                                    <div className="jjnvjfnv">
+                                        <img src={carcategoryimages[0]} alt="" style={{ width: '100px', height: '100px' }} />
+                                        <div className="jfnv">
+                                            {cabcategorynames[0]}
+                                            <div className="jnvn">
+                                                {cabcategorydescription[0]}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
+                                        ₹{cabmultiplier[0] * parseInt(distanceAndTime.distance)}
+                                    </div>
+
+                                </div>
+                            </Link>
+                            <Link style={{ textDecoration: 'none', color: 'black' }}>
+                                <div className="erhfrj" style={{ border: index === 1 ? '2px solid black' : 'white',width:'100vw' }} onClick={() => {
+                                    setindex(1)
+                                    fetchDrivers(cabcategorynames[1])
+                                }}>
+                                    <div className="jjnvjfnv">
+                                        <img src={carcategoryimages[1]} alt="" style={{ width: '100px', height: '100px' }} />
+                                        <div className="jfnv">
+                                            {cabcategorynames[1]}
+                                            <div className="jnvn">
+                                                {cabcategorydescription[1]}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
+                                        ₹{cabmultiplier[1] * parseInt(distanceAndTime.distance)}
+                                    </div>
+                                </div>
+                            </Link>
+                            <Link style={{ textDecoration: 'none', color: 'black' }}>
+                                <div className="erhfrj" style={{ border: index === 2 ? '2px solid black' : 'white' ,width:'100vw'}} onClick={() => {
+                                    setindex(2)
+                                    fetchDrivers(cabcategorynames[2])
+                                }}>
+                                    <div className="jjnvjfnv">
+                                        <img src={carcategoryimages[2]} alt="" style={{ width: '100px', height: '100px' }} />
+                                        <div className="jfnv">
+                                            {cabcategorynames[2]}
+                                            <div className="jnvn">
+                                                {cabcategorydescription[2]}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
+                                        ₹{cabmultiplier[2] * parseInt(distanceAndTime.distance)}
+                                    </div>
+                                </div>
+                            </Link>
+                            <Link style={{ textDecoration: 'none', color: 'black' }}>
+                                <div className="erhfrj" style={{ marginBottom: '110px', border: index === 3 ? '2px solid black' : 'white', marginTop: '20px',marginBottom:'5px',width:'100vw' }} onClick={() => {
+                                    setindex(3)
+                                    fetchDrivers(cabcategorynames[3])
+                                }}>
+                                    <div className="jjnvjfnv">
+                                        <img src={carcategoryimages[3]} alt="" style={{ width: '100px', height: '100px' }} />
+                                        <div className="jfnv">
+                                            {cabcategorynames[3]}
+                                            <div className="jnvn">
+                                                {cabcategorydescription[3]}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
+                                        ₹{cabmultiplier[3] * parseInt(distanceAndTime.distance)}
+                                    </div>
+                                </div>
+                            </Link>
+                            <div className="jdhcjhd">
+                                <div className="jhdcj" style={{width:'100vw',marginBottom:'20px',backgroundColor: drivers.length > 0 ? 'black' : 'grey',color:'white',border:'1px solid transparent'}} onClick={() => {
+                                        if (drivers.length > 0) {
+                                            const random4DigitNumber = Math.floor(10000 + Math.random() * 90000);
+                                            console.log(drivers)
+                                            localStorage.setItem('Ride ID', random4DigitNumber);
+                                            console.log(drivers);
+                                            // writeRideDetailsToDB(random4DigitNumber.toString());
+                                            // writeRideDetails(random4DigitNumber.toString());
+                                            // sendriderequesttodriver(random4DigitNumber.toString())
+                                            // setbookingstarted(true);
+                                        }
+                                    }}>
+                                Request {cabcategorynames[index]}
+                                </div>
+                            </div>
+
+                </div>:<div className='dfnjvnvn'>
+                <div className="mdnvjnv" style={{ fontSize: '15px', fontWeight: 'bold', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
+                        Find a trip
+                    </div>
+                    <div className="mdnvjnv" style={{ position: 'relative', marginLeft: '10px', marginRight: '20px' }}>
+                        <input
+                            type="text"
+                            className="ebfbebfeh"
+                            placeholder="Pickup location"
+                            value={pickupLocation}
+                            style={{ width: '90vw', height: '40px', fontSize: '15px' }}
+
+                            onChange={handlePickupInputChange}
+                        />
+                        {pickupSuggestions.length > 0 && (
+                            <ul style={{
+                                listStyleType: 'none',
+                                padding: '0',
+                                margin: '0',
+                                border: '1px solid #ccc',
+                                borderRadius: '4px',
+                                maxHeight: '150px',
+                                overflowY: 'auto',
+                                backgroundColor: '#fff',
+                                position: 'absolute',
+                                top: '100%',
+                                left: '0',
+                                right: '0',
+                                zIndex: 1000,
+                            }}>
+                                {pickupSuggestions.map((suggestion) => (
+                                    <li
+                                        key={suggestion.place_id}
+                                        style={{
+                                            padding: '6px 10px',
+                                            cursor: 'pointer',
+                                            borderBottom: '1px solid #f0f0f0',
+                                            fontSize: '16px',
+                                            lineHeight: '1.4',
+                                        }}
+                                        onClick={() => handleSuggestionClick(suggestion.place_id, 'pickup')}
+                                    >
+                                        {suggestion.description}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+                    <div className="mdnvjnv" style={{ position: 'relative', marginLeft: '10px', marginRight: '20px' }}>
+                        <input
+                            type="text"
+                            className="ebfbebfeh"
+                            style={{ width: '90vw', height: '40px', fontSize: '15px' }}
+                            placeholder="Dropoff location"
+                            value={dropLocation}
+                            onChange={handleDropInputChange}
+                        />
+                        {dropSuggestions.length > 0 && (
+                            <ul style={{
+                                listStyleType: 'none',
+                                padding: '0',
+                                margin: '0',
+                                border: '1px solid #ccc',
+                                borderRadius: '4px',
+                                maxHeight: '150px',
+                                overflowY: 'auto',
+                                backgroundColor: '#fff',
+                                zIndex: 1000,
+                                position: 'absolute',
+                                top: '100%',
+                                left: '0',
+                                right: '0',
+                            }}>
+                                {dropSuggestions.map((suggestion) => (
+                                    <li
+                                        key={suggestion.place_id}
+                                        style={{
+                                            padding: '6px 10px',
+                                            cursor: 'pointer',
+                                            borderBottom: '1px solid #f0f0f0',
+                                            fontSize: '16px',
+                                            lineHeight: '1.4',
+                                        }}
+                                        onClick={() => handleSuggestionClick(suggestion.place_id, 'drop')}
+                                    >
+                                        {suggestion.description}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+                </div>
+                }
             </div>
         </div>
     )
