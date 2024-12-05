@@ -523,5 +523,6 @@ justify-content: space-between;
   font-family: 'Avenir', sans-serif;
   width: 100vw;
   background-color: white;
-  overflow: scroll;
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
