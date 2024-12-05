@@ -4,6 +4,7 @@ import { GoogleMap, LoadScript, Marker, Polyline } from '@react-google-maps/api'
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "firebase/auth";
+import { doc, getDoc, getFirestore } from '@firebase/firestore';
 
 const provider = new GoogleAuthProvider();
 const firebaseConfig = {
@@ -18,17 +19,25 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-// Get Auth instance and Google provider
+const db = getFirestore(app);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 const defaultLatLng = { lat: 22.5660201, lng: 88.3630783 };
 
 export default function LandingPage_Laptop() {
+    const [name,setname]=useState('');
+    const [loggeduser,setloggeduser]=useState(null);
     useEffect(() => {
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async(user) => {
             if (user) {
-              window.location.replace('/go/home');
+            //   window.location.replace('/go/home');
               const uid = user.uid;
+              setloggeduser(user);
+              const docref=doc(db,'VistaRide User Details',uid);
+              const docsnap=await getDoc(docref);
+              if(docsnap.exists()){
+                setname(docsnap.data()['User Name']);
+              }
               // ...
             } else {
               // User is signed out
@@ -195,8 +204,8 @@ export default function LandingPage_Laptop() {
                         <Link style={{ textDecoration: 'none', color: 'white' }}>
                             <div className="eefebf">Business</div>
                         </Link>
-                        <Link style={{ textDecoration: 'none', color: 'white' }} onClick={handleLogin}>
-                            <div className="eefebf">Login</div>
+                        <Link style={{ textDecoration: 'none', color: 'white' }} onClick={loggeduser!=null?null:handleLogin}>
+                            <div className="eefebf">{loggeduser!=null?`${name}`:'Login'}</div>
                         </Link>
                     </div>
                 </div>
@@ -296,7 +305,7 @@ export default function LandingPage_Laptop() {
                                 </ul>
                             )}
                         </div>
-                        <Link style={{ textDecoration: 'none', color: 'white' }}>
+                        <Link style={{ textDecoration: 'none', color: 'white' }} onClick={pickupLocation && dropLocation?GoogleAuthProvider(window.location.replace('/go/home')):null}>
                             <div className="jffnrn">See prices</div>
                         </Link>
                     </div>
