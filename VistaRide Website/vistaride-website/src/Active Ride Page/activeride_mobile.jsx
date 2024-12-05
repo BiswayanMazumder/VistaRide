@@ -59,7 +59,7 @@ export default function Activeride_mobile() {
             if (currentUser) {
                 setUser(currentUser.uid);
             } else {
-                window.location.replace('/');
+                // window.location.replace('/');
             }
         });
 
@@ -318,11 +318,11 @@ export default function Activeride_mobile() {
                             {droplocations}
                         </div>
                     </div>
-                    {rideverified ? <></> : (<div className="rnnfbnfmbn" onClick={cancelride} style={{ width: "100vw",marginLeft:"20px",marginTop:"20px" }}>
+                    {user!=''?rideverified ? <></> : (<div className="rnnfbnfmbn" onClick={cancelride} style={{ width: "100vw",marginLeft:"20px",marginTop:"20px" }}>
                         <div className="mnbngb" >
                             Cancel Ride
                         </div>
-                    </div>)}
+                    </div>):<></>}
                 </div>
                 
             </div>

@@ -59,7 +59,7 @@ export default function Activeride_laptop() {
             if (currentUser) {
                 setUser(currentUser.uid);
             } else {
-                window.location.replace('/');
+                // window.location.replace('/');
             }
         });
 
@@ -282,11 +282,11 @@ export default function Activeride_laptop() {
                                     {droplocations}
                                 </div>
                             </div>
-                            {rideverified?<></>:(<div className="rnnfbnfmbn" onClick={cancelride}>
+                            {user!=''? rideverified?<></>:(<div className="rnnfbnfmbn" onClick={cancelride}>
                                 <div className="mnbngb">
                                     Cancel Ride
                                 </div>
-                            </div>)}
+                            </div>):<></>}
                         </div>
                     </div>
                     
