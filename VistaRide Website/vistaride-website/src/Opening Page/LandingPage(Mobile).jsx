@@ -38,14 +38,14 @@ export default function LandingPageMobile() {
           });
     })
     const handleLogin = async () => {
-        try {
-            const result = await signInWithPopup(auth, googleProvider);
-            const user = result.user;
-            setUser(user);
-            window.location.replace('/go/home');
-        } catch (err) {
-            setError(err.message);
-        }
+        // try {
+        //     const result = await signInWithPopup(auth, googleProvider);
+        //     const user = result.user;
+        //     setUser(user);
+        //     window.location.replace('/go/home');
+        // } catch (err) {
+        //     setError(err.message);
+        // }
     };
     const [pickupLocation, setPickupLocation] = useState('');
     const [dropLocation, setDropLocation] = useState('');
