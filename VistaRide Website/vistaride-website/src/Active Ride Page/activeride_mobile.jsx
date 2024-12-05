@@ -285,6 +285,9 @@ export default function Activeride_mobile() {
                     <div className="ddhdv" style={{ fontWeight: '600', fontSize: '15px', marginTop: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                         {rideverified ? ridecompleted ? (`Please pay ₹${fare} to the driver`) : (`Ride verified. Have a safe journey.`) : (`Please share the OTP ${OTP} to start trip.`)}
                     </div>
+                    <div className="ddhdv" style={{ fontWeight: '500', fontSize: '12px', marginTop: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        {rideverified ? ridecompleted ? (`Please pay ₹${fare} to the driver`) : (`You are ${distanceAndTime.distance} (${distanceAndTime.duration}) away.`) : (`Your driver is ${distanceAndTime.distance} (${distanceAndTime.duration}) away from you.`)}
+                    </div>
                     <div className="dnjndjv" style={{ color: 'black', fontWeight: '600', marginLeft: '20px', marginRight: '20px', marginTop: '20px', display: 'flex', flexDirection: 'column' }}>
                         {carregnumber}
                     </div>
