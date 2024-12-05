@@ -1,8 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { onAuthStateChanged, getAuth, signOut } from "firebase/auth";
-import { arrayRemove, arrayUnion, collection, deleteField, doc, FieldValue, getDoc, getFirestore, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
+import React, { useEffect, useState } from 'react';
+import { onAuthStateChanged, getAuth } from "firebase/auth";
+import { doc, getDoc, getFirestore } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
-import { GoogleMap, LoadScript, Marker, Polyline } from '@react-google-maps/api';
 import { Link } from 'react-router-dom';
 
 const firebaseConfig = {
@@ -23,8 +22,13 @@ export default function Mytripslaptop() {
     const [userName, setUserName] = useState(null);
     const [userPfp, setUserPfp] = useState(null);
     const [user, setUser] = useState('');
+    const [tripid, setTripid] = useState([]);
+    const [carcatergory, setCarcategory] = useState([]);
+    const [startlocation, setStartlocation] = useState([]);
+    const [endlocation, setendlocation] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [ridecancelled, setRidecancelled] = useState([]);
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             if (currentUser) {
@@ -36,11 +40,11 @@ export default function Mytripslaptop() {
 
         return () => unsubscribe();
     }, []);
+
     useEffect(() => {
         if (!user) return;
 
         const fetchUserDetails = async () => {
-            setLoading(true);
             try {
                 const docRef = doc(db, "VistaRide User Details", user);
                 const docSnap = await getDoc(docRef);
@@ -53,28 +57,49 @@ export default function Mytripslaptop() {
                 }
             } catch (err) {
                 setError(`Error fetching user data: ${err.message}`);
-            } finally {
-                setLoading(false);
             }
         };
 
-        fetchUserDetails();
-    }, [user]);
-    const [tripid, settripid] = useState([]);
-    useEffect(() => {
-        const fetchridedetails = async () => {
+        const fetchRideDetails = async () => {
             try {
-                const docref = doc(db, 'Booking IDs', user);
-                const docSnap = await getDoc(docref);
-                if (docSnap.exists()) {
-                    settripid(docSnap.data()['IDs']);
-                }
-            } catch (error) {
+                const docRef = doc(db, 'Booking IDs', user);
+                const docSnap = await getDoc(docRef);
 
+                if (docSnap.exists()) {
+                    const tripIds = docSnap.data()['IDs'];
+                    setTripid(tripIds);
+
+                    const carCategories = [];
+                    const startLocations = [];
+                    const Endlocations = [];
+                    const Ridecancelled = [];
+                    for (const trip of tripIds) {
+                        const rideDocRef = doc(db, 'Ride Details', trip);
+                        const rideDocSnap = await getDoc(rideDocRef);
+
+                        if (rideDocSnap.exists()) {
+                            carCategories.push(rideDocSnap.data()['Cab Category']);
+                            startLocations.push(rideDocSnap.data()['Pickup Location']);
+                            Endlocations.push(rideDocSnap.data()['Drop Location']);
+                            Ridecancelled.push(rideDocSnap.data()['Ride Cancelled'] ?? false);
+                        }
+                    }
+                    console.log(Ridecancelled);
+                    setCarcategory(carCategories);
+                    setStartlocation(startLocations);
+                    setendlocation(Endlocations);
+                    setRidecancelled(Ridecancelled);
+                }
+
+            } catch (err) {
+                setError(`Error fetching ride details: ${err.message}`);
             }
-        }
-        fetchridedetails();
-    }, [])
+        };
+
+        Promise.all([fetchUserDetails(), fetchRideDetails()])
+            .finally(() => setLoading(false));
+    }, [user]);
+
     useEffect(() => {
         document.title = 'Request a Ride with VistaRide';
     }, []);
@@ -82,12 +107,17 @@ export default function Mytripslaptop() {
         <div className='webbody'>
             <div className="ehfjfv" style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Link to={'/go/home'}>
-                    <div className="hfejfw" >
-                        <svg width="100" height="30" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="30" fill="black" rx="5"></rect><text x="50%" y="50%" font-family="'Lobster', cursive" font-size="21" fill="white" text-anchor="middle" alignment-baseline="middle" dominant-baseline="middle">VistaRide</text></svg>
+                    <div className="hfejfw">
+                        <svg width="100" height="30" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="100" height="30" fill="black" rx="5"></rect>
+                            <text x="50%" y="50%" font-family="'Lobster', cursive" font-size="21" fill="white" text-anchor="middle" alignment-baseline="middle" dominant-baseline="middle">
+                                VistaRide
+                            </text>
+                        </svg>
                     </div>
                 </Link>
                 <div className="hfejfw" style={{ right: '100px', position: 'absolute', flexDirection: 'row', gap: '20px' }}>
-                    <Link style={{ textDecoration: 'none', color: "white" }} >
+                    <Link style={{ textDecoration: 'none', color: "white" }}>
                         <div className="dbvbvdhna" style={{ fontWeight: '600' }}>My Trips</div>
                     </Link>
                     <div className="dbvbvdhn">{userName}</div>
@@ -102,24 +132,58 @@ export default function Mytripslaptop() {
                     </div>
                 </div>
             </div>
-            <div className="dnjfndndjn">
+            {loading ? (
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: 'calc(100vh - 60px)', // Adjust height to account for navigation bar
+                }}>
+                    <div style={{
+                        width: '80px',
+                        height: '80px',
+                        border: '8px solid #f3f3f3',
+                        borderTop: '8px solid #3498db',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite',
+                    }}></div>
+                    <style>{`
+                        @keyframes spin {
+                            0% { transform: rotate(0deg); }
+                            100% { transform: rotate(360deg); }
+                        }
+                    `}</style>
+                </div>
+            ) : (<div className="dnjfndndjn">
                 <div className="rnrnv">
                     <img src="https://d3i4yxtzktqr9n.cloudfront.net/riders-web-v2/853ebe0d95a62aca.svg" alt="" width={'100%'} style={{ borderRadius: '10px' }} />
-                    <div className="dnvjnv">
-                        Past
-                    </div>
-                    <div className="rnjnfjvn" style={{marginTop:'40px'}}>
-                        {Array(tripid.length).fill().map((_, index) => (
-                            <Link style={{textDecoration:'none',color:'black'}}>
-                            <div key={index} className="tripdetails">
-                                
+                    <div className="dnvjnv">Past</div>
+                    <div className="rnjnfjvn" style={{ marginTop: '40px' }}>
+                        {tripid.map((trip, index) => (
+                            <Link key={trip} style={{ textDecoration: 'none', color: 'black' }}>
+                               
+                                <div className="tripdetails">
+                                <div style={{ fontWeight: '400', color: 'red', margin: '30px', marginTop: '10px', marginBottom: '0px' }}>
+                                    {ridecancelled[index]?'Cancelled':''}
+                                </div>
+                                    <div style={{ fontWeight: '500', color: 'black', margin: '30px',marginTop:'10px' }}>
+                                        {carcatergory[index]} from
+                                    </div>
+                                    <div style={{ fontWeight: '500', color: 'black', margin: '30px', marginBottom: '0px' }}>
+                                        {startlocation[index]}
+                                    </div>
+                                    <div style={{ fontWeight: '300', color: 'grey', margin: '30px', marginTop: '10px', marginBottom: '10px' }}>
+                                        to
+                                    </div>
+                                    <div style={{ fontWeight: '500', color: 'black', margin: '30px', marginTop: '0px',marginBottom:'20px' }}>
+                                        {endlocation[index]}
+                                    </div>
                                 </div>
                             </Link>
                         ))}
-
                     </div>
                 </div>
-            </div>
+            </div>)}
         </div>
-    )
+    );
 }

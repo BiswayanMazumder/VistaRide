@@ -564,12 +564,12 @@ justify-content: space-between;
 }
 .tripdetails{
   width: 100%;
-  height: 200px;
+  /* height: 1px; */
   margin-bottom: 50px;
   border: 0.5px solid rgb(234, 234, 234);;
   border-radius: 10px;
 }
 .tripdetails:hover{
   background-color: rgb(234, 234, 234);
-  border:none
+  /* border:none */
 }
