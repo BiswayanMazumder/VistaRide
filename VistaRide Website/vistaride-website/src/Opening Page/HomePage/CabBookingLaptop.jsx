@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { onAuthStateChanged, getAuth } from "firebase/auth";
+import { onAuthStateChanged, getAuth, signOut } from "firebase/auth";
 import { arrayRemove, arrayUnion, collection, deleteField, doc, FieldValue, getDoc, getFirestore, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import { GoogleMap, LoadScript, Marker, Polyline } from '@react-google-maps/api';
@@ -431,6 +431,16 @@ export default function CabBookingLaptop() {
             console.error("Error writing ride details:", error);
         }
     };
+    const handleLogout = async () => {
+        try {
+          await signOut(auth);
+          console.log("User signed out successfully.");
+          window.location.replace('/');
+          // Optionally redirect or show a message to the user
+        } catch (error) {
+          console.error("Error signing out:", error);
+        }
+      };
     const sendriderequesttodriver = async (rideid) => {
         // Loop through each driver in the "drivers" array
         for (let i = 0; i < drivers.length; i++) {
@@ -479,7 +489,7 @@ export default function CabBookingLaptop() {
                     ) : (
                         <>
                             <div className="dkf">{userName}</div>
-                            <div className="jnjvndv">
+                            <div className="jnjvndv" onClick={handleLogout}>
                                 <img
                                     src={userPfp}
                                     alt=""
