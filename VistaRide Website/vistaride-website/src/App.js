@@ -8,6 +8,7 @@ import {
 import LandingPage from './Opening Page/LandingPage';
 import Cabbookingpage from './Opening Page/HomePage/cabbookingpage';
 import Activeride from './Active Ride Page/activeride';
+import Mytrips from './My Trips/mytrips';
 function App() {
   return (
     <BrowserRouter>
@@ -16,6 +17,9 @@ function App() {
       </Routes>
       <Routes>
         <Route path="/go/home" element={<Cabbookingpage />} />
+      </Routes>
+      <Routes>
+        <Route path="/trips" element={<Mytrips />} />
       </Routes>
       <Routes>
         <Route path="/ride/:RideID" element={<Activeride />} />

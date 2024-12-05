@@ -488,8 +488,11 @@ export default function CabBookingLaptop() {
                         <div style={{ color: 'red' }}>{error}</div>
                     ) : (
                         <>
-                            <div className="dkf">{userName}</div>
-                            <div className="jnjvndv" onClick={handleLogout}>
+                        <Link style={{textDecoration:'none',color:"white"}} to={'/trips'}>
+                        <div className="dbvbvdhna">My Trips</div>
+                        </Link>
+                            <div className="dbvbvdhn">{userName}</div>
+                            <div className="dbvbvdhn" onClick={handleLogout}>
                                 <img
                                     src={userPfp}
                                     alt=""
