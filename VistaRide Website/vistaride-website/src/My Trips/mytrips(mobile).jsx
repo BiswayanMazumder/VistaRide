@@ -18,7 +18,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-export default function Mytripslaptop() {
+export default function Mytripsmobile() {
     const [userName, setUserName] = useState(null);
     const [userPfp, setUserPfp] = useState(null);
     const [user, setUser] = useState('');
@@ -171,7 +171,7 @@ export default function Mytripslaptop() {
                     `}</style>
                 </div>
             ) : (<div className="dnjfndndjn">
-                <div className="rnrnv">
+                <div className="rnrnv" style={{width:'90vw'}}>
                     <img src="https://d3i4yxtzktqr9n.cloudfront.net/riders-web-v2/853ebe0d95a62aca.svg" alt="" width={'100%'} style={{ borderRadius: '10px' }} />
                     <div className="dnvjnv">Past</div>
                     <div className="rnjnfjvn" style={{ marginTop: '40px' }}>

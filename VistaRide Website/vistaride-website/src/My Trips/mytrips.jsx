@@ -1,5 +1,6 @@
 import React from 'react'
 import Mytripslaptop from './mytrips(laptop)'
+import Mytripsmobile from './mytrips(mobile)'
 
 export default function Mytrips() {
     return (
@@ -8,7 +9,7 @@ export default function Mytrips() {
                 <Mytripslaptop />
             </div>
             <div className="jnvjnfjn">
-                {/* <Cabbookingpagemobile/> */}
+                <Mytripsmobile/>
             </div>
         </div>
     )
