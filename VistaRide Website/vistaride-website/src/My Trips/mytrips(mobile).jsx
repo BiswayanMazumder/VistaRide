@@ -36,7 +36,7 @@ export default function Mytripsmobile() {
     const [fare, setFare] = useState([]);
     const [bookingtime, setBookingtime] = useState([]);
     const [loadedTrips, setLoadedTrips] = useState(3); // To track number of trips loaded
-
+    const [driverid, setDriverid] = useState([]);
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             if (currentUser) {
@@ -87,7 +87,7 @@ export default function Mytripsmobile() {
                     const dropLons = [];
                     const Fare = [];
                     const bookingTimes = [];
-        
+                    const driverIDs = [];
                     // Function to format a timestamp to "DD MM YYYY HH:mm:ss"
                     const formatTimestamp = (timestamp) => {
                         const date = timestamp.toDate(); // Convert Firestore Timestamp to JavaScript Date
@@ -119,7 +119,7 @@ export default function Mytripsmobile() {
                             dropLats.push(rideDocSnap.data()['Drop Latitude']);
                             dropLons.push(rideDocSnap.data()['Drop Longitude']);
                             Fare.push(rideDocSnap.data()['Fare']);
-                            
+                            driverIDs.push(rideDocSnap.data()['Driver ID']);
                             // Convert Booking Time timestamp to formatted date
                             const bookingTime = rideDocSnap.data()['Booking Time'];
                             if (bookingTime) {
@@ -139,6 +139,7 @@ export default function Mytripsmobile() {
                     setDroplat(dropLats);
                     setDroplng(dropLons);
                     setFare(Fare);
+                    setDriverid(driverIDs);
                     setBookingtime(bookingTimes);
                 }
         
@@ -228,6 +229,9 @@ export default function Mytripsmobile() {
                                         localStorage.setItem('Drop Latitude', droplat[index]);
                                         localStorage.setItem('Drop Longitude', droplng[index]);
                                         localStorage.setItem('Car Category', carcatergory[index]);
+                                        localStorage.setItem('Fare', fare[index]);
+                                        localStorage.setItem('Trip ID', tripid[index]);
+                                        localStorage.setItem('Driver ID', driverid[index]);
                                         localStorage.setItem('Ride Cancelled', ridecancelled[index]);
                                     }}>
                                         <div style={{ fontWeight: '400', color: 'red', margin: '30px', marginTop: '10px', marginBottom: '0px',display:'flex',flexDirection:'row',gap:'10px' }}>

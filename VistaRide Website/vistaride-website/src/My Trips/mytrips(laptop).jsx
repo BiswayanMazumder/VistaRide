@@ -219,7 +219,7 @@ export default function Mytripslaptop() {
                         <div className="dnvjnv">Past</div>
                         <div className="rnjnfjvn" style={{ marginTop: '40px' }}>
                             {tripid.slice(0, loadedTrips).map((trip, index) => (
-                                <Link key={trip} style={{ textDecoration: 'none', color: 'black' }}>
+                                <Link key={trip} style={{ textDecoration: 'none', color: 'black' }} to={`/trips/${tripid[index]}`}>
                                     <div className="tripdetails" onClick={() => {
                                         localStorage.setItem('Pickup Location', startlocation[index]);
                                         localStorage.setItem('Drop Location', endlocation[index]);
@@ -229,6 +229,9 @@ export default function Mytripslaptop() {
                                         localStorage.setItem('Drop Longitude', droplng[index]);
                                         localStorage.setItem('Car Category', carcatergory[index]);
                                         localStorage.setItem('Ride Cancelled', ridecancelled[index]);
+                                        localStorage.setItem('Fare', fare[index]);
+                                        localStorage.setItem('Trip ID', tripid[index]);
+                                        localStorage.setItem('Booking Time', bookingtime[index]);
                                     }}>
                                         <div style={{ fontWeight: '400', color: 'red', margin: '30px', marginTop: '10px', marginBottom: '0px',display:'flex',flexDirection:'row',gap:'10px' }}>
                                         <div className="jdnvjfnfv" style={{color:'black'}}>
