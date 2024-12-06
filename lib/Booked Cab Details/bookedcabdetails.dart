@@ -33,11 +33,79 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
   String? _pickupAddress;
   String? _dropoffAddress;
   late Timer _timertofetch;
+  String paymentid='';
+  Future<void> fetchpaymentid()async{
+    await fetchridedetails();
+    final prefs=await SharedPreferences.getInstance();
+    final docsnap=await _firestore.collection('Payment ID').doc(prefs.getString('Booking ID')).get();
+    if(docsnap.exists){
+      setState(() {
+        paymentid=docsnap.data()?['Payment ID'];
+      });
+    }
+    if (kDebugMode) {
+      print('Payment ID $paymentid');
+    }
+  }
+  Future<void> processRefund() async {
+    await fetchridedetails();
+    await fetchpaymentid();
+    // Razorpay credentials
+    const String keyId = Environment.razorpaytestapi;
+    const String keySecret = Environment.razorpaytestkeysecret;
+
+    // Base64 encode the credentials
+    String basicAuth =
+        'Basic ${base64Encode(utf8.encode('$keyId:$keySecret'))}';
+
+    // API Endpoint
+     String url = 'https://api.razorpay.com/v1/payments/$paymentid/refund';
+
+    // Request body
+    final Map<String, dynamic> requestBody = {
+      "amount": price*100,
+      "speed": "optimum",
+    };
+
+    try {
+      // Make the HTTP POST request
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': basicAuth,
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      // Check the response
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (kDebugMode) {
+          print("Refund processed successfully:");
+        }
+        if (kDebugMode) {
+          print(response.body);
+        }
+      } else {
+        if (kDebugMode) {
+          print("Failed to process refund:");
+        }
+        if (kDebugMode) {
+          print(response.body);
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error occurred: $e");
+      }
+    }
+  }
   @override
   void initState() {
     super.initState();
     _fetchRoute();
     fetchridedetails();
+    fetchpaymentid();
     _timertofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
       fetchridedetails();
       _fetchRoute();
@@ -697,25 +765,46 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                     !rideverified?  Padding(
                         padding: const EdgeInsets.only(left: 20, right: 20),
                         child: InkWell(
-                          onTap: ()async{
-                            // Navigator.pop(context);
-                            final prefs=await SharedPreferences.getInstance();
-                            if (kDebugMode) {
-                              print(prefs.getString('Booking ID'));
+                          onTap: () async {
+                            try {
+                              final prefs = await SharedPreferences.getInstance();
+                              if (kDebugMode) {
+                                print(prefs.getString('Booking ID'));
+                              }
+
+                              // Attempt to fetch payment ID and process refund
+                              await fetchpaymentid();
+
+                              try {
+                                await processRefund(); // If this fails, no further code will execute
+                              } catch (e) {
+                                if (kDebugMode) {
+                                  print('Refund Error: $e');
+                                }
+                                return; // Stop execution if refund fails
+                              }
+
+                              // Proceed to update Firestore and Navigator only if refund was successful
+                              await _firestore.collection('Ride Details').doc(prefs.getString('Booking ID')).update({
+                                'Ride Accepted': false,
+                                'Ride Cancelled': true,
+                                'Cancellation Time': FieldValue.serverTimestamp(),
+                              });
+
+                              await _firestore.collection('VistaRide Driver Details').doc(driverid).update({
+                                'Ride Doing': FieldValue.delete(),
+                                'Driver Avaliable': true,
+                              });
+
+                              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
+
+                            } catch (e) {
+                              if (kDebugMode) {
+                                print('General Error: $e');
+                              }
                             }
-                            await _firestore.collection('Ride Details').doc(prefs.getString('Booking ID')).update(
-                                {
-                                  'Ride Accepted':false,
-                                  'Ride Cancelled':true,
-                                  'Cancellation Time':FieldValue.serverTimestamp(),
-                                });
-                            await _firestore.collection('VistaRide Driver Details').doc(driverid).update(
-                                {
-                                  'Ride Doing':FieldValue.delete(),
-                                  'Driver Avaliable':true
-                                });
-                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
                           },
+
                           child: Container(
                             height: 50,
                             decoration: BoxDecoration(

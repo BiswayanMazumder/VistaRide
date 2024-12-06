@@ -220,7 +220,7 @@ class _HomePageState extends State<HomePage> {
     fetchuserdetails();
     fetchactiveride();
     fetchdrivers();
-    _timertofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
+    _timertofetch = Timer.periodic(const Duration(seconds: 900), (Timer t) {
       fetchdrivers();
     });
   }

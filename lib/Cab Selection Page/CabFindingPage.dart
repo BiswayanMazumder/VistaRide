@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
+import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -11,6 +13,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simple_animation_progress_bar/simple_animation_progress_bar.dart';
 import 'package:vistaride/Booked%20Cab%20Details/bookedcabdetails.dart';
+
+import '../Environment Files/.env.dart';
 
 class CabFinding extends StatefulWidget {
   const CabFinding({super.key});
@@ -44,6 +48,7 @@ class _CabFindingState extends State<CabFinding> with TickerProviderStateMixin {
   late AnimationController _rippleController;
   late Animation<double> _rippleAnimation;
   bool ridestarted=false;
+  double price=0;
   late Timer _timertofetch;
   Future<void>fetchridedetails()async{
     final prefs=await SharedPreferences.getInstance();
@@ -51,6 +56,11 @@ class _CabFindingState extends State<CabFinding> with TickerProviderStateMixin {
     if(docsnap.exists){
       setState(() {
         ridestarted=docsnap.data()?['Ride Accepted'];
+        iscashpayment=docsnap.data()?['Cash Payment'];
+        price=docsnap.data()?['Fare'] is int?
+        (docsnap.data()?['Fare']).toDouble()
+            :docsnap.data()?['Fare'] is double
+            ? (docsnap.data()?['Fare'])as double:0.0;
       });
     }
     if(ridestarted){
@@ -227,6 +237,74 @@ class _CabFindingState extends State<CabFinding> with TickerProviderStateMixin {
       print('Random 5-digit number: $randomFiveDigitNumber');
     }
   }
+  bool iscashpayment=false;
+  String paymentid='';
+  Future<void> fetchpaymentid()async{
+    await fetchridedetails();
+    final prefs=await SharedPreferences.getInstance();
+    final docsnap=await _firestore.collection('Payment ID').doc(prefs.getString('Booking ID')).get();
+    if(docsnap.exists){
+      setState(() {
+        paymentid=docsnap.data()?['Payment ID'];
+      });
+    }
+    if (kDebugMode) {
+      print('Payment ID $paymentid');
+    }
+  }
+  Future<void> processRefund() async {
+    await fetchridedetails();
+    await fetchpaymentid();
+    // Razorpay credentials
+    const String keyId = Environment.razorpaytestapi;
+    const String keySecret = Environment.razorpaytestkeysecret;
+
+    // Base64 encode the credentials
+    String basicAuth =
+        'Basic ${base64Encode(utf8.encode('$keyId:$keySecret'))}';
+
+    // API Endpoint
+    String url = 'https://api.razorpay.com/v1/payments/$paymentid/refund';
+
+    // Request body
+    final Map<String, dynamic> requestBody = {
+      "amount": price*100,
+      "speed": "optimum",
+    };
+
+    try {
+      // Make the HTTP POST request
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': basicAuth,
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      // Check the response
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (kDebugMode) {
+          print("Refund processed successfully:");
+        }
+        if (kDebugMode) {
+          print(response.body);
+        }
+      } else {
+        if (kDebugMode) {
+          print("Failed to process refund:");
+        }
+        if (kDebugMode) {
+          print(response.body);
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error occurred: $e");
+      }
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -370,7 +448,6 @@ class _CabFindingState extends State<CabFinding> with TickerProviderStateMixin {
                         padding: const EdgeInsets.only(left: 20, right: 20),
                         child: InkWell(
                           onTap: ()async{
-                            Navigator.pop(context);
                             final prefs=await SharedPreferences.getInstance();
                             await _firestore.collection('Booking IDs').doc(_auth.currentUser!.uid).set(
                                 {
@@ -379,6 +456,11 @@ class _CabFindingState extends State<CabFinding> with TickerProviderStateMixin {
                             if (kDebugMode) {
                               print(prefs.getString('Booking ID'));
                             }
+                            if(!iscashpayment){
+                              await processRefund();
+                            }
+                            Navigator.pop(context);
+
                           },
                           child: Container(
                             height: 50,
@@ -389,7 +471,7 @@ class _CabFindingState extends State<CabFinding> with TickerProviderStateMixin {
                             width: MediaQuery.sizeOf(context).width - 40,
                             child: Center(
                               child: Text(
-                                'Cancel Ride',
+                                'Cancel Request',
                                 style: GoogleFonts.poppins(
                                     color: Colors.black,
                                     fontWeight: FontWeight.w600),

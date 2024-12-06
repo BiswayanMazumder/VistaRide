@@ -62,6 +62,58 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
   List<dynamic> driversnearme=[];
   List<String> driverids=[];
   bool isdrivernearby=false;
+  Future<void> capturepayment(String paymentid) async {
+    final prefs=await SharedPreferences.getInstance();
+    // Razorpay credentials
+    const String keyId = Environment.razorpaytestapi;
+    const String keySecret = Environment.razorpaytestkeysecret;
+
+    // Base64 encode the credentials
+    String basicAuth =
+        'Basic ${base64Encode(utf8.encode('$keyId:$keySecret'))}';
+
+    // API Endpoint
+    String url = 'https://api.razorpay.com/v1/payments/$paymentid/capture';
+
+    // Request body
+    final Map<String, dynamic> requestBody = {
+      "amount": (prefs.getDouble('Fare'))!*100,
+      "currency": "INR"
+    };
+
+    try {
+      // Make the HTTP POST request
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': basicAuth,
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      // Check the response
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (kDebugMode) {
+          print("Refund processed successfully:");
+        }
+        if (kDebugMode) {
+          print(response.body);
+        }
+      } else {
+        if (kDebugMode) {
+          print("Failed to process refund:");
+        }
+        if (kDebugMode) {
+          print(response.body);
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error occurred: $e");
+      }
+    }
+  }
   Future<void> fetchdrivers() async {
     await _fetchRoute();
     driverids.clear();
@@ -432,6 +484,11 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
           'Travel Time':prefs.getString('Travel Time'),
           'Ride OTP':randomFourDigitNumber,
         });
+    await _firestore.collection('Payment ID').doc(prefs.getString('Booking ID')).set(
+        {
+          'Payment ID':response.paymentId
+        });
+    await capturepayment(response.paymentId!);
     if(prefs.getString('Cab Category')!=null || prefs.getString('Fare')!=null){
       Navigator.push(context, MaterialPageRoute(builder: (context) => CabFinding(),));
     }
