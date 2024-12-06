@@ -73,7 +73,7 @@ export default function Tripdetailslaptop() {
         return <div>Loading or Coordinates not found in localStorage...</div>;
     }
     const mapOptions={
-        zoomControl: true,
+        zoomControl: false,
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false,
