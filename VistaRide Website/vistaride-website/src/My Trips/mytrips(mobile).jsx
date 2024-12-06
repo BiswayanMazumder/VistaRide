@@ -33,6 +33,10 @@ export default function Mytripsmobile() {
     const [picklng, setPicklng] = useState([]);
     const [droplat, setDroplat] = useState([]);
     const [droplng, setDroplng] = useState([]);
+    const [fare, setFare] = useState([]);
+    const [bookingtime, setBookingtime] = useState([]);
+    const [loadedTrips, setLoadedTrips] = useState(3); // To track number of trips loaded
+
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             if (currentUser) {
@@ -68,11 +72,11 @@ export default function Mytripsmobile() {
             try {
                 const docRef = doc(db, 'Booking IDs', user);
                 const docSnap = await getDoc(docRef);
-
+        
                 if (docSnap.exists()) {
                     const tripIds = docSnap.data()['IDs'];
                     setTripid(tripIds);
-
+        
                     const carCategories = [];
                     const startLocations = [];
                     const Endlocations = [];
@@ -81,10 +85,30 @@ export default function Mytripsmobile() {
                     const pickupLons = [];
                     const dropLats = [];
                     const dropLons = [];
+                    const Fare = [];
+                    const bookingTimes = [];
+        
+                    // Function to format a timestamp to "DD MM YYYY HH:mm:ss"
+                    const formatTimestamp = (timestamp) => {
+                        const date = timestamp.toDate(); // Convert Firestore Timestamp to JavaScript Date
+                        const day = String(date.getDate()).padStart(2, '0');  // Get day and pad with 0 if needed
+                        const monthNames = [
+                            'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+                        ];
+                        const month = monthNames[date.getMonth()]; // Get month name (Jan-Dec)
+                        const year = date.getFullYear();  // Get year (4 digits)
+                        const hours = String(date.getHours()).padStart(2, '0');  // Get hours (0-23)
+                        const minutes = String(date.getMinutes()).padStart(2, '0');  // Get minutes (0-59)
+                    
+                        // Return formatted string
+                        return `${day} ${month} • ${hours}:${minutes}`;
+                    };
+                    
+        
                     for (const trip of tripIds) {
                         const rideDocRef = doc(db, 'Ride Details', trip);
                         const rideDocSnap = await getDoc(rideDocRef);
-
+        
                         if (rideDocSnap.exists()) {
                             carCategories.push(rideDocSnap.data()['Cab Category']);
                             startLocations.push(rideDocSnap.data()['Pickup Location']);
@@ -94,9 +118,18 @@ export default function Mytripsmobile() {
                             pickupLons.push(rideDocSnap.data()['Pick Longitude']);
                             dropLats.push(rideDocSnap.data()['Drop Latitude']);
                             dropLons.push(rideDocSnap.data()['Drop Longitude']);
+                            Fare.push(rideDocSnap.data()['Fare']);
+                            
+                            // Convert Booking Time timestamp to formatted date
+                            const bookingTime = rideDocSnap.data()['Booking Time'];
+                            if (bookingTime) {
+                                bookingTimes.push(formatTimestamp(bookingTime));
+                            } else {
+                                bookingTimes.push('N/A'); // Handle case where there's no Booking Time
+                            }
                         }
                     }
-                    console.log(Ridecancelled);
+        
                     setCarcategory(carCategories);
                     setStartlocation(startLocations);
                     setendlocation(Endlocations);
@@ -105,20 +138,28 @@ export default function Mytripsmobile() {
                     setPicklng(pickupLons);
                     setDroplat(dropLats);
                     setDroplng(dropLons);
+                    setFare(Fare);
+                    setBookingtime(bookingTimes);
                 }
-
+        
             } catch (err) {
                 setError(`Error fetching ride details: ${err.message}`);
             }
         };
-
+        
         Promise.all([fetchUserDetails(), fetchRideDetails()])
             .finally(() => setLoading(false));
-    }, [user]);
+    }, [user]);        
 
     useEffect(() => {
         document.title = 'Request a Ride with VistaRide';
     }, []);
+
+    // Function to load more trips when the user scrolls to the bottom
+    const loadMoreTrips = () => {
+        setLoadedTrips(prev => Math.min(prev + 3, tripid.length));
+    };
+
     return (
         <div className='webbody'>
             <div className="ehfjfv" style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -132,7 +173,7 @@ export default function Mytripsmobile() {
                         </svg>
                     </div>
                 </Link>
-                <div className="hfejfw" style={{ right: '100px', position: 'absolute', flexDirection: 'row', gap: '20px' }}>
+                {/* <div className="hfejfw" style={{ right: '100px', position: 'absolute', flexDirection: 'row', gap: '20px' }}>
                     <Link style={{ textDecoration: 'none', color: "white" }}>
                         <div className="dbvbvdhna" style={{ fontWeight: '600' }}>My Trips</div>
                     </Link>
@@ -146,8 +187,9 @@ export default function Mytripsmobile() {
                             style={{ borderRadius: '50%' }}
                         />
                     </div>
-                </div>
+                </div> */}
             </div>
+
             {loading ? (
                 <div style={{
                     display: 'flex',
@@ -170,47 +212,55 @@ export default function Mytripsmobile() {
                         }
                     `}</style>
                 </div>
-            ) : (<div className="dnjfndndjn">
-                <div className="rnrnv" style={{width:'90vw'}}>
-                    <img src="https://d3i4yxtzktqr9n.cloudfront.net/riders-web-v2/853ebe0d95a62aca.svg" alt="" width={'100%'} style={{ borderRadius: '10px' }} />
-                    <div className="dnvjnv">Past</div>
-                    <div className="rnjnfjvn" style={{ marginTop: '40px' }}>
-                        {tripid.map((trip, index) => (
-                            <Link key={trip} style={{ textDecoration: 'none', color: 'black' }}>
+            ) : (
+                <div className="dnjfndndjn">
+                    <div className="rnrnv" style={{width:'95vw'}}>
+                        <img src="https://d3i4yxtzktqr9n.cloudfront.net/riders-web-v2/853ebe0d95a62aca.svg" alt="" width={'100%'} style={{ borderRadius: '10px' }} />
+                        <div className="dnvjnv">Past</div>
+                        <div className="rnjnfjvn" style={{ marginTop: '40px' }}>
+                            {tripid.slice(0, loadedTrips).map((trip, index) => (
+                                <Link key={trip} style={{ textDecoration: 'none', color: 'black' }}>
+                                    <div className="tripdetails" onClick={() => {
+                                        localStorage.setItem('Pickup Location', startlocation[index]);
+                                        localStorage.setItem('Drop Location', endlocation[index]);
+                                        localStorage.setItem('Pickup Latitude', picklat[index]);
+                                        localStorage.setItem('Pickup Longitude', picklng[index]);
+                                        localStorage.setItem('Drop Latitude', droplat[index]);
+                                        localStorage.setItem('Drop Longitude', droplng[index]);
+                                        localStorage.setItem('Car Category', carcatergory[index]);
+                                        localStorage.setItem('Ride Cancelled', ridecancelled[index]);
+                                    }}>
+                                        <div style={{ fontWeight: '400', color: 'red', margin: '30px', marginTop: '10px', marginBottom: '0px',display:'flex',flexDirection:'row',gap:'10px' }}>
+                                        <div className="jdnvjfnfv" style={{color:'black'}}>
+                                        {bookingtime[index]}
+                                        </div>
+                                            {ridecancelled[index] ? `Cancelled` : ''}
+                                        </div>
+                                        <div style={{ fontWeight: '500', color: 'black', margin: '30px', marginTop: '10px' }}>
+                                            {carcatergory[index]} from
+                                        </div>
+                                        <div style={{ fontWeight: '500', color: 'black', margin: '30px', marginBottom: '0px' }}>
+                                            {startlocation[index]}
+                                        </div>
+                                        <div style={{ fontWeight: '300', color: 'grey', margin: '30px', marginTop: '10px', marginBottom: '10px' }}>
+                                            to
+                                        </div>
+                                        <div style={{ fontWeight: '500', color: 'black', margin: '30px', marginTop: '0px', marginBottom: '20px' }}>
+                                            {endlocation[index]}
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
 
-                                <div className="tripdetails" onClick={() => {
-                                    localStorage.setItem('Pickup Location', startlocation[index]);
-                                    localStorage.setItem('Drop Location', endlocation[index]);
-                                    localStorage.setItem('Pickup Latitude', picklat[index]);
-                                    localStorage.setItem('Pickup Longitude', picklng[index]);
-                                    localStorage.setItem('Drop Latitude', droplat[index]);
-                                    localStorage.setItem('Drop Longitude', droplng[index]);
-                                    localStorage.setItem('Car Category', carcatergory[index]);
-                                    localStorage.setItem('Ride Cancelled', ridecancelled[index]);
-                                    //  location.setItem('Driver Name',driver[index]);
-
-                                }}>
-                                    <div style={{ fontWeight: '400', color: 'red', margin: '30px', marginTop: '10px', marginBottom: '0px' }}>
-                                        {ridecancelled[index] ? 'Cancelled' : ''}
-                                    </div>
-                                    <div style={{ fontWeight: '500', color: 'black', margin: '30px', marginTop: '10px' }}>
-                                        {carcatergory[index]} from
-                                    </div>
-                                    <div style={{ fontWeight: '500', color: 'black', margin: '30px', marginBottom: '0px' }}>
-                                        {startlocation[index]}
-                                    </div>
-                                    <div style={{ fontWeight: '300', color: 'grey', margin: '30px', marginTop: '10px', marginBottom: '10px' }}>
-                                        to
-                                    </div>
-                                    <div style={{ fontWeight: '500', color: 'black', margin: '30px', marginTop: '0px', marginBottom: '20px' }}>
-                                        {endlocation[index]}
-                                    </div>
-                                </div>
-                            </Link>
-                        ))}
+                        {loadedTrips < tripid.length && (
+                            <button onClick={loadMoreTrips} style={{ margin: '20px', padding: '10px', cursor: 'pointer', }}>
+                                Load More
+                            </button>
+                        )}
                     </div>
                 </div>
-            </div>)}
+            )}
         </div>
     );
 }
