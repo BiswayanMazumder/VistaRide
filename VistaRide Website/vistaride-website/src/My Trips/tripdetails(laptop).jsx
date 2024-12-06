@@ -72,7 +72,7 @@ export default function Tripdetailslaptop() {
     if (!pickupLat || !pickupLng) {
         return <div>Loading or Coordinates not found in localStorage...</div>;
     }
-    const mapOptions={
+    const mapOptions = {
         zoomControl: false,
         mapTypeControl: false,
         streetViewControl: false,
@@ -125,10 +125,10 @@ export default function Tripdetailslaptop() {
                         {localStorage.getItem('Ride Cancelled') === 'true' ? (<div style={{ color: 'white', background: 'red', padding: '5px', borderRadius: '5px', fontWeight: '600', fontSize: '15px' }}>
                             {'Cancelled'}
                         </div>) : <></>}
-                        
+
                     </div>
-                    {localStorage.getItem('Ride Cancelled')=='true'?(<div style={{marginTop:'30px',marginBottom:'40px',paddingBottom:'20px'}}>
-                   <LoadScript googleMapsApiKey="AIzaSyApzKC2nq9OCuaVQV2Jbm9cJoOHPy9kzvM">
+                    {localStorage.getItem('Ride Cancelled') == 'true' ? (<div style={{ marginTop: '30px', marginBottom: '40px', paddingBottom: '20px' }}>
+                        <LoadScript googleMapsApiKey="AIzaSyApzKC2nq9OCuaVQV2Jbm9cJoOHPy9kzvM">
                             <GoogleMap
                                 mapContainerStyle={{
                                     height: '300px',
@@ -136,12 +136,12 @@ export default function Tripdetailslaptop() {
                                 }}
                                 options={mapOptions}
                                 center={{ lat: pickupLat, lng: pickupLng }}
-                                zoom={14}
+                                zoom={17}
                             >
-                                <Marker position={{ lat: pickupLat, lng: pickupLng, }}  />
+                                <Marker position={{ lat: pickupLat, lng: pickupLng, }} />
                             </GoogleMap>
                         </LoadScript>
-                   </div>):<></>}
+                    </div>) : <></>}
                 </div>
             </div>
         </div>
