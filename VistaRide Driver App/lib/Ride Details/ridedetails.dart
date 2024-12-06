@@ -343,7 +343,7 @@ class _RideDetailsState extends State<RideDetails> {
   }
   Future<void> sendnotification() async {
     await getDeviceToken(); // Assuming this sets a valid `token`
-
+    await fetchservercode();
     // Replace this with your actual server token.
     const String serverToken = Environment.ServerToken;
 
@@ -351,7 +351,7 @@ class _RideDetailsState extends State<RideDetails> {
       Uri.parse('https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
       headers: {
         'Content-Type': 'application/json', // Correct Content-Type header
-        'Authorization': 'Bearer $serverToken', // Correct Authorization header
+        'Authorization': 'Bearer $ServerToken', // Correct Authorization header
       },
       body: jsonEncode({
         "message": {
@@ -377,9 +377,21 @@ class _RideDetailsState extends State<RideDetails> {
       }
     }
   }
+  String ? ServerToken;
+  Future<void>fetchservercode()async{
+    final docsnap=await _firestore.collection('Server Token').doc('Token').get();
+    if(docsnap.exists){
+      setState(() {
+        ServerToken=docsnap.data()?['Token']??Environment.ServerToken;
+      });
+    }
+    if (kDebugMode) {
+      print('Server Token $ServerToken');
+    }
+  }
   Future<void> sendotpverfiednotification() async {
     await getDeviceToken(); // Assuming this sets a valid `token`
-
+    await fetchservercode();
     // Replace this with your actual server token.
     const String serverToken = Environment.ServerToken;
 
@@ -387,7 +399,7 @@ class _RideDetailsState extends State<RideDetails> {
       Uri.parse('https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
       headers: {
         'Content-Type': 'application/json', // Correct Content-Type header
-        'Authorization': 'Bearer $serverToken', // Correct Authorization header
+        'Authorization': 'Bearer $ServerToken', // Correct Authorization header
       },
       body: jsonEncode({
         "message": {
@@ -470,44 +482,51 @@ class _RideDetailsState extends State<RideDetails> {
   bool istripcompleted = false;
   double price = 0;
   Future<void> fetchridedetails() async {
-    final prefs = await SharedPreferences.getInstance();
-    final docsnap = await _firestore
-        .collection('Ride Details')
-        .doc(prefs.getString('Booking ID'))
-        .get();
-    if (docsnap.exists) {
-      setState(() {
-        ridestarted = docsnap.data()?['Ride Accepted'];
-        driverid = docsnap.data()?['Driver ID'];
-        rideotp = docsnap.data()?['Ride OTP'];
-        pickuplong = docsnap.data()?['Pick Longitude'];
-        pickuplat = docsnap.data()?['Pickup Latitude'];
-        droplat = docsnap.data()?['Drop Latitude'];
-        price = docsnap.data()?['Fare'];
-        droplong = docsnap.data()?['Drop Longitude'];
-        pickuploc = docsnap.data()?['Pickup Location'];
-        droploc = docsnap.data()?['Drop Location'];
-        cabcategory = docsnap.data()?['Cab Category'];
-        rideverified = docsnap.data()?['Ride Verified'];
-        isamountpaid = docsnap.data()?['Amount Paid'] ?? false;
-        istripcompleted = docsnap.data()?['Ride Completed'];
-      });
-      print('Ride Verified $rideverified');
-    }
-    final Docsnap = await _firestore
-        .collection('VistaRide Driver Details')
-        .doc(driverid)
-        .get();
-    if (Docsnap.exists) {
-      setState(() {
-        drivername = Docsnap.data()?['Name'];
-        driverprofilephoto = Docsnap.data()?['Profile Picture'];
-        carname = Docsnap.data()?['Car Name'];
-        carphoto = Docsnap.data()?['Car Photo'];
-        carnumber = Docsnap.data()?['Car Number Plate'];
-        rating = Docsnap.data()?['Rating'];
-        phonenumber = Docsnap.data()?['Contact Number'];
-      });
+    try{
+      final prefs = await SharedPreferences.getInstance();
+      final docsnap = await _firestore
+          .collection('Ride Details')
+          .doc(prefs.getString('Booking ID'))
+          .get();
+      if (docsnap.exists) {
+        setState(() {
+          ridestarted = docsnap.data()?['Ride Accepted'];
+          driverid = docsnap.data()?['Driver ID'];
+          rideotp = docsnap.data()?['Ride OTP'];
+          pickuplong = docsnap.data()?['Pick Longitude'];
+          pickuplat = docsnap.data()?['Pickup Latitude'];
+          droplat = docsnap.data()?['Drop Latitude'];
+          price = docsnap.data()?['Fare'] is int?
+          (docsnap.data()?['Fare']).toDouble()
+              :docsnap.data()?['Fare'] is double
+          ? (docsnap.data()?['Fare'])as double:0.0;
+          droplong = docsnap.data()?['Drop Longitude'];
+          pickuploc = docsnap.data()?['Pickup Location'];
+          droploc = docsnap.data()?['Drop Location'];
+          cabcategory = docsnap.data()?['Cab Category'];
+          rideverified = docsnap.data()?['Ride Verified'];
+          isamountpaid = docsnap.data()?['Amount Paid'] ?? false;
+          istripcompleted = docsnap.data()?['Ride Completed'];
+        });
+        print('Ride Verified $rideverified');
+      }
+      final Docsnap = await _firestore
+          .collection('VistaRide Driver Details')
+          .doc(driverid)
+          .get();
+      if (Docsnap.exists) {
+        setState(() {
+          drivername = Docsnap.data()?['Name'];
+          driverprofilephoto = Docsnap.data()?['Profile Picture'];
+          carname = Docsnap.data()?['Car Name'];
+          carphoto = Docsnap.data()?['Car Photo'];
+          carnumber = Docsnap.data()?['Car Number Plate'];
+          rating = Docsnap.data()?['Rating'];
+          phonenumber = Docsnap.data()?['Contact Number'];
+        });
+      }
+    }catch(e){
+      print('Ride Details Error $e');
     }
   }
   @override
@@ -529,6 +548,7 @@ class _RideDetailsState extends State<RideDetails> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    fetchservercode();
     notificationService.requestnotificationpermission();
     notificationService.getDeviceToken();
     notificationService.firebaseInit(context);
@@ -763,6 +783,7 @@ class _RideDetailsState extends State<RideDetails> {
                                     ? InkWell(
                                         onTap: ()async{
                                           //istripcompleted true
+                                          // await sendotpverfiednotification();
                                           final prefs =
                                           await SharedPreferences.getInstance();
                                           setState(() {

@@ -174,19 +174,33 @@ class _HomePageState extends State<HomePage> {
 
     // Set the release mode to keep the source after playback has completed.
 
-    final docSnap =
-        await _firestore.collection('Ride Details').doc(rideId).get();
-    if (docSnap.exists) {
-      setState(() {
-        pickuplocation = docSnap.data()?['Pickup Location'] ?? '';
-        droplocation = docSnap.data()?['Drop Location'] ?? '';
-        fare = docSnap.data()?['Fare'] ?? 0;
-        traveltime = docSnap.data()?['Travel Time'] ?? '';
-        distance = docSnap.data()?['Travel Distance'] ?? '';
-        cabcategory = docSnap.data()?['Cab Category'] ?? '';
-        isamountpaid = docSnap.data()?['Amount Paid'] ?? false;
-        istripcompleted = docSnap.data()?['Ride Completed'];
-      });
+    try{
+      final docSnap =
+      await _firestore.collection('Ride Details').doc(rideId).get();
+      if (docSnap.exists) {
+        final data = docSnap.data(); // Safely access data once
+        if (data != null) {
+          setState(() {
+            pickuplocation = data['Pickup Location'] ?? '';
+            droplocation = data['Drop Location'] ?? '';
+            fare = data['Fare'] is int
+                ? (data['Fare'] as int).toDouble() // Convert int to double
+                : data['Fare'] is double
+                ? data['Fare'] as double // Use the value directly if it's already double
+                : 0.0; // Default to 0.0 if not int or double
+            traveltime = data['Travel Time'] ?? '';
+            distance = data['Travel Distance'] ?? '';
+            cabcategory = data['Cab Category'] ?? '';
+            isamountpaid = data['Amount Paid'] ?? false;
+            istripcompleted = data['Ride Completed'] ?? false;
+          });
+        }
+      }
+
+    }catch(e){
+      if (kDebugMode) {
+        print("Trip fetching error $e");
+      }
     }
   }
 
@@ -263,11 +277,22 @@ class _HomePageState extends State<HomePage> {
           ));
     }
   }
-
+  String ? ServerToken;
+  Future<void>fetchservercode()async{
+    final docsnap=await _firestore.collection('Server Token').doc('Token').get();
+    if(docsnap.exists){
+      setState(() {
+        ServerToken=docsnap.data()?['Token']??Environment.ServerToken;
+      });
+    }
+    if (kDebugMode) {
+      print('Server Token $ServerToken');
+    }
+  }
   NotificationService notificationService = NotificationService();
   Future<void> sendnotification() async {
     await getDeviceToken(); // Assuming this sets a valid `token`
-
+    await fetchservercode();
     // Replace this with your actual server token.
     const String serverToken = Environment.ServerToken;
 
@@ -276,7 +301,7 @@ class _HomePageState extends State<HomePage> {
           'https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
       headers: {
         'Content-Type': 'application/json', // Correct Content-Type header
-        'Authorization': 'Bearer $serverToken', // Correct Authorization header
+        'Authorization': 'Bearer $ServerToken', // Correct Authorization header
       },
       body: jsonEncode({
         "message": {

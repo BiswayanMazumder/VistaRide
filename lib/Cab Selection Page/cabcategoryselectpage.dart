@@ -10,6 +10,7 @@ import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:image/image.dart' as img;
@@ -376,7 +377,6 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
 
   List cabpricesmultiplier = [36, 40, 65, 15];
   int _selectedindex = 0;
-
   // Add this function to initialize the map controller
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
@@ -399,82 +399,196 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
       print('Random 4-digit number: $randomFourDigitNumber');
     }
   }
+  bool iscashpayment=true;
+  void handlePaymentErrorResponse(PaymentFailureResponse response){
+
+  }
+
+  void handlePaymentSuccessResponse(PaymentSuccessResponse response)async{
+    final prefs =
+    await SharedPreferences.getInstance();
+    await _firestore.collection('Booking IDs').doc(_auth.currentUser!.uid).set(
+        {
+          'IDs':FieldValue.arrayUnion([prefs.getString('Booking ID')])
+        },SetOptions(merge: true));
+    await _firestore.collection('Ride Details').doc(prefs.getString('Booking ID')).set(
+        {
+          'Booking ID':prefs.getString('Booking ID'),
+          'Pickup Location':pickup,
+          'Drop Location':dropoffloc,
+          'Fare':prefs.getDouble('Fare'),
+          'Cash Payment':iscashpayment,
+          'Cab Category':prefs.getString('Cab Category'),
+          'Booking Time':FieldValue.serverTimestamp(),
+          'Ride Accepted':false,
+          'Ride Verified':false,
+          'Ride Completed':false,
+          'Driver ID':'',
+          'Pick Longitude':_pickupLocation.longitude,
+          'Pickup Latitude':_pickupLocation.latitude,
+          'Drop Latitude':_dropoffLocation.latitude,
+          'Drop Longitude':_dropoffLocation.longitude,
+          'Travel Distance':prefs.getString('Travel Distance'),
+          'Travel Time':prefs.getString('Travel Time'),
+          'Ride OTP':randomFourDigitNumber,
+        });
+    if(prefs.getString('Cab Category')!=null || prefs.getString('Fare')!=null){
+      Navigator.push(context, MaterialPageRoute(builder: (context) => CabFinding(),));
+    }
+  }
+
+  void handleExternalWalletSelected(ExternalWalletResponse response){
+
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       bottomNavigationBar: Container(
         width: MediaQuery.sizeOf(context).width,
-        height: 80,
+        height: 110,
         color: Colors.white,
         child: Padding(
           padding: const EdgeInsets.only(left: 30, right: 30),
-          child: InkWell(
-            onTap: () async {
-              await fetchdrivers();
-              final prefs =
-              await SharedPreferences.getInstance();
-              prefs.setString('Cab Category', cabcategorynames[_selectedindex]);
-              prefs.setString('Travel Distance', DistanceTravel);
-              prefs.setString('Travel Time', Time);
-              if (kDebugMode) {
-                print('Cab ${prefs.getDouble('Fare')}');
-              }
-              await generateBookingID();
-              if(isdrivernearby){
-                await generateotp();
-                prefs.setString('Booking ID', randomFiveDigitNumber.toString());
-                await generateBookingID();
-                if (kDebugMode) {
-                  print(prefs.getString('Booking ID'));
-                }
-                await _firestore.collection('Booking IDs').doc(_auth.currentUser!.uid).set(
-                    {
-                      'IDs':FieldValue.arrayUnion([prefs.getString('Booking ID')])
-                    },SetOptions(merge: true));
-                await _firestore.collection('Ride Details').doc(prefs.getString('Booking ID')).set(
-                    {
-                      'Booking ID':prefs.getString('Booking ID'),
-                      'Pickup Location':pickup,
-                      'Drop Location':dropoffloc,
-                      'Fare':prefs.getDouble('Fare'),
-                      'Cab Category':prefs.getString('Cab Category'),
-                      'Booking Time':FieldValue.serverTimestamp(),
-                      'Ride Accepted':false,
-                      'Ride Verified':false,
-                      'Ride Completed':false,
-                      'Driver ID':'',
-                      'Pick Longitude':_pickupLocation.longitude,
-                      'Pickup Latitude':_pickupLocation.latitude,
-                      'Drop Latitude':_dropoffLocation.latitude,
-                      'Drop Longitude':_dropoffLocation.longitude,
-                      'Travel Distance':prefs.getString('Travel Distance'),
-                      'Travel Time':prefs.getString('Travel Time'),
-                      'Ride OTP':randomFourDigitNumber,
-                    });
-                if(prefs.getString('Cab Category')!=null || prefs.getString('Fare')!=null){
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => CabFinding(),));
-                }
-              }
-            },
-            child: Align(
-              alignment: Alignment
-                  .center, // Aligns the inner container at the top-left
-              child: Container(
-                width: MediaQuery.sizeOf(context).width,
-                height: 50,
-                decoration:  BoxDecoration(
-                    color:isdrivernearby?Colors.black:Colors.grey,
-                    borderRadius: BorderRadius.all(Radius.circular(10))),
-                child: Center(
-                  child: Text(
-                  isdrivernearby? 'Book ${cabcategorynames[_selectedindex]}':'No drivers nearby',
+          child: Column(
+            children: [
+              const SizedBox(
+                height: 10,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  InkWell(
+                    onTap: (){
+                      setState(() {
+                        iscashpayment=!iscashpayment;
+                      });
+                    },
+                    child: Row(
+                      children: [
+                        const SizedBox(
+                          width:10,
+                        ),
+                        Text(iscashpayment?'Cash':'Online',style: GoogleFonts.poppins(
+                          color: Colors.black,fontWeight: FontWeight.w600
+                        ),),
 
-                    style: GoogleFonts.poppins(
-                        color: Colors.white, fontWeight: FontWeight.w600),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(
+                    width:10,
+                  ),
+                  InkWell(
+                    onTap: (){
+
+                    },
+                    child: Row(
+                      children: [
+                        const SizedBox(
+                          width:10,
+                        ),
+                        Text('Promo codes',style: GoogleFonts.poppins(
+                            color: Colors.black,fontWeight: FontWeight.w600
+                        ),),
+
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(
+                height: 15,
+              ),
+              InkWell(
+                onTap: () async {
+                  await fetchdrivers();
+                  final prefs =
+                  await SharedPreferences.getInstance();
+                  prefs.setString('Cab Category', cabcategorynames[_selectedindex]);
+                  prefs.setString('Travel Distance', DistanceTravel);
+                  prefs.setString('Travel Time', Time);
+                  if (kDebugMode) {
+                    print('Cab ${prefs.getDouble('Fare')}');
+                  }
+                  await generateBookingID();
+                  if(isdrivernearby){
+                    await generateotp();
+                    prefs.setString('Booking ID', randomFiveDigitNumber.toString());
+                    await generateBookingID();
+                    if (kDebugMode) {
+                      print(prefs.getString('Booking ID'));
+                    }
+                    if(iscashpayment){
+                      await _firestore.collection('Booking IDs').doc(_auth.currentUser!.uid).set(
+                          {
+                            'IDs':FieldValue.arrayUnion([prefs.getString('Booking ID')])
+                          },SetOptions(merge: true));
+                      await _firestore.collection('Ride Details').doc(prefs.getString('Booking ID')).set(
+                          {
+                            'Booking ID':prefs.getString('Booking ID'),
+                            'Pickup Location':pickup,
+                            'Drop Location':dropoffloc,
+                            'Fare':prefs.getDouble('Fare'),
+                            'Cab Category':prefs.getString('Cab Category'),
+                            'Booking Time':FieldValue.serverTimestamp(),
+                            'Ride Accepted':false,
+                            'Ride Verified':false,
+                            'Ride Completed':false,
+                            'Cash Payment':iscashpayment,
+                            'Driver ID':'',
+                            'Pick Longitude':_pickupLocation.longitude,
+                            'Pickup Latitude':_pickupLocation.latitude,
+                            'Drop Latitude':_dropoffLocation.latitude,
+                            'Drop Longitude':_dropoffLocation.longitude,
+                            'Travel Distance':prefs.getString('Travel Distance'),
+                            'Travel Time':prefs.getString('Travel Time'),
+                            'Ride OTP':randomFourDigitNumber,
+                          });
+                      if(prefs.getString('Cab Category')!=null || prefs.getString('Fare')!=null){
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => CabFinding(),));
+                      }
+                    }
+                    if(!iscashpayment){
+                      Razorpay razorpay = Razorpay();
+                      var options = {
+                        'key': Environment.razorpaytestapi,
+                        'amount': (prefs.getDouble('Fare'))!*100,
+                        'name': 'VistaRide',
+                        'description': 'Trip to ${dropoffloc} from ${pickup}',
+                        'retry': {'enabled': true, 'max_count': 1},
+                        'send_sms_hash': true,
+                        'external': {
+                          'wallets': ['paytm']
+                        }
+                      };
+                      razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, handlePaymentErrorResponse);
+                      razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, handlePaymentSuccessResponse);
+                      razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, handleExternalWalletSelected);
+                      razorpay.open(options);
+                    }
+                  }
+                },
+                child: Align(
+                  alignment: Alignment
+                      .center, // Aligns the inner container at the top-left
+                  child: Container(
+                    width: MediaQuery.sizeOf(context).width,
+                    height: 50,
+                    decoration:  BoxDecoration(
+                        color:isdrivernearby?Colors.black:Colors.grey,
+                        borderRadius: BorderRadius.all(Radius.circular(10))),
+                    child: Center(
+                      child: Text(
+                      isdrivernearby? 'Book ${cabcategorynames[_selectedindex]}':'No drivers nearby',
+
+                        style: GoogleFonts.poppins(
+                            color: Colors.white, fontWeight: FontWeight.w600),
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ),
         ),
       ),
@@ -512,7 +626,7 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
             child: Container(
                 width: MediaQuery.sizeOf(context).width,
                 color: Colors.white,
-                height: 300,
+                height: 400,
                 child: Column(
                   children: [
                     Padding(

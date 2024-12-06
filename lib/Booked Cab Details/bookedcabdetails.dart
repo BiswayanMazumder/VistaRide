@@ -299,49 +299,56 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
   bool isamountpaid=false;
   double price=0;
   Future<void> fetchridedetails() async {
-    final prefs = await SharedPreferences.getInstance();
-    final docsnap = await _firestore
-        .collection('Ride Details')
-        .doc(prefs.getString('Booking ID'))
-        .get();
-    if (docsnap.exists) {
-      setState(() {
-        ridestarted = docsnap.data()?['Ride Accepted'];
-        driverid = docsnap.data()?['Driver ID'];
-        rideotp = docsnap.data()?['Ride OTP'];
-        pickuplong = docsnap.data()?['Pick Longitude'];
-        pickuplat = docsnap.data()?['Pickup Latitude'];
-        droplat = docsnap.data()?['Drop Latitude'];
-        price=docsnap.data()?['Fare'];
-        droplong = docsnap.data()?['Drop Longitude'];
-        pickuploc = docsnap.data()?['Pickup Location'];
-        droploc = docsnap.data()?['Drop Location'];
-        cabcategory=docsnap.data()?['Cab Category'];
-        rideverified=docsnap.data()?['Ride Verified'];
-        istripdone=docsnap.data()?['Ride Completed'];
-        isamountpaid=docsnap.data()?['Amount Paid']??false;
-      });
-    }
-    print('Trip Done $isamountpaid');
-    final Docsnap = await _firestore
-        .collection('VistaRide Driver Details')
-        .doc(driverid)
-        .get();
-    if (Docsnap.exists) {
-      setState(() {
-        drivername = Docsnap.data()?['Name'];
-        driverprofilephoto = Docsnap.data()?['Profile Picture'];
-        carname = Docsnap.data()?['Car Name'];
-        carphoto = Docsnap.data()?['Car Photo'];
-        carnumber = Docsnap.data()?['Car Number Plate'];
-        rating = Docsnap.data()?['Rating'];
-        phonenumber = Docsnap.data()?['Contact Number'];
-        drivercurrentlatitude=Docsnap.data()?['Current Latitude'];
-        drivercurrentlongitude=Docsnap.data()?['Current Longitude'];
-      });
-    }
-    if(isamountpaid){
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
+    try{
+      final prefs = await SharedPreferences.getInstance();
+      final docsnap = await _firestore
+          .collection('Ride Details')
+          .doc(prefs.getString('Booking ID'))
+          .get();
+      if (docsnap.exists) {
+        setState(() {
+          ridestarted = docsnap.data()?['Ride Accepted'];
+          driverid = docsnap.data()?['Driver ID'];
+          rideotp = docsnap.data()?['Ride OTP'];
+          pickuplong = docsnap.data()?['Pick Longitude'];
+          pickuplat = docsnap.data()?['Pickup Latitude'];
+          droplat = docsnap.data()?['Drop Latitude'];
+          price=docsnap.data()?['Fare'] is int?
+          (docsnap.data()?['Fare']).toDouble()
+              :docsnap.data()?['Fare'] is double
+              ? (docsnap.data()?['Fare'])as double:0.0;
+          droplong = docsnap.data()?['Drop Longitude'];
+          pickuploc = docsnap.data()?['Pickup Location'];
+          droploc = docsnap.data()?['Drop Location'];
+          cabcategory=docsnap.data()?['Cab Category'];
+          rideverified=docsnap.data()?['Ride Verified'];
+          istripdone=docsnap.data()?['Ride Completed'];
+          isamountpaid=docsnap.data()?['Amount Paid']??false;
+        });
+      }
+      print('Trip Done $isamountpaid');
+      final Docsnap = await _firestore
+          .collection('VistaRide Driver Details')
+          .doc(driverid)
+          .get();
+      if (Docsnap.exists) {
+        setState(() {
+          drivername = Docsnap.data()?['Name'];
+          driverprofilephoto = Docsnap.data()?['Profile Picture'];
+          carname = Docsnap.data()?['Car Name'];
+          carphoto = Docsnap.data()?['Car Photo'];
+          carnumber = Docsnap.data()?['Car Number Plate'];
+          rating = Docsnap.data()?['Rating'];
+          phonenumber = Docsnap.data()?['Contact Number'];
+          drivercurrentlatitude=Docsnap.data()?['Current Latitude'];
+          drivercurrentlongitude=Docsnap.data()?['Current Longitude'];
+        });
+      }
+      if(isamountpaid){
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
+      }
+    }catch(e){
+      print('Error in fetching ride $e');
     }
   }
 
