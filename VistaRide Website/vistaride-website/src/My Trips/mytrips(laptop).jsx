@@ -35,8 +35,10 @@ export default function Mytripslaptop() {
     const [droplng, setDroplng] = useState([]);
     const [fare, setFare] = useState([]);
     const [bookingtime, setBookingtime] = useState([]);
+    const [distance, setDistance] = useState([]);
+    const [traveltime, setTraveltime] = useState([]);
     const [loadedTrips, setLoadedTrips] = useState(3); // To track number of trips loaded
-
+    const[driver,setdriver]= useState([]);
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             if (currentUser) {
@@ -87,7 +89,9 @@ export default function Mytripslaptop() {
                     const dropLons = [];
                     const Fare = [];
                     const bookingTimes = [];
-        
+                    const driverIDs = [];
+                    const DistanceTravel=[];
+                    const TravelTimes=[];
                     // Function to format a timestamp to "DD MM YYYY HH:mm:ss"
                     const formatTimestamp = (timestamp) => {
                         const date = timestamp.toDate(); // Convert Firestore Timestamp to JavaScript Date
@@ -119,7 +123,9 @@ export default function Mytripslaptop() {
                             dropLats.push(rideDocSnap.data()['Drop Latitude']);
                             dropLons.push(rideDocSnap.data()['Drop Longitude']);
                             Fare.push(rideDocSnap.data()['Fare']);
-                            
+                            driverIDs.push(rideDocSnap.data()['Driver ID']);
+                            DistanceTravel.push(rideDocSnap.data()['Travel Distance']);
+                            TravelTimes.push(rideDocSnap.data()['Travel Time']);
                             // Convert Booking Time timestamp to formatted date
                             const bookingTime = rideDocSnap.data()['Booking Time'];
                             if (bookingTime) {
@@ -137,8 +143,11 @@ export default function Mytripslaptop() {
                     setPicklat(pickupLats);
                     setPicklng(pickupLons);
                     setDroplat(dropLats);
+                    setdriver(driverIDs);
                     setDroplng(dropLons);
                     setFare(Fare);
+                    setDistance(DistanceTravel);
+                    setTraveltime(TravelTimes);
                     setBookingtime(bookingTimes);
                 }
         
@@ -232,6 +241,9 @@ export default function Mytripslaptop() {
                                         localStorage.setItem('Fare', fare[index]);
                                         localStorage.setItem('Trip ID', tripid[index]);
                                         localStorage.setItem('Booking Time', bookingtime[index]);
+                                        localStorage.setItem('Distance', distance[index]);
+                                        localStorage.setItem('Travel Time', traveltime[index]);
+                                        localStorage.setItem('Driver ID', driver[index]);
                                     }}>
                                         <div style={{ fontWeight: '400', color: 'red', margin: '30px', marginTop: '10px', marginBottom: '0px',display:'flex',flexDirection:'row',gap:'10px' }}>
                                         <div className="jdnvjfnfv" style={{color:'black'}}>

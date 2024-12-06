@@ -34,6 +34,22 @@ export default function Tripdetailslaptop() {
 
         return () => unsubscribe();
     }, []);
+    const [drivername, setdrivername] = useState('');
+    const [carimage, setcarimage] = useState('');
+    const [carmodel, setcarmodel] = useState('');
+
+    useEffect(() => {
+        const fetchdrivers = async () => {
+            const docref = doc(db, 'VistaRide Driver Details', localStorage.getItem('Driver ID'));
+            const docSnap = await getDoc(docref);
+            if (docSnap.exists()) {
+                setdrivername(docSnap.data()['Name']);
+                setcarimage(docSnap.data()['Car Photo']);
+                setcarmodel(docSnap.data()['Car Name']);
+            }
+        }
+        fetchdrivers();
+    }, []);
     useEffect(() => {
         if (!user) return;
 
@@ -57,27 +73,31 @@ export default function Tripdetailslaptop() {
     }, [user]);
     const [pickupLat, setPickupLat] = useState(null);
     const [pickupLng, setPickupLng] = useState(null);
+    const [dropLat, setDropLat] = useState(null);
+    const [dropLng, setDropLng] = useState(null);
 
     useEffect(() => {
-        // Retrieve latitude and longitude from localStorage
-        const lat = parseFloat(localStorage.getItem('Pickup Latitude'));
-        const lng = parseFloat(localStorage.getItem('Pickup Longitude'));
+        // Retrieve pickup and drop coordinates from localStorage
+        const pickupLat = parseFloat(localStorage.getItem('Pickup Latitude'));
+        const pickupLng = parseFloat(localStorage.getItem('Pickup Longitude'));
+        const dropLat = parseFloat(localStorage.getItem('Drop Latitude'));
+        const dropLng = parseFloat(localStorage.getItem('Drop Longitude'));
 
-        if (lat && lng) {
-            setPickupLat(lat);
-            setPickupLng(lng);
+        // Set state if the coordinates are available
+        if (pickupLat && pickupLng && dropLat && dropLng) {
+            setPickupLat(pickupLat);
+            setPickupLng(pickupLng);
+            setDropLat(dropLat);
+            setDropLng(dropLng);
         }
     }, []);
-
-    if (!pickupLat || !pickupLng) {
-        return <div>Loading or Coordinates not found in localStorage...</div>;
-    }
     const mapOptions = {
         zoomControl: false,
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false,
     }
+    
     return (
         <div className='webbody'>
             <div className="ehfjfv" style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -118,9 +138,9 @@ export default function Tripdetailslaptop() {
                     <div className="djnvdnv">
                         Your trip
                     </div>
-                    <div className="djnvdnv" style={{ fontWeight: '500', fontSize: '16px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%', height: '30px', alignItems: 'center' }}>
+                    <div className="djnvdnv" style={{ fontWeight: '600', fontSize: '16px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%', height: '30px', alignItems: 'center' }}>
                         <div>
-                            {localStorage.getItem('Booking Time')}
+                            {localStorage.getItem('Booking Time')} {localStorage.getItem('Ride Cancelled') == 'false' ?(`with ${drivername}`):<></>}
                         </div>
                         {localStorage.getItem('Ride Cancelled') === 'true' ? (<div style={{ color: 'white', background: 'red', padding: '5px', borderRadius: '5px', fontWeight: '600', fontSize: '15px' }}>
                             {'Cancelled'}
@@ -141,7 +161,81 @@ export default function Tripdetailslaptop() {
                                 <Marker position={{ lat: pickupLat, lng: pickupLng, }} />
                             </GoogleMap>
                         </LoadScript>
-                    </div>) : <></>}
+                    </div>) :(<div style={{ marginTop: '30px', marginBottom: '40px', paddingBottom: '20px' }}>
+                        <LoadScript googleMapsApiKey="AIzaSyApzKC2nq9OCuaVQV2Jbm9cJoOHPy9kzvM">
+                            <GoogleMap
+                                mapContainerStyle={{
+                                    height: '300px',
+                                    width: '100%',
+                                }}
+                                options={mapOptions}
+                                center={{ lat: pickupLat, lng: pickupLng }}
+                                zoom={17}
+                            >
+                                <Marker position={{ lat: pickupLat, lng: pickupLng, }} />
+                            </GoogleMap>
+                        </LoadScript>
+                    </div>)}
+                    {localStorage.getItem('Ride Cancelled') === 'true' ? <></> :
+                        (<div>
+                            <div className="djnvdnv" style={{ marginTop: '30px' }}>
+                                Trip Details
+                            </div>
+                            <div className="djnvdnv" style={{ fontWeight: '600', fontSize: '16px', display: 'flex', flexDirection: 'row', width: '100%', height: '30px', alignItems: 'center', gap: "10px" }}>
+                                <div style={{ marginTop: '5px' }}>
+                                    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><title>Road</title><path d="M23 23 17.5 1h-4v5h-3V1h-4L1 23h9.5v-5h3v5H23Zm-12.5-8V9h3v6h-3Z" fill="currentColor"></path></svg>
+                                </div>
+                                <div style={{ fontWeight: '500' }}>
+                                    {localStorage.getItem('Distance')}
+                                </div>
+                            </div>
+                            <div className="djnvdnv" style={{ fontWeight: '600', fontSize: '16px', display: 'flex', flexDirection: 'row', width: '100%', height: '30px', alignItems: 'center', gap: "10px" }}>
+                                <div style={{ marginTop: '5px' }}>
+                                    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><title>Clock</title><path d="M12 1C5.9 1 1 5.9 1 12s4.9 11 11 11 11-4.9 11-11S18.1 1 12 1Zm6 13h-8V4h3v7h5v3Z" fill="currentColor"></path></svg>
+                                </div>
+                                <div style={{ fontWeight: '500' }}>
+                                    {localStorage.getItem('Travel Time')}
+                                </div>
+                            </div>
+                            <div className="djnvdnv" style={{ fontWeight: '600', fontSize: '16px', display: 'flex', flexDirection: 'row', width: '100%', height: '30px', alignItems: 'center', gap: "10px" }}>
+                                <div style={{ marginTop: '5px' }}>
+                                    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><title>Tag</title><path d="m10 24 12-12V2H12L0 14l10 10Z" fill="currentColor"></path></svg>
+                                </div>
+                                <div style={{ fontWeight: '500' }}>
+                                    ₹{localStorage.getItem('Fare')}
+                                </div>
+                            </div>
+                            <div className="djnvdnv" style={{ fontWeight: '600', fontSize: '16px', display: 'flex', flexDirection: 'row', width: '100%', height: '30px', alignItems: 'center', gap: "10px" }}>
+                                <div style={{ marginTop: '5px' }}>
+                                    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><title>Credit card</title><path fill-rule="evenodd" clip-rule="evenodd" d="M1 4h22v4H1V4Zm0 7h22v9H1v-9Z" fill="currentColor"></path></svg>
+                                </div>
+                                <div style={{ fontWeight: '500' }}>
+                                    Cash
+                                </div>
+                            </div>
+                        </div>)
+                    }
+                    {localStorage.getItem('Ride Cancelled') === 'false' ?(<div>
+                        <div className="djnvdnv" style={{ marginTop: '30px', fontWeight: '700' }}>
+                        Route Details
+                    </div>
+                    <div className="djnvdnv" style={{ fontWeight: '600', fontSize: '16px', display: 'flex', flexDirection: 'row', width: '100%', height: '30px', alignItems: 'center', gap: "10px" }}>
+                        <div style={{ marginTop: '5px' }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" color="#000000"><title>Circle</title><path d="M12 23c6.075 0 11-4.925 11-11S18.075 1 12 1 1 5.925 1 12s4.925 11 11 11Z" fill="currentColor"></path></svg>
+                        </div>
+                        <div style={{ fontWeight: '500' }}>
+                            {localStorage.getItem('Pickup Location')}
+                        </div>
+                    </div>
+                    <div className="djnvdnv" style={{ fontWeight: '600', fontSize: '16px', display: 'flex', flexDirection: 'row', width: '100%', height: '30px', alignItems: 'center', gap: "10px",marginTop:'50px',paddingBottom:'30px' }}>
+                        <div style={{ marginTop: '5px' }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" color="#000000"><title>Square</title><path d="M2 2h20v20H2V2Z" fill="currentColor"></path></svg>
+                        </div>
+                        <div style={{ fontWeight: '500' }}>
+                            {localStorage.getItem('Drop Location')}
+                        </div>
+                    </div>
+                    </div>):<></>}
                 </div>
             </div>
         </div>
