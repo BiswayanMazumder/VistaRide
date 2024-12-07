@@ -242,7 +242,7 @@ export default function CabBookingLaptop() {
 
         return distance <= 15; // Return true if within 15 km
     };
-
+    const [carcategory, setcarcategory] = useState([]);
     // Fetch drivers when the selectedPickupLocation changes
     useEffect(() => {
         if (!selectedPickupLocation) return;
@@ -263,13 +263,16 @@ export default function CabBookingLaptop() {
                     };
                     const driverAvailability = driverData['Driver Avaliable'];
                     const driverStatus = driverData['Driver Online'];
-
+                    const drivercarcategory = driverData['Car Category'];
+                    setcarcategory(drivercarcategory);
+                    console.log('Category: ' + drivercarcategory);
                     // Check if driver is online, available, and within 15 km
                     if (driverStatus && driverAvailability && isWithin15Km(selectedPickupLocation, driverLocation)) {
                         nearbyDrivers.push(doc.id); // Push driver UID if they are within range
                         driverMarkers.push({
                             id: doc.id,
                             position: driverLocation,
+                            'category': drivercarcategory
                         });
                     }
                 });
@@ -838,16 +841,23 @@ export default function CabBookingLaptop() {
                         {selectedDropLocation && <Marker position={selectedDropLocation} />}
 
                         {/* Render markers for each nearby driver */}
-                        {markers.map((driver) => (
-                            <Marker
-                                key={driver.id}
-                                position={driver.position}
-                                icon={{
-                                    url: "https://d1a3f4spazzrp4.cloudfront.net/car-types/map70px/map-blue-uberx.png",
-                                    scaledSize: new window.google.maps.Size(40, 40), // Adjust marker size
-                                }}
-                            />
-                        ))}
+                        {markers.map((driver) => {
+                            const categoryIndex = cabcategorynames.indexOf(driver.category); // Find the index of the category
+                            const iconUrl = categoryIndex === 4 ? 'https://d1a3f4spazzrp4.cloudfront.net/car-types/map70px/map-black.png' : 'https://d1a3f4spazzrp4.cloudfront.net/car-types/map70px/product/map-uberx.png'; // Get the corresponding icon or a default one if not found
+
+                            return (
+                                <Marker
+                                    key={driver.id}
+                                    position={driver.position}
+                                    category={driver.category}
+                                    icon={{
+                                        url: iconUrl, // Use the icon URL from the category
+                                        scaledSize: new window.google.maps.Size(40, 40), // Adjust marker size
+                                    }}
+                                />
+                            );
+                        })}
+
 
                         {directions && directions.routes[0].overview_path && (
                             <Polyline
