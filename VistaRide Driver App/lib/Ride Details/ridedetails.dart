@@ -480,6 +480,7 @@ class _RideDetailsState extends State<RideDetails> {
   double droplat = 0;
   bool isamountpaid = false;
   bool istripcompleted = false;
+  bool iscashpayment=false;
   double price = 0;
   Future<void> fetchridedetails() async {
     try{
@@ -502,6 +503,7 @@ class _RideDetailsState extends State<RideDetails> {
           ? (docsnap.data()?['Fare'])as double:0.0;
           droplong = docsnap.data()?['Drop Longitude'];
           pickuploc = docsnap.data()?['Pickup Location'];
+          iscashpayment=docsnap.data()?['Cash Payment'];
           droploc = docsnap.data()?['Drop Location'];
           cabcategory = docsnap.data()?['Cab Category'];
           rideverified = docsnap.data()?['Ride Verified'];
@@ -786,13 +788,29 @@ class _RideDetailsState extends State<RideDetails> {
                                           // await sendotpverfiednotification();
                                           final prefs =
                                           await SharedPreferences.getInstance();
-                                          setState(() {
-                                            istripcompleted=true;
-                                          });
-                                          await _firestore
-                                              .collection('Ride Details')
-                                              .doc(prefs.getString('Booking ID'))
-                                              .update({'Ride Completed': true});
+                                          if(iscashpayment){
+                                            setState(() {
+                                              istripcompleted=true;
+                                            });
+                                            await _firestore
+                                                .collection('Ride Details')
+                                                .doc(prefs.getString('Booking ID'))
+                                                .update({'Ride Completed': true});
+                                          }else{
+                                            await _firestore
+                                                .collection('Ride Details')
+                                                .doc(prefs.getString('Booking ID'))
+                                                .update({
+                                              'Amount Paid':true,
+                                              'Ride Accepted':false
+                                            });
+                                            await _firestore.collection('VistaRide Driver Details').doc(_auth.currentUser!.uid).update({
+                                              'Driver Avaliable':true,
+                                              'Ride Doing':FieldValue.delete(),
+                                              'Rides Completed':FieldValue.arrayUnion([rideid]),
+                                            });
+                                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
+                                          }
                                         },
                                         child: Container(
                                           height: 60,

@@ -169,6 +169,7 @@ class _HomePageState extends State<HomePage> {
 
   bool isamountpaid = false;
   bool istripcompleted = false;
+  bool iscashpayment=false;
   Future<void> fetchRideDetails(String rideId) async {
     player = AudioPlayer();
 
@@ -193,6 +194,7 @@ class _HomePageState extends State<HomePage> {
             cabcategory = data['Cab Category'] ?? '';
             isamountpaid = data['Amount Paid'] ?? false;
             istripcompleted = data['Ride Completed'] ?? false;
+            iscashpayment=data['Cash Payment']??false;
           });
         }
       }
@@ -804,7 +806,7 @@ class _HomePageState extends State<HomePage> {
                               height: 20,
                             ),
                             Text(
-                              '₹$fare Trip Fare',
+                              '₹$fare (${iscashpayment?'Cash Payment':'Online Payment'})',
                               style: GoogleFonts.poppins(
                                   color: Colors.black,
                                   fontWeight: FontWeight.w700,
