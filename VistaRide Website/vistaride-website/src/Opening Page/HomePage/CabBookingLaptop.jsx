@@ -4,8 +4,8 @@ import { arrayRemove, arrayUnion, collection, deleteField, doc, FieldValue, getD
 import { initializeApp } from "firebase/app";
 import { GoogleMap, LoadScript, Marker, Polyline } from '@react-google-maps/api';
 import { Link } from 'react-router-dom';
-import {Elements} from '@stripe/react-stripe-js';
-import {loadStripe} from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 const firebaseConfig = {
     apiKey: "AIzaSyA5h_ElqdgLrs6lXLgwHOfH9Il5W7ARGiI",
     authDomain: "vistafeedd.firebaseapp.com",
@@ -25,25 +25,27 @@ export default function CabBookingLaptop() {
     const mapRef = useRef(null);
     const [bookingstarted, setbookingstarted] = useState(false);
     const [index, setindex] = useState(0);
-    const cabmultiplier = [36, 40, 65, 15];
-    const cabcategorynames = ['Mini', 'Prime', 'SUV', 'Non AC Taxi'];
+    const cabmultiplier = [36, 40, 65, 15, 100];
+    const cabcategorynames = ['Mini', 'Prime', 'SUV', 'Non AC Taxi', 'LUX'];
     const cabcategorydescription = [
         'Highly Discounted fare',
         'Spacious sedans, top drivers',
         'Spacious SUVs',
-        ''];
+        '',
+        'Our most luxurious ride option'];
     const carcategoryimages = [
         'https://d1a3f4spazzrp4.cloudfront.net/car-types/haloProductImages/Hatchback.png',
         'https://d1a3f4spazzrp4.cloudfront.net/car-types/haloProductImages/v1.1/UberX_v1.png',
         'https://d1a3f4spazzrp4.cloudfront.net/car-types/haloProductImages/package_UberXL_new_2022.png',
-        'https://olawebcdn.com/images/v1/cabs/sl/ic_kp.png'
+        'https://olawebcdn.com/images/v1/cabs/sl/ic_kp.png',
+        'https://d1a3f4spazzrp4.cloudfront.net/car-types/haloProductImages/v1.1/Black_Premium_Driver_Red_Carpet.png'
     ];
     const [user, setUser] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [userName, setUserName] = useState(null);
     const [userPfp, setUserPfp] = useState(null);
-
+    const [weatherData, setWeatherData] = useState(null);
     const [pickupLocation, setPickupLocation] = useState('');
     const [dropLocation, setDropLocation] = useState('');
     const [pickupSuggestions, setPickupSuggestions] = useState([]);
@@ -271,7 +273,6 @@ export default function CabBookingLaptop() {
                         });
                     }
                 });
-
                 setDrivers(nearbyDrivers); // Update the state with the filtered list of drivers
                 setMarkers(driverMarkers); // Update the state with the list of driver markers
                 console.log("Nearby drivers (within 15 km):", nearbyDrivers);
@@ -470,7 +471,44 @@ export default function CabBookingLaptop() {
         }
     };
     const [cashpayment, setcashpayment] = useState(true);
+    useEffect(() => {
+        const fetchWeather = async () => {
+            const apiKey = '5796abbde9106b7da4febfae8c44c232'; // Replace with your OpenWeatherMap API key
+            const url = `https://api.openweathermap.org/data/2.5/weather?lat=${selectedPickupLocation.lat}&lon=${selectedPickupLocation.lng}&appid=${apiKey}&units=metric`;
 
+            setLoading(true);  // Start loading state
+            setError(null);    // Reset any previous errors
+
+            try {
+                const response = await fetch(url);
+
+                // Check if the API call was successful
+                if (response.ok) {
+                    const data = await response.json();
+
+                    // Extract weather information
+                    const description = data.weather[0].main;
+                    const temperature = data.main.temp;
+                    // Store weather data in localStorage (like SharedPreferences in Flutter)
+                    localStorage.setItem('Weather Temperature', temperature);
+                    localStorage.setItem('Weather Condition', description);
+                    console.log('Weather Data:', { temperature, description });
+                    // Set the weather data in state
+                    setWeatherData({ temperature, description });
+                    setLoading(false); // Stop loading state
+                } else {
+                    // Handle error if status code is not 200
+                    setError('Failed to load weather data');
+                    setLoading(false);
+                }
+            } catch (e) {
+                // Handle network or other errors
+                setError('Error: ' + e.message);
+                setLoading(false);
+            }
+        };
+        fetchWeather();
+    }, []);
     const mapCenter = selectedDropLocation
         ? {
             lat: (selectedPickupLocation.lat + selectedDropLocation.lat) / 2,
@@ -649,19 +687,19 @@ export default function CabBookingLaptop() {
                                 </div>
                                 <div className="jjfnvjnf" style={{ backgroundColor: drivers.length > 0 ? 'black' : 'grey', cursor: drivers.length > 0 ? 'pointer' : 'not-allowed' }}
                                     onClick={() => {
-                                        if(cashpayment){
+                                        if (cashpayment) {
                                             if (drivers.length > 0) {
-                                            const random4DigitNumber = Math.floor(10000 + Math.random() * 90000);
-                                            console.log(drivers)
-                                            localStorage.setItem('Ride ID', random4DigitNumber);
-                                            console.log(drivers);
-                                            writeRideDetailsToDB(random4DigitNumber.toString());
-                                            writeRideDetails(random4DigitNumber.toString());
-                                            sendriderequesttodriver(random4DigitNumber.toString())
-                                            setbookingstarted(true);
-                                        }
-                                        }else{
-                                            
+                                                const random4DigitNumber = Math.floor(10000 + Math.random() * 90000);
+                                                console.log(drivers)
+                                                localStorage.setItem('Ride ID', random4DigitNumber);
+                                                console.log(drivers);
+                                                writeRideDetailsToDB(random4DigitNumber.toString());
+                                                writeRideDetails(random4DigitNumber.toString());
+                                                sendriderequesttodriver(random4DigitNumber.toString())
+                                                setbookingstarted(true);
+                                            }
+                                        } else {
+
                                         }
                                     }}>
                                     Request {cabcategorynames[index]}
@@ -686,10 +724,13 @@ export default function CabBookingLaptop() {
                                             <div className="jnvn">
                                                 {cabcategorydescription[0]}
                                             </div>
+                                            <div className="jnvn">
+                                                {localStorage.getItem('Weather Condition') == 'Rain' || drivers.length < 10 ? 'Prices are higher than usual' : ''}
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
-                                        ₹{cabmultiplier[0] * parseInt(distanceAndTime.distance)}
+                                        ₹{localStorage.getItem('Weather Condition') == 'Rain' || drivers.length < 10 ? (cabmultiplier[0] * parseInt(distanceAndTime.distance) + 50) : cabmultiplier[0] * parseInt(distanceAndTime.distance)}
                                     </div>
 
                                 </div>
@@ -706,10 +747,13 @@ export default function CabBookingLaptop() {
                                             <div className="jnvn">
                                                 {cabcategorydescription[1]}
                                             </div>
+                                            <div className="jnvn">
+                                                {localStorage.getItem('Weather Condition') == 'Rain' || drivers.length < 10 ? 'Prices are higher than usual' : ''}
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
-                                        ₹{cabmultiplier[1] * parseInt(distanceAndTime.distance)}
+                                        ₹{localStorage.getItem('Weather Condition') == 'Rain' || drivers.length < 10 ? (cabmultiplier[1] * parseInt(distanceAndTime.distance) + 200) : cabmultiplier[1] * parseInt(distanceAndTime.distance)}
                                     </div>
                                 </div>
                             </Link>
@@ -725,15 +769,18 @@ export default function CabBookingLaptop() {
                                             <div className="jnvn">
                                                 {cabcategorydescription[2]}
                                             </div>
+                                            <div className="jnvn">
+                                                {localStorage.getItem('Weather Condition') == 'Rain' || drivers.length < 10 ? 'Prices are higher than usual' : ''}
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
-                                        ₹{cabmultiplier[2] * parseInt(distanceAndTime.distance)}
+                                        ₹{localStorage.getItem('Weather Condition') == 'Rain' || drivers.length < 10 ? (cabmultiplier[2] * parseInt(distanceAndTime.distance) + 500) : cabmultiplier[2] * parseInt(distanceAndTime.distance)}
                                     </div>
                                 </div>
                             </Link>
                             <Link style={{ textDecoration: 'none', color: 'black' }}>
-                                <div className="erhfrj" style={{ marginBottom: '110px', border: index === 3 ? '2px solid black' : 'white', marginTop: '20px' }} onClick={() => {
+                                <div className="erhfrj" style={{ border: index === 3 ? '2px solid black' : 'white', marginTop: '20px' }} onClick={() => {
                                     setindex(3)
                                     fetchDrivers(cabcategorynames[3])
                                 }}>
@@ -744,10 +791,35 @@ export default function CabBookingLaptop() {
                                             <div className="jnvn">
                                                 {cabcategorydescription[3]}
                                             </div>
+                                            {/* <div className="jnvn">
+                                                {localStorage.getItem('Weather Condition')=='Haze' || drivers.length<10?'Prices are higher than usual':''}
+                                            </div> */}
                                         </div>
                                     </div>
                                     <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
                                         ₹{cabmultiplier[3] * parseInt(distanceAndTime.distance)}
+                                    </div>
+                                </div>
+                            </Link>
+                            <Link style={{ textDecoration: 'none', color: 'black' }}>
+                                <div className="erhfrj" style={{ marginBottom: '110px', border: index === 4 ? '2px solid black' : 'white', marginTop: '20px' }} onClick={() => {
+                                    setindex(4)
+                                    fetchDrivers(cabcategorynames[4])
+                                }}>
+                                    <div className="jjnvjfnv">
+                                        <img src={carcategoryimages[4]} alt="" style={{ width: '100px', height: '100px' }} />
+                                        <div className="jfnv">
+                                            {cabcategorynames[4]}
+                                            <div className="jnvn">
+                                                {cabcategorydescription[4]}
+                                            </div>
+                                            <div className="jnvn">
+                                                {localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 4 ? 'Prices are higher than usual' : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
+                                        ₹{localStorage.getItem('Weather Condition') == 'Rain' || drivers.length < 2 ? (cabmultiplier[4] * parseInt(distanceAndTime.distance) + 1000) : cabmultiplier[4] * parseInt(distanceAndTime.distance)}
                                     </div>
                                 </div>
                             </Link>
