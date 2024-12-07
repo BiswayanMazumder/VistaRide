@@ -45,11 +45,8 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    _timertofetch = Timer.periodic(const Duration(seconds: 15), (Timer t)async{
-      if(_auth.currentUser!=null){
-        await fetchactiveride();
-      }
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>_auth.currentUser!=null?isactiveride?const BookedCabDetails(): const HomePage():const LoginPage(),));
+    _timertofetch = Timer.periodic(const Duration(seconds: 8), (Timer t)async{
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>_auth.currentUser!=null?const HomePage():const LoginPage(),));
     });
   }
   @override

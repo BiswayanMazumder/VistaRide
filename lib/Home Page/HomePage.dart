@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 import 'package:image/image.dart' as img;
 import 'package:http/http.dart' as http;
@@ -224,7 +225,7 @@ class _HomePageState extends State<HomePage> {
       fetchdrivers();
     });
   }
-
+  bool _addressliked=false;
   // Function to get the current location using Geolocator
   Future<void> _getCurrentLocation() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -259,6 +260,7 @@ class _HomePageState extends State<HomePage> {
       });
     }
 
+    print('Latitude ${position.latitude} Long ${position.latitude}');
     // Update the state with the new location
     setState(() {
       _currentLocation = LatLng(position.latitude, position.longitude);
@@ -271,12 +273,56 @@ class _HomePageState extends State<HomePage> {
     });
     prefs.setDouble('location longitude', position.longitude);
     prefs.setDouble('location latitude', position.latitude);
+    await _fetchWeather(position.latitude, position.longitude);
     // Move the camera to the user's current location
     mapController.animateCamera(
       CameraUpdate.newLatLng(_currentLocation),
     );
   }
+  Future<void> _fetchWeather(double latitude, double longitude) async {
+    final apiKey = Environment.WeatherAPI; // Replace with your OpenWeatherMap API key
+    final url =
+        'https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric';
 
+    try {
+      final response = await http.get(Uri.parse(url));
+
+      // Check if the API call was successful
+      if (response.statusCode == 200) {
+        // Parse the JSON data
+        Map<String, dynamic> weatherData = json.decode(response.body);
+
+        // Extract weather information
+        String description = weatherData['weather'][0]['description'];
+        double temperature = weatherData['main']['temp'];
+        final prefs=await SharedPreferences.getInstance();
+        prefs.setDouble('Weather Temperature', temperature);
+        prefs.setString('Weather Condition', description);
+        // Print the weather information to the terminal
+        if (kDebugMode) {
+          print('Weather in $locationName:');
+          print('Temperature: $temperature°C');
+          print('Condition: $description');
+        }
+      } else {
+        // If the response code is not 200, print the error
+        if (kDebugMode) {
+          print('Error: Failed to load weather data. Status Code: ${response.statusCode}');
+        }
+      }
+    } catch (e) {
+      // Catch any errors that occur during the HTTP request
+      if (e is http.ClientException) {
+        if (kDebugMode) {
+          print('Network Error: Failed to reach the server.');
+        }
+      } else {
+        if (kDebugMode) {
+          print('Error: $e');
+        }
+      }
+    }
+  }
   @override
   void dispose() {
     // TODO: implement dispose
@@ -380,10 +426,22 @@ class _HomePageState extends State<HomePage> {
                 decoration: InputDecoration(
                   // hintText: 'Search for a location',
                   suffixIcon: InkWell(
-                    onTap: () {
+                    onTap: ()async{
                       setState(() {
                         islikedlocation = !islikedlocation;
                       });
+                      if(islikedlocation){
+                        await _firestore.collection('Liked Addresses').doc(_auth.currentUser!.uid).set(
+                            {
+                              'Addresses':FieldValue.arrayUnion([_locationcontroller.text])
+                            },SetOptions(merge: true));
+                      }
+                      if(!islikedlocation){
+                        await _firestore.collection('Liked Addresses').doc(_auth.currentUser!.uid).update(
+                            {
+                              'Addresses':FieldValue.arrayRemove([_locationcontroller.text])
+                            });
+                      }
                     },
                     child: Icon(
                       islikedlocation ? Icons.favorite : Icons.favorite_border,
