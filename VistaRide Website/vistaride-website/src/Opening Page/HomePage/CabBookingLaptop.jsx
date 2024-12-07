@@ -4,7 +4,8 @@ import { arrayRemove, arrayUnion, collection, deleteField, doc, FieldValue, getD
 import { initializeApp } from "firebase/app";
 import { GoogleMap, LoadScript, Marker, Polyline } from '@react-google-maps/api';
 import { Link } from 'react-router-dom';
-
+import {Elements} from '@stripe/react-stripe-js';
+import {loadStripe} from '@stripe/stripe-js';
 const firebaseConfig = {
     apiKey: "AIzaSyA5h_ElqdgLrs6lXLgwHOfH9Il5W7ARGiI",
     authDomain: "vistafeedd.firebaseapp.com",
@@ -421,7 +422,7 @@ export default function CabBookingLaptop() {
             onSnapshot(docref, (docSnapshot) => {
                 const data = docSnapshot.data();
                 if (data && data['Ride Accepted'] === true) {
-                    
+
                     // Redirect to the ride details page when 'Ride Verified' becomes true
                     window.location.replace(`/ride/${rideId}`);
                 }
@@ -433,14 +434,14 @@ export default function CabBookingLaptop() {
     };
     const handleLogout = async () => {
         try {
-          await signOut(auth);
-          console.log("User signed out successfully.");
-          window.location.replace('/');
-          // Optionally redirect or show a message to the user
+            await signOut(auth);
+            console.log("User signed out successfully.");
+            window.location.replace('/');
+            // Optionally redirect or show a message to the user
         } catch (error) {
-          console.error("Error signing out:", error);
+            console.error("Error signing out:", error);
         }
-      };
+    };
     const sendriderequesttodriver = async (rideid) => {
         // Loop through each driver in the "drivers" array
         for (let i = 0; i < drivers.length; i++) {
@@ -468,6 +469,8 @@ export default function CabBookingLaptop() {
             }
         }
     };
+    const [cashpayment, setcashpayment] = useState(true);
+
     const mapCenter = selectedDropLocation
         ? {
             lat: (selectedPickupLocation.lat + selectedDropLocation.lat) / 2,
@@ -488,10 +491,12 @@ export default function CabBookingLaptop() {
                         <div style={{ color: 'red' }}>{error}</div>
                     ) : (
                         <>
-                        <Link style={{textDecoration:'none',color:"white"}} to={'/trips'}>
-                        <div className="dbvbvdhna">My Trips</div>
-                        </Link>
-                            <div className="dbvbvdhn">{userName}</div>
+                            <Link style={{ textDecoration: 'none', color: "white" }} to={'/trips'}>
+                                <div className="dbvbvdhna">My Trips</div>
+                            </Link>
+                            <Link style={{ textDecoration: 'none', color: "white" }}>
+                                <div className="dbvbvdhn">{userName}</div>
+                            </Link>
                             <div className="dbvbvdhn" onClick={handleLogout}>
                                 <img
                                     src={userPfp}
@@ -634,14 +639,18 @@ export default function CabBookingLaptop() {
                         bookingstarted ? <></> : (pickupLocation && dropLocation && distanceAndTime.distance) ? <div className="fbnbvfnbv" style={{ width: '30vw', overflowY: 'scroll' }}>
                             <div className="jrngjn">
                                 <div className="jgnn">
-                                    <img src='https://tb-static.uber.com/prod/wallet/icons/cash_3x.png' alt="" style={{ width: '30px', height: '30px', marginLeft: '10px' }} />
+                                    <img src={!cashpayment ? 'https://tb-static.uber.com/prod/wallet/icons/upi_intent_3x.png' : 'https://tb-static.uber.com/prod/wallet/icons/cash_3x.png'} alt="" style={{ width: '30px', height: '30px', marginLeft: '10px' }} />
                                     <div className="jgjrufj" style={{ fontWeight: 'bolder' }}>
-                                        Cash
+                                        {cashpayment ? 'Cash' : 'Online Payment'}
+                                    </div>
+                                    <div className="jgjrufj" style={{ fontWeight: 'bolder', cursor: 'pointer' }} onClick={() => { setcashpayment(!cashpayment) }}>
+                                        <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" class="_css-cGLBlV" color="contentPrimary"><title>Change payment method to {!cashpayment ? 'Cash' : 'Online Payment'}</title><path d="M18 8v3.8l-6 4.6-6-4.6V8l6 4.6L18 8Z" fill="currentColor"></path></svg>
                                     </div>
                                 </div>
                                 <div className="jjfnvjnf" style={{ backgroundColor: drivers.length > 0 ? 'black' : 'grey', cursor: drivers.length > 0 ? 'pointer' : 'not-allowed' }}
                                     onClick={() => {
-                                        if (drivers.length > 0) {
+                                        if(cashpayment){
+                                            if (drivers.length > 0) {
                                             const random4DigitNumber = Math.floor(10000 + Math.random() * 90000);
                                             console.log(drivers)
                                             localStorage.setItem('Ride ID', random4DigitNumber);
@@ -650,6 +659,9 @@ export default function CabBookingLaptop() {
                                             writeRideDetails(random4DigitNumber.toString());
                                             sendriderequesttodriver(random4DigitNumber.toString())
                                             setbookingstarted(true);
+                                        }
+                                        }else{
+                                            
                                         }
                                     }}>
                                     Request {cabcategorynames[index]}
