@@ -302,7 +302,7 @@ export default function Cabbookingpagemobile() {
             console.error("Geolocation not supported by this browser.");
         }
     }, []);
-
+    const cabpriceextended = [50, 200, 500, 0, 1000]
     const mapOptions = {
         zoomControl: true,
         mapTypeControl: false,
@@ -392,7 +392,9 @@ export default function Cabbookingpagemobile() {
     const writeRideDetails = async (rideId) => {
         const randomotp = Math.floor(1000 + Math.random() * 9000);
         const docref = doc(db, "Ride Details", rideId.toString()); // Define docRef outside of the try-);
-        let Fare = parseFloat(parseFloat(cabmultiplier[index]) * parseFloat(distanceAndTime.distance));
+        let Fare = (localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 10)
+            ? (parseFloat(cabmultiplier[index]) * parseFloat(distanceAndTime.distance)) + cabpriceextended[index]
+            : (parseFloat(cabmultiplier[index]) * parseFloat(distanceAndTime.distance));
 
         // Ensure the Fare is sent as a double:
         Fare = Number(Fare.toFixed(2));
@@ -583,12 +585,12 @@ export default function Cabbookingpagemobile() {
                                                 {cabcategorydescription[0]}
                                             </div>
                                             <div className="jnvn">
-                                                {localStorage.getItem('Weather Condition') == 'Rain' || drivers.length < 10 ? 'Prices are higher than usual' : ''}
+                                                {localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 10 ? 'Prices are higher than usual' : ''}
                                             </div>
                                         </div>
                                     </div>
                                     <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
-                                    ₹{localStorage.getItem('Weather Condition') == 'Rain' || drivers.length < 10 ? (cabmultiplier[0] * parseInt(distanceAndTime.distance) + 50) : cabmultiplier[0] * parseInt(distanceAndTime.distance)}
+                                    ₹{localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 10 ? (cabmultiplier[0] * parseInt(distanceAndTime.distance) + cabpriceextended[0]) : cabmultiplier[0] * parseInt(distanceAndTime.distance)}
                                     </div>
 
                                 </div>
@@ -606,12 +608,12 @@ export default function Cabbookingpagemobile() {
                                                 {cabcategorydescription[1]}
                                             </div>
                                             <div className="jnvn">
-                                                {localStorage.getItem('Weather Condition') == 'Rain' || drivers.length < 10 ? 'Prices are higher than usual' : ''}
+                                                {localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 10 ? 'Prices are higher than usual' : ''}
                                             </div>
                                         </div>
                                     </div>
                                     <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
-                                    ₹{localStorage.getItem('Weather Condition') == 'Rain' || drivers.length < 10 ? (cabmultiplier[1] * parseInt(distanceAndTime.distance) + 200) : cabmultiplier[1] * parseInt(distanceAndTime.distance)}
+                                    ₹{localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 10 ? (cabmultiplier[1] * parseInt(distanceAndTime.distance) + cabpriceextended[1]) : cabmultiplier[1] * parseInt(distanceAndTime.distance)}
                                     </div>
                                 </div>
                             </Link>
@@ -628,12 +630,12 @@ export default function Cabbookingpagemobile() {
                                                 {cabcategorydescription[2]}
                                             </div>
                                             <div className="jnvn">
-                                                {localStorage.getItem('Weather Condition') == 'Rain' || drivers.length < 10 ? 'Prices are higher than usual' : ''}
+                                                {localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 10 ? 'Prices are higher than usual' : ''}
                                             </div>
                                         </div>
                                     </div>
                                     <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
-                                    ₹{localStorage.getItem('Weather Condition') == 'Rain' || drivers.length < 10 ? (cabmultiplier[2] * parseInt(distanceAndTime.distance) + 500) : cabmultiplier[2] * parseInt(distanceAndTime.distance)}
+                                    ₹{localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 10 ? (cabmultiplier[2] * parseInt(distanceAndTime.distance) + cabpriceextended[2]) : cabmultiplier[2] * parseInt(distanceAndTime.distance)}
                                     </div>
                                 </div>
                             </Link>
@@ -669,12 +671,12 @@ export default function Cabbookingpagemobile() {
                                                 {cabcategorydescription[4]}
                                             </div>
                                             <div className="jnvn">
-                                                {localStorage.getItem('Weather Condition') == 'Rain' || drivers.length < 2 ? 'Prices are higher than usual' : ''}
+                                                {localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 2 ? 'Prices are higher than usual' : ''}
                                             </div>
                                         </div>
                                     </div>
                                     <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
-                                    ₹{localStorage.getItem('Weather Condition') == 'Rain' || drivers.length < 2 ? (cabmultiplier[4] * parseInt(distanceAndTime.distance) + 1000) : cabmultiplier[4] * parseInt(distanceAndTime.distance)}
+                                    ₹{localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 2 ? (cabmultiplier[4] * parseInt(distanceAndTime.distance) + cabpriceextended[4]) : cabmultiplier[4] * parseInt(distanceAndTime.distance)}
                                     </div>
                                 </div>
                             </Link>
