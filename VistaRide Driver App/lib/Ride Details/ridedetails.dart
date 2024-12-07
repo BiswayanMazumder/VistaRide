@@ -319,6 +319,7 @@ class _RideDetailsState extends State<RideDetails> {
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
   }
+
   String? token;
   Future<void> getDeviceToken() async {
     FirebaseMessaging messaging = FirebaseMessaging.instance;
@@ -341,6 +342,7 @@ class _RideDetailsState extends State<RideDetails> {
       }
     }
   }
+
   Future<void> sendnotification() async {
     await getDeviceToken(); // Assuming this sets a valid `token`
     await fetchservercode();
@@ -348,18 +350,18 @@ class _RideDetailsState extends State<RideDetails> {
     const String serverToken = Environment.ServerToken;
 
     final response = await http.post(
-      Uri.parse('https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
+      Uri.parse(
+          'https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
       headers: {
         'Content-Type': 'application/json', // Correct Content-Type header
         'Authorization': 'Bearer $ServerToken', // Correct Authorization header
       },
       body: jsonEncode({
         "message": {
-          "token":
-          '$token',
+          "token": '$token',
           "notification": {
             "body":
-            "Unfortunately, your rider has cancelled the trip. Please wait for some time till we assign you a new ride.",
+                "Unfortunately, your rider has cancelled the trip. Please wait for some time till we assign you a new ride.",
             "title": "Ride Cancelled"
           }
         }
@@ -372,23 +374,27 @@ class _RideDetailsState extends State<RideDetails> {
       }
     } else {
       if (kDebugMode) {
-        print('Failed to send notification. Status code: ${response.statusCode}');
+        print(
+            'Failed to send notification. Status code: ${response.statusCode}');
         print('Response: ${response.body}');
       }
     }
   }
-  String ? ServerToken;
-  Future<void>fetchservercode()async{
-    final docsnap=await _firestore.collection('Server Token').doc('Token').get();
-    if(docsnap.exists){
+
+  String? ServerToken;
+  Future<void> fetchservercode() async {
+    final docsnap =
+        await _firestore.collection('Server Token').doc('Token').get();
+    if (docsnap.exists) {
       setState(() {
-        ServerToken=docsnap.data()?['Token']??Environment.ServerToken;
+        ServerToken = docsnap.data()?['Token'] ?? Environment.ServerToken;
       });
     }
     if (kDebugMode) {
       print('Server Token $ServerToken');
     }
   }
+
   Future<void> sendotpverfiednotification() async {
     await getDeviceToken(); // Assuming this sets a valid `token`
     await fetchservercode();
@@ -396,18 +402,18 @@ class _RideDetailsState extends State<RideDetails> {
     const String serverToken = Environment.ServerToken;
 
     final response = await http.post(
-      Uri.parse('https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
+      Uri.parse(
+          'https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
       headers: {
         'Content-Type': 'application/json', // Correct Content-Type header
         'Authorization': 'Bearer $ServerToken', // Correct Authorization header
       },
       body: jsonEncode({
         "message": {
-          "token":
-          '$token',
+          "token": '$token',
           "notification": {
             "body":
-            "OTP verified successfully, you can start your trip.Safe Journey!",
+                "OTP verified successfully, you can start your trip.Safe Journey!",
             "title": "OTP Verified"
           }
         }
@@ -420,11 +426,13 @@ class _RideDetailsState extends State<RideDetails> {
       }
     } else {
       if (kDebugMode) {
-        print('Failed to send notification. Status code: ${response.statusCode}');
+        print(
+            'Failed to send notification. Status code: ${response.statusCode}');
         print('Response: ${response.body}');
       }
     }
   }
+
   String rideid = '';
   late AudioPlayer player = AudioPlayer();
   Future<void> fetchactiverides() async {
@@ -434,13 +442,13 @@ class _RideDetailsState extends State<RideDetails> {
         .get();
     if (docsnap.exists) {
       setState(() {
-        rideid = docsnap.data()?['Ride Doing']??'';
+        rideid = docsnap.data()?['Ride Doing'] ?? '';
       });
     }
     if (kDebugMode) {
       print('Ride Doing $rideid');
     }
-    if(rideid==''){
+    if (rideid == '') {
       player.setReleaseMode(ReleaseMode.stop);
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         try {
@@ -455,7 +463,11 @@ class _RideDetailsState extends State<RideDetails> {
         }
       });
       await sendnotification();
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
+      Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomePage(),
+          ));
     }
   }
 
@@ -480,10 +492,10 @@ class _RideDetailsState extends State<RideDetails> {
   double droplat = 0;
   bool isamountpaid = false;
   bool istripcompleted = false;
-  bool iscashpayment=false;
+  bool iscashpayment = false;
   double price = 0;
   Future<void> fetchridedetails() async {
-    try{
+    try {
       final prefs = await SharedPreferences.getInstance();
       final docsnap = await _firestore
           .collection('Ride Details')
@@ -497,13 +509,14 @@ class _RideDetailsState extends State<RideDetails> {
           pickuplong = docsnap.data()?['Pick Longitude'];
           pickuplat = docsnap.data()?['Pickup Latitude'];
           droplat = docsnap.data()?['Drop Latitude'];
-          price = docsnap.data()?['Fare'] is int?
-          (docsnap.data()?['Fare']).toDouble()
-              :docsnap.data()?['Fare'] is double
-          ? (docsnap.data()?['Fare'])as double:0.0;
+          price = docsnap.data()?['Fare'] is int
+              ? (docsnap.data()?['Fare']).toDouble()
+              : docsnap.data()?['Fare'] is double
+                  ? (docsnap.data()?['Fare']) as double
+                  : 0.0;
           droplong = docsnap.data()?['Drop Longitude'];
           pickuploc = docsnap.data()?['Pickup Location'];
-          iscashpayment=docsnap.data()?['Cash Payment'];
+          iscashpayment = docsnap.data()?['Cash Payment'];
           droploc = docsnap.data()?['Drop Location'];
           cabcategory = docsnap.data()?['Cab Category'];
           rideverified = docsnap.data()?['Ride Verified'];
@@ -527,20 +540,22 @@ class _RideDetailsState extends State<RideDetails> {
           phonenumber = Docsnap.data()?['Contact Number'];
         });
       }
-    }catch(e){
+    } catch (e) {
       print('Ride Details Error $e');
     }
   }
+
   @override
   void dispose() {
     // TODO: implement dispose
     super.dispose();
     _timetofetch.cancel();
   }
-  NotificationService notificationService=NotificationService();
-  Future<void>fetchservertoken()async{
-    GetServerKey getserertoken =GetServerKey();
-    String accesstoken=await getserertoken.getserertoken();
+
+  NotificationService notificationService = NotificationService();
+  Future<void> fetchservertoken() async {
+    GetServerKey getserertoken = GetServerKey();
+    String accesstoken = await getserertoken.getserertoken();
     if (kDebugMode) {
       print('Token $accesstoken');
     }
@@ -563,7 +578,7 @@ class _RideDetailsState extends State<RideDetails> {
     _getCurrentLocation();
     _timetofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
       fetchactiverides();
-      // _getCurrentLocation();
+      _getCurrentLocation();
     });
   }
 
@@ -589,365 +604,423 @@ class _RideDetailsState extends State<RideDetails> {
             myLocationEnabled: false,
             myLocationButtonEnabled: false,
           ),
-          istripcompleted?  Center(
-            child: Container(
-              height: 250,
-              width: 300,
-              decoration: const BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                color: Colors.white,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.only(left: 20,right: 20),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Align(
-                      alignment: Alignment.center,
-                      child: Text('Please collect ₹$price',style: GoogleFonts.poppins(
-                        color: Colors.black,fontWeight: FontWeight.w600,fontSize: 20
-                      ),),
+          istripcompleted
+              ? Center(
+                  child: Container(
+                    height: 250,
+                    width: 300,
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                      color: Colors.white,
                     ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    InkWell(
-                      onTap: ()async{
-                        //amount paid true ride doing remove driver available true navigate to home screen
-                        setState(() {
-                          isamountpaid=true;
-                        });
-                        final prefs =
-                            await SharedPreferences.getInstance();
-                        await _firestore
-                            .collection('Ride Details')
-                            .doc(prefs.getString('Booking ID'))
-                            .update({
-                          'Amount Paid':true,
-                          'Ride Accepted':false
-                        });
-                        await _firestore.collection('VistaRide Driver Details').doc(_auth.currentUser!.uid).update({
-                          'Driver Avaliable':true,
-                          'Ride Doing':FieldValue.delete(),
-                          'Rides Completed':FieldValue.arrayUnion([rideid]),
-                        });
-                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
-                      },
-                      child: Container(
-                        height: 50,
-                        width:
-                        MediaQuery.sizeOf(context).width,
-                        decoration: const BoxDecoration(
-                            borderRadius: BorderRadius.all(
-                                Radius.circular(50)),
-                            color: Colors.green),
-                        child: Center(
-                          child: Text(
-                            'CASH COLLECTED',
-                            style: GoogleFonts.poppins(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600),
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 20, right: 20),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Align(
+                            alignment: Alignment.center,
+                            child: Text(
+                              'Please collect ₹$price',
+                              style: GoogleFonts.poppins(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 20),
+                            ),
                           ),
+                          const SizedBox(
+                            height: 20,
+                          ),
+                          InkWell(
+                            onTap: () async {
+                              //amount paid true ride doing remove driver available true navigate to home screen
+                              setState(() {
+                                isamountpaid = true;
+                              });
+                              final prefs =
+                                  await SharedPreferences.getInstance();
+                              await _firestore
+                                  .collection('Ride Details')
+                                  .doc(prefs.getString('Booking ID'))
+                                  .update({
+                                'Amount Paid': true,
+                                'Ride Accepted': false
+                              });
+                              await _firestore
+                                  .collection('VistaRide Driver Details')
+                                  .doc(_auth.currentUser!.uid)
+                                  .update({
+                                'Driver Avaliable': true,
+                                'Ride Doing': FieldValue.delete(),
+                                'Rides Completed':
+                                    FieldValue.arrayUnion([rideid]),
+                              });
+                              Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => HomePage(),
+                                  ));
+                            },
+                            child: Container(
+                              height: 50,
+                              width: MediaQuery.sizeOf(context).width,
+                              decoration: const BoxDecoration(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(50)),
+                                  color: Colors.green),
+                              child: Center(
+                                child: Text(
+                                  'CASH COLLECTED',
+                                  style: GoogleFonts.poppins(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              : Container(),
+          rideverified
+              ? Positioned(
+                  top: 20,
+                  right: 20,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ChatSupport(RideID: rideid),
+                          ));
+                    },
+                    child: Container(
+                      height: 50,
+                      width: 100,
+                      decoration: BoxDecoration(
+                          color: Colors.purple.shade500,
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(50))),
+                      child: Center(
+                        child: Text(
+                          'Support',
+                          style: GoogleFonts.poppins(
+                              color: Colors.white, fontWeight: FontWeight.w600),
                         ),
                       ),
-                    )
-                  ],
-                ),
-              ),
-            ),
-          ):Container(),
-         rideverified? Positioned(
-              top: 20,
-              right: 20,
-              child: InkWell(
-                onTap: (){
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => ChatSupport(RideID: rideid),));
-                },
-                child: Container(
-                            height: 50,
-                            width: 100,
-                            decoration:  BoxDecoration(
-                color: Colors.purple.shade500,
-                borderRadius: const BorderRadius.all(Radius.circular(50))
-                            ),
-                            child: Center(
-                child: Text('Support',style: GoogleFonts.poppins(
-                  color: Colors.white,fontWeight: FontWeight.w600
-                ),),
-                            ),
-                          ),
-              )
-         ):Container(),
-          istripcompleted?
-          Container() :
-          Positioned(
-              bottom: 0,
-              child: Container(
-                height: 320,
-                width: MediaQuery.sizeOf(context).width,
-                color: Colors.white,
-                child: Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20),
-                  child: SingleChildScrollView(
-                      child: !isotpverification
-                          ? Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                isdrivernearby
-                                    ? const SizedBox(
-                                        height: 20,
-                                      )
-                                    : Container(),
-                                isdrivernearby
-                                    ? Center(
-                                        child: Text(
-                                          'Rider has been notified',
-                                          style: GoogleFonts.poppins(
-                                              color: Colors.black,
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 18),
-                                        ),
-                                      )
-                                    : Container(),
-                                const SizedBox(
-                                  height: 20,
-                                ),
-                                Text(
-                                rideverified? 'You are $DistanceTravel ($Time) away from your drop' :'You are $DistanceTravel ($Time) away from your pickup',
-                                  style: GoogleFonts.poppins(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.w500),
-                                ),
-                                const SizedBox(
-                                  height: 20,
-                                ),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
+                    ),
+                  ))
+              : Container(),
+          istripcompleted
+              ? Container()
+              : Positioned(
+                  bottom: 0,
+                  child: Container(
+                    height: 320,
+                    width: MediaQuery.sizeOf(context).width,
+                    color: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 20, right: 20),
+                      child: SingleChildScrollView(
+                          child: !isotpverification
+                              ? Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Icon(
-                                      Icons.directions_walk,
-                                      color: Colors.green,
-                                    ),
-                                    const SizedBox(
-                                      width: 20,
-                                    ),
-                                    Flexible(
-                                      child: Text(
-                                        pickuploc,
-                                        maxLines:
-                                            5, // Ensures the text doesn't exceed 5 lines
-                                        overflow: TextOverflow
-                                            .ellipsis, // Adds ellipsis if text is too long
-                                        style: GoogleFonts.poppins(
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(
-                                  height: 30,
-                                ),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    const Icon(
-                                      Icons.pin_drop_rounded,
-                                      color: Colors.red,
-                                    ),
-                                    const SizedBox(
-                                      width: 20,
-                                    ),
-                                    Flexible(
-                                      child: Text(
-                                        droploc,
-                                        maxLines:
-                                            5, // Ensures the text doesn't exceed 5 lines
-                                        overflow: TextOverflow
-                                            .ellipsis, // Adds ellipsis if text is too long
-                                        style: GoogleFonts.poppins(
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(
-                                  height: 30,
-                                ),
-                                rideverified
-                                    ? InkWell(
-                                        onTap: ()async{
-                                          //istripcompleted true
-                                          // await sendotpverfiednotification();
-                                          final prefs =
-                                          await SharedPreferences.getInstance();
-                                          if(iscashpayment){
-                                            setState(() {
-                                              istripcompleted=true;
-                                            });
-                                            await _firestore
-                                                .collection('Ride Details')
-                                                .doc(prefs.getString('Booking ID'))
-                                                .update({'Ride Completed': true});
-                                          }else{
-                                            await _firestore
-                                                .collection('Ride Details')
-                                                .doc(prefs.getString('Booking ID'))
-                                                .update({
-                                              'Amount Paid':true,
-                                              'Ride Accepted':false
-                                            });
-                                            await _firestore.collection('VistaRide Driver Details').doc(_auth.currentUser!.uid).update({
-                                              'Driver Avaliable':true,
-                                              'Ride Doing':FieldValue.delete(),
-                                              'Rides Completed':FieldValue.arrayUnion([rideid]),
-                                            });
-                                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
-                                          }
-                                        },
-                                        child: Container(
-                                          height: 60,
-                                          width:
-                                              MediaQuery.sizeOf(context).width,
-                                          decoration: const BoxDecoration(
-                                              borderRadius: BorderRadius.all(
-                                                  Radius.circular(50)),
-                                              color: Colors.red),
-                                          child: Center(
+                                    isdrivernearby
+                                        ? const SizedBox(
+                                            height: 20,
+                                          )
+                                        : Container(),
+                                    isdrivernearby
+                                        ? Center(
                                             child: Text(
-                                              'END TRIP',
+                                              'Rider has been notified',
                                               style: GoogleFonts.poppins(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.w500),
+                                                  color: Colors.black,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 18),
+                                            ),
+                                          )
+                                        : Container(),
+                                    const SizedBox(
+                                      height: 20,
+                                    ),
+                                    Text(
+                                      rideverified
+                                          ? 'You are $DistanceTravel ($Time) away from your drop'
+                                          : 'You are $DistanceTravel ($Time) away from your pickup',
+                                      style: GoogleFonts.poppins(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.w500),
+                                    ),
+                                    const SizedBox(
+                                      height: 20,
+                                    ),
+                                    Text(
+                                      iscashpayment
+                                          ? 'The fare to be collected is ₹$price.'
+                                          : 'The payment of ₹$price has already been made online.',
+                                      style: GoogleFonts.poppins(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.w500),
+                                    ),
+                                    const SizedBox(
+                                      height: 20,
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        const Icon(
+                                          Icons.directions_walk,
+                                          color: Colors.green,
+                                        ),
+                                        const SizedBox(
+                                          width: 20,
+                                        ),
+                                        Flexible(
+                                          child: Text(
+                                            pickuploc,
+                                            maxLines:
+                                                5, // Ensures the text doesn't exceed 5 lines
+                                            overflow: TextOverflow
+                                                .ellipsis, // Adds ellipsis if text is too long
+                                            style: GoogleFonts.poppins(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.w500,
                                             ),
                                           ),
                                         ),
-                                      )
-                                    : Padding(
-                                      padding: const EdgeInsets.only(bottom: 20),
-                                      child: InkWell(
-                                          onTap: () {
-                                            setState(() {
-                                              isotpverification = true;
-                                            });
-                                          },
-                                          child: Container(
-                                            height: 60,
-                                            width:
-                                                MediaQuery.sizeOf(context).width,
-                                            decoration: const BoxDecoration(
-                                                borderRadius: BorderRadius.all(
-                                                    Radius.circular(50)),
-                                                color: Colors.green),
-                                            child: Center(
-                                              child: Text(
-                                                'Verify OTP',
-                                                style: GoogleFonts.poppins(
-                                                    color: Colors.black,
-                                                    fontWeight: FontWeight.w500),
+                                      ],
+                                    ),
+                                    const SizedBox(
+                                      height: 30,
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        const Icon(
+                                          Icons.pin_drop_rounded,
+                                          color: Colors.red,
+                                        ),
+                                        const SizedBox(
+                                          width: 20,
+                                        ),
+                                        Flexible(
+                                          child: Text(
+                                            droploc,
+                                            maxLines:
+                                                5, // Ensures the text doesn't exceed 5 lines
+                                            overflow: TextOverflow
+                                                .ellipsis, // Adds ellipsis if text is too long
+                                            style: GoogleFonts.poppins(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(
+                                      height: 30,
+                                    ),
+                                    rideverified
+                                        ? InkWell(
+                                            onTap: () async {
+                                              //istripcompleted true
+                                              // await sendotpverfiednotification();
+                                              final prefs =
+                                                  await SharedPreferences
+                                                      .getInstance();
+                                              if (iscashpayment) {
+                                                setState(() {
+                                                  istripcompleted = true;
+                                                });
+                                                await _firestore
+                                                    .collection('Ride Details')
+                                                    .doc(prefs.getString(
+                                                        'Booking ID'))
+                                                    .update({
+                                                  'Ride Completed': true
+                                                });
+                                              } else {
+                                                await _firestore
+                                                    .collection('Ride Details')
+                                                    .doc(prefs.getString(
+                                                        'Booking ID'))
+                                                    .update({
+                                                  'Amount Paid': true,
+                                                  'Ride Accepted': false
+                                                });
+                                                await _firestore
+                                                    .collection(
+                                                        'VistaRide Driver Details')
+                                                    .doc(_auth.currentUser!.uid)
+                                                    .update({
+                                                  'Driver Avaliable': true,
+                                                  'Ride Doing':
+                                                      FieldValue.delete(),
+                                                  'Rides Completed':
+                                                      FieldValue.arrayUnion(
+                                                          [rideid]),
+                                                });
+                                                Navigator.pushReplacement(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          HomePage(),
+                                                    ));
+                                              }
+                                            },
+                                            child: Container(
+                                              height: 60,
+                                              width: MediaQuery.sizeOf(context)
+                                                  .width,
+                                              decoration: const BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                          Radius.circular(50)),
+                                                  color: Colors.red),
+                                              child: Center(
+                                                child: Text(
+                                                  'END TRIP',
+                                                  style: GoogleFonts.poppins(
+                                                      color: Colors.white,
+                                                      fontWeight:
+                                                          FontWeight.w500),
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                        : Padding(
+                                            padding: const EdgeInsets.only(
+                                                bottom: 20),
+                                            child: InkWell(
+                                              onTap: () {
+                                                setState(() {
+                                                  isotpverification = true;
+                                                });
+                                              },
+                                              child: Container(
+                                                height: 60,
+                                                width:
+                                                    MediaQuery.sizeOf(context)
+                                                        .width,
+                                                decoration: const BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.all(
+                                                            Radius.circular(
+                                                                50)),
+                                                    color: Colors.green),
+                                                child: Center(
+                                                  child: Text(
+                                                    'Verify OTP',
+                                                    style: GoogleFonts.poppins(
+                                                        color: Colors.black,
+                                                        fontWeight:
+                                                            FontWeight.w500),
+                                                  ),
+                                                ),
                                               ),
                                             ),
                                           ),
-                                        ),
+                                  ],
+                                )
+                              : Column(
+                                  children: [
+                                    const SizedBox(
+                                      height: 20,
                                     ),
-                              ],
-                            )
-                          : Column(
-                              children: [
-                                const SizedBox(
-                                  height: 20,
-                                ),
-                                Text(
-                                  'Enter the OTP to start the trip.',
-                                  style: GoogleFonts.poppins(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 18),
-                                ),
-                                const SizedBox(
-                                  height: 40,
-                                ),
-                                Container(
-                                  width: MediaQuery.sizeOf(context).width,
-                                  decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: Colors.black,
-                                      ),
-                                      borderRadius: const BorderRadius.all(
-                                          Radius.circular(50))),
-                                  child: TextField(
-                                    controller: _OTPController,
-                                    keyboardType: TextInputType.name,
-                                    decoration: const InputDecoration(
-                                      border: InputBorder
-                                          .none, // Removes the outline border
-                                      hintText: 'Enter OTP to start trip.',
-                                      contentPadding: EdgeInsets.all(
-                                          10), // Optional: adjust padding
+                                    Text(
+                                      'Enter the OTP to start the trip.',
+                                      style: GoogleFonts.poppins(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 18),
                                     ),
-                                  ),
-                                ),
-                                const SizedBox(
-                                  height: 40,
-                                ),
-                                InkWell(
-                                  onTap: () async {
-                                    await sendotpverfiednotification();
-                                    final prefs =
-                                        await SharedPreferences.getInstance();
-                                    if (kDebugMode) {
-                                      print('OTP ${_OTPController.text}');
-                                    }
-                                    int? enteredOtp =
-                                        int.tryParse(_OTPController.text);
-                                    if (enteredOtp != null &&
-                                        rideotp == enteredOtp) {
-                                      if (kDebugMode) {
-                                        print("Verified");
-                                      }
-                                      await _firestore
-                                          .collection('Ride Details')
-                                          .doc(prefs.getString('Booking ID'))
-                                          .update({'Ride Verified': true});
-                                      await _getCurrentLocation();
-                                      setState(() {
-                                        isotpverification = false;
-                                        rideverified = true;
-                                      });
-                                    } else {
-                                      if (kDebugMode) {
-                                        print("Invalid OTP");
-                                      }
-                                    }
-                                  },
-                                  child: Container(
-                                    height: 60,
-                                    width: MediaQuery.sizeOf(context).width,
-                                    decoration: const BoxDecoration(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(50)),
-                                        color: Colors.green),
-                                    child: Center(
-                                      child: Text(
-                                        'Verify OTP',
-                                        style: GoogleFonts.poppins(
+                                    const SizedBox(
+                                      height: 40,
+                                    ),
+                                    Container(
+                                      width: MediaQuery.sizeOf(context).width,
+                                      decoration: BoxDecoration(
+                                          border: Border.all(
                                             color: Colors.black,
-                                            fontWeight: FontWeight.w500),
+                                          ),
+                                          borderRadius: const BorderRadius.all(
+                                              Radius.circular(50))),
+                                      child: TextField(
+                                        controller: _OTPController,
+                                        keyboardType: TextInputType.name,
+                                        decoration: const InputDecoration(
+                                          border: InputBorder
+                                              .none, // Removes the outline border
+                                          hintText: 'Enter OTP to start trip.',
+                                          contentPadding: EdgeInsets.all(
+                                              10), // Optional: adjust padding
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ),
-                              ],
-                            )),
-                ),
-              ))
+                                    const SizedBox(
+                                      height: 40,
+                                    ),
+                                    InkWell(
+                                      onTap: () async {
+                                        await sendotpverfiednotification();
+                                        final prefs = await SharedPreferences
+                                            .getInstance();
+                                        if (kDebugMode) {
+                                          print('OTP ${_OTPController.text}');
+                                        }
+                                        int? enteredOtp =
+                                            int.tryParse(_OTPController.text);
+                                        if (enteredOtp != null &&
+                                            rideotp == enteredOtp) {
+                                          if (kDebugMode) {
+                                            print("Verified");
+                                          }
+                                          await _firestore
+                                              .collection('Ride Details')
+                                              .doc(
+                                                  prefs.getString('Booking ID'))
+                                              .update({'Ride Verified': true});
+                                          await _getCurrentLocation();
+                                          setState(() {
+                                            isotpverification = false;
+                                            rideverified = true;
+                                          });
+                                        } else {
+                                          if (kDebugMode) {
+                                            print("Invalid OTP");
+                                          }
+                                        }
+                                      },
+                                      child: Container(
+                                        height: 60,
+                                        width: MediaQuery.sizeOf(context).width,
+                                        decoration: const BoxDecoration(
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(50)),
+                                            color: Colors.green),
+                                        child: Center(
+                                          child: Text(
+                                            'Verify OTP',
+                                            style: GoogleFonts.poppins(
+                                                color: Colors.black,
+                                                fontWeight: FontWeight.w500),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )),
+                    ),
+                  ))
         ],
       ),
     );
