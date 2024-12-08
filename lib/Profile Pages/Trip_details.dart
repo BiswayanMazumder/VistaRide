@@ -133,6 +133,96 @@ class _TripDetailsState extends State<TripDetails> {
                     child: Center(child: Text('Completed',style: GoogleFonts.poppins(color: Colors.green.shade500),)),
                   )
                 ],
+              ),
+              const SizedBox(
+                height: 30,
+              ),
+              const Divider(
+                color: Colors.grey,
+              ),
+              const SizedBox(
+                height: 30,
+              ),
+              Row(
+                children: [
+                  Image(image: NetworkImage('https://tb-static.uber.com/prod/wallet/icons/cash_3x.png'),height: 50,width: 50,),
+                  const SizedBox(
+                    width: 20,
+                  ),
+                  Text(
+                   '₹${widget.cancelled?'0':widget.fare.toString()}',style: GoogleFonts.poppins(
+                    color: Colors.black,fontWeight:FontWeight.w600
+                  ),)
+                ],
+              ),
+              const SizedBox(
+                height: 30,
+              ),
+              const Divider(
+                color: Colors.grey,
+              ),
+              const SizedBox(
+                height: 30,
+              ),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.directions_walk,
+                    color: Colors.green,
+                  ),
+                  const SizedBox(
+                    width: 20,
+                  ),
+                  Expanded(
+                      child: Text(
+                        widget.pickuplocation,
+                        style: GoogleFonts.poppins(color: Colors.black),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      )),
+                ],
+              ),
+              const SizedBox(
+                height: 50,
+              ),
+              Row(
+                children: [
+                  const CircleAvatar(
+                    radius: 5,
+                    backgroundColor: Colors.red,
+                  ),
+                  const SizedBox(
+                    width: 20,
+                  ),
+                  Expanded(
+                      child: Text(
+                        widget.droplocation,
+                        style: GoogleFonts.poppins(color: Colors.black),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      )),
+                ],
+              ),
+              widget.cancelled?Container(): const SizedBox(
+                height: 30,
+              ),
+              widget.cancelled?Container():  const Divider(
+                color: Colors.grey,
+              ),
+              widget.cancelled?Container(): const SizedBox(
+                height: 30,
+              ),
+             widget.cancelled?Container(): Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Your Trip',style: GoogleFonts.poppins(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w600,
+                  ),),
+                  Text('₹${widget.fare}',style: GoogleFonts.poppins(
+                      color: Colors.black,
+                  ),)
+                ],
               )
             ],
           ),
