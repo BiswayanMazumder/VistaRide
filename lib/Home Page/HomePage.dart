@@ -293,11 +293,14 @@ class _HomePageState extends State<HomePage> {
         Map<String, dynamic> weatherData = json.decode(response.body);
 
         // Extract weather information
-        String description = weatherData['weather'][0]['description'];
+        String description = weatherData['weather'][0]['main'];
         double temperature = weatherData['main']['temp'];
         final prefs=await SharedPreferences.getInstance();
         prefs.setDouble('Weather Temperature', temperature);
         prefs.setString('Weather Condition', description);
+        if (kDebugMode) {
+          print('Weather ${prefs.getString('Weather Condition')}');
+        }
         // Print the weather information to the terminal
         if (kDebugMode) {
           print('Weather in $locationName:');
@@ -418,7 +421,7 @@ class _HomePageState extends State<HomePage> {
               height: 50,
               decoration: const BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(20)),
+                borderRadius: BorderRadius.all(Radius.circular(10)),
               ),
               width: MediaQuery.sizeOf(context).width - 140,
               child: TextField(
@@ -486,7 +489,7 @@ class _HomePageState extends State<HomePage> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       border: Border.all(color: Colors.white),
-                      borderRadius: const BorderRadius.all(Radius.circular(20)),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: Row(
                       children: [

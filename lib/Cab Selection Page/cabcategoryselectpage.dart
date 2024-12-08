@@ -27,8 +27,8 @@ class CabSelectAndPrice extends StatefulWidget {
 
 class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
   late GoogleMapController mapController;
-  final FirebaseAuth _auth=FirebaseAuth.instance;
-  final FirebaseFirestore _firestore=FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   Set<Marker> _markers = {};
   Set<Polyline> _polylines = {}; // Set to hold polyline
   LatLng _pickupLocation =
@@ -48,10 +48,12 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
         throw Exception('Failed to decode image');
       }
 
-      img.Image resizedImage = img.copyResize(originalImage, width: 80, height: 80);
+      img.Image resizedImage =
+          img.copyResize(originalImage, width: 80, height: 80);
 
       // Convert the resized image back to bytes
-      final Uint8List resizedBytes = Uint8List.fromList(img.encodePng(resizedImage));
+      final Uint8List resizedBytes =
+          Uint8List.fromList(img.encodePng(resizedImage));
 
       // Create a BitmapDescriptor from the resized bytes
       return BitmapDescriptor.fromBytes(resizedBytes);
@@ -59,11 +61,12 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
       throw Exception('Failed to load image from network');
     }
   }
-  List<dynamic> driversnearme=[];
-  List<String> driverids=[];
-  bool isdrivernearby=false;
+
+  List<dynamic> driversnearme = [];
+  List<String> driverids = [];
+  bool isdrivernearby = false;
   Future<void> capturepayment(String paymentid) async {
-    final prefs=await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
     // Razorpay credentials
     const String keyId = Environment.razorpaytestapi;
     const String keySecret = Environment.razorpaytestkeysecret;
@@ -77,7 +80,7 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
 
     // Request body
     final Map<String, dynamic> requestBody = {
-      "amount": (prefs.getDouble('Fare'))!*100,
+      "amount": (prefs.getDouble('Fare'))! * 100,
       "currency": "INR"
     };
 
@@ -114,6 +117,18 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
       }
     }
   }
+
+  String? weathercondition;
+  Future<void> fetchweatherfromcache() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      weathercondition = prefs.getString('Weather Condition');
+    });
+    if (kDebugMode) {
+      print('Fetched from cache $weathercondition');
+    }
+  }
+
   Future<void> fetchdrivers() async {
     await _fetchRoute();
     driverids.clear();
@@ -134,7 +149,7 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
         final String driverLatitude = data['Current Latitude'] ?? "0.0";
         final String driverLongitude = data['Current Longitude'] ?? "0.0";
         final String cabcategory = data['Car Category'] ?? '';
-        final bool isDriverAvaliable=data['Driver Avaliable']??true;
+        final bool isDriverAvaliable = data['Driver Avaliable'] ?? true;
         // Calculate the distance between user and driver
         double distance = _calculateDistance(
           pickuplatitude!,
@@ -148,9 +163,11 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
         }
 
         // Condition to add the driver marker
-        if (distance <= 15.0 && cabcategory == cabcategorynames[_selectedindex] && isDriverAvaliable) {
+        if (distance <= 15.0 &&
+            cabcategory == cabcategorynames[_selectedindex] &&
+            isDriverAvaliable) {
           setState(() {
-            isdrivernearby=true;
+            isdrivernearby = true;
           });
           nearbyDrivers.add({
             'driverId': doc.id,
@@ -167,15 +184,18 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                 'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2Fimages-removebg-preview%20(1).png?alt=media&token=80f80ee3-6787-4ddc-8aad-f9ce400461ea');
           } catch (e) {
             print('Failed to load custom car icon: $e');
-            carIcon = BitmapDescriptor.defaultMarker; // Fallback to default marker
+            carIcon =
+                BitmapDescriptor.defaultMarker; // Fallback to default marker
           }
 
           // Add the driver marker
           driverMarkers.add(
             Marker(
-              markerId: MarkerId('driver_${doc.id}'), // Use a unique identifier for drivers
+              markerId: MarkerId(
+                  'driver_${doc.id}'), // Use a unique identifier for drivers
               icon: carIcon,
-              position: LatLng(double.parse(driverLatitude), double.parse(driverLongitude)),
+              position: LatLng(
+                  double.parse(driverLatitude), double.parse(driverLongitude)),
             ),
           );
         }
@@ -185,7 +205,8 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
         driversnearme = nearbyDrivers; // Update state with nearby drivers
 
         // Remove all existing driver markers
-        _markers.removeWhere((marker) => marker.markerId.value.startsWith('driver_'));
+        _markers.removeWhere(
+            (marker) => marker.markerId.value.startsWith('driver_'));
 
         // Add the updated driver markers
         _markers.addAll(driverMarkers);
@@ -193,10 +214,9 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
 
       if (nearbyDrivers.isEmpty) {
         setState(() {
-          isdrivernearby=false;
+          isdrivernearby = false;
         });
         if (kDebugMode) {
-
           print('No drivers found within the specified radius.');
         }
       } else {
@@ -213,19 +233,23 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
     } catch (e) {
       if (kDebugMode) {
         setState(() {
-          isdrivernearby=false;
+          isdrivernearby = false;
         });
         print('Error fetching drivers: $e');
       }
     }
   }
-  double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+
+  double _calculateDistance(
+      double lat1, double lon1, double lat2, double lon2) {
     const double R = 6371; // Radius of the Earth in km
     final double dLat = _toRadians(lat2 - lat1);
     final double dLon = _toRadians(lon2 - lon1);
     final double a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(_toRadians(lat1)) * cos(_toRadians(lat2)) *
-            sin(dLon / 2) * sin(dLon / 2);
+        cos(_toRadians(lat1)) *
+            cos(_toRadians(lat2)) *
+            sin(dLon / 2) *
+            sin(dLon / 2);
     final double c = 2 * atan2(sqrt(a), sqrt(1 - a));
     return R * c; // Distance in km
   }
@@ -233,10 +257,12 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
   double _toRadians(double degree) {
     return degree * pi / 180;
   }
+
   @override
   void initState() {
     super.initState();
     _fetchRoute();
+    fetchweatherfromcache();
   }
 
   String Time = '';
@@ -408,31 +434,37 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
     // Use DateFormat to display time as h:mm
     return DateFormat('H:mm a').format(time);
   }
+
   @override
   void dispose() {
     // TODO: implement dispose
     super.dispose();
   }
+
+  List cabpriceextended = [50, 200, 500, 0, 1000];
   List carcategoryimages = [
     'https://olawebcdn.com/images/v1/cabs/sl/ic_mini.png',
     'https://olawebcdn.com/images/v1/cabs/sl/ic_prime.png',
     'https://olawebcdn.com/images/v1/cabs/sl/ic_suv.png',
-    'https://olawebcdn.com/images/v1/cabs/sl/ic_kp.png'
+    'https://olawebcdn.com/images/v1/cabs/sl/ic_kp.png',
+    'https://d1a3f4spazzrp4.cloudfront.net/car-types/haloProductImages/v1.1/Black_Premium_Driver_Red_Carpet.png'
   ];
-  List cabcategorynames = ['Mini', 'Prime', 'SUV', 'Non AC Taxi'];
+  List cabcategorynames = ['Mini', 'Prime', 'SUV', 'Non AC Taxi', 'LUX'];
   List cabcategorydescription = [
     'Highly Discounted fare',
     'Spacious sedans, top drivers',
     'Spacious SUVs',
-    ''
+    '',
+    'Our most luxurious ride'
   ];
 
-  List cabpricesmultiplier = [36, 40, 65, 15];
+  List cabpricesmultiplier = [36, 40, 65, 15, 100];
   int _selectedindex = 0;
   // Add this function to initialize the map controller
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
   }
+
   int randomFiveDigitNumber = 0;
   Future<void> generateBookingID() async {
     final random = Random();
@@ -442,6 +474,7 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
       print('Random 5-digit number: $randomFiveDigitNumber');
     }
   }
+
   int randomFourDigitNumber = 0;
   Future<void> generateotp() async {
     final random = Random();
@@ -451,52 +484,54 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
       print('Random 4-digit number: $randomFourDigitNumber');
     }
   }
-  bool iscashpayment=true;
-  void handlePaymentErrorResponse(PaymentFailureResponse response){
 
-  }
+  bool iscashpayment = true;
+  void handlePaymentErrorResponse(PaymentFailureResponse response) {}
 
-  void handlePaymentSuccessResponse(PaymentSuccessResponse response)async{
-    final prefs =
-    await SharedPreferences.getInstance();
-    await _firestore.collection('Booking IDs').doc(_auth.currentUser!.uid).set(
-        {
-          'IDs':FieldValue.arrayUnion([prefs.getString('Booking ID')])
-        },SetOptions(merge: true));
-    await _firestore.collection('Ride Details').doc(prefs.getString('Booking ID')).set(
-        {
-          'Booking ID':prefs.getString('Booking ID'),
-          'Pickup Location':pickup,
-          'Drop Location':dropoffloc,
-          'Fare':prefs.getDouble('Fare'),
-          'Cash Payment':iscashpayment,
-          'Cab Category':prefs.getString('Cab Category'),
-          'Booking Time':FieldValue.serverTimestamp(),
-          'Ride Accepted':false,
-          'Ride Verified':false,
-          'Ride Completed':false,
-          'Driver ID':'',
-          'Pick Longitude':_pickupLocation.longitude,
-          'Pickup Latitude':_pickupLocation.latitude,
-          'Drop Latitude':_dropoffLocation.latitude,
-          'Drop Longitude':_dropoffLocation.longitude,
-          'Travel Distance':prefs.getString('Travel Distance'),
-          'Travel Time':prefs.getString('Travel Time'),
-          'Ride OTP':randomFourDigitNumber,
-        });
-    await _firestore.collection('Payment ID').doc(prefs.getString('Booking ID')).set(
-        {
-          'Payment ID':response.paymentId
-        });
+  void handlePaymentSuccessResponse(PaymentSuccessResponse response) async {
+    final prefs = await SharedPreferences.getInstance();
+    await _firestore.collection('Booking IDs').doc(_auth.currentUser!.uid).set({
+      'IDs': FieldValue.arrayUnion([prefs.getString('Booking ID')])
+    }, SetOptions(merge: true));
+    await _firestore
+        .collection('Ride Details')
+        .doc(prefs.getString('Booking ID'))
+        .set({
+      'Booking ID': prefs.getString('Booking ID'),
+      'Pickup Location': pickup,
+      'Drop Location': dropoffloc,
+      'Fare': prefs.getDouble('Fare'),
+      'Cash Payment': iscashpayment,
+      'Cab Category': prefs.getString('Cab Category'),
+      'Booking Time': FieldValue.serverTimestamp(),
+      'Ride Accepted': false,
+      'Ride Verified': false,
+      'Ride Completed': false,
+      'Driver ID': '',
+      'Pick Longitude': _pickupLocation.longitude,
+      'Pickup Latitude': _pickupLocation.latitude,
+      'Drop Latitude': _dropoffLocation.latitude,
+      'Drop Longitude': _dropoffLocation.longitude,
+      'Travel Distance': prefs.getString('Travel Distance'),
+      'Travel Time': prefs.getString('Travel Time'),
+      'Ride OTP': randomFourDigitNumber,
+    });
+    await _firestore
+        .collection('Payment ID')
+        .doc(prefs.getString('Booking ID'))
+        .set({'Payment ID': response.paymentId});
     await capturepayment(response.paymentId!);
-    if(prefs.getString('Cab Category')!=null || prefs.getString('Fare')!=null){
-      Navigator.push(context, MaterialPageRoute(builder: (context) => CabFinding(),));
+    if (prefs.getString('Cab Category') != null ||
+        prefs.getString('Fare') != null) {
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CabFinding(),
+          ));
     }
   }
 
-  void handleExternalWalletSelected(ExternalWalletResponse response){
-
-  }
+  void handleExternalWalletSelected(ExternalWalletResponse response) {}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -515,39 +550,39 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   InkWell(
-                    onTap: (){
+                    onTap: () {
                       setState(() {
-                        iscashpayment=!iscashpayment;
+                        iscashpayment = !iscashpayment;
                       });
                     },
                     child: Row(
                       children: [
                         const SizedBox(
-                          width:10,
+                          width: 10,
                         ),
-                        Text(iscashpayment?'Cash':'Online',style: GoogleFonts.poppins(
-                          color: Colors.black,fontWeight: FontWeight.w600
-                        ),),
-
+                        Text(
+                          iscashpayment ? 'Cash' : 'Online',
+                          style: GoogleFonts.poppins(
+                              color: Colors.black, fontWeight: FontWeight.w600),
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(
-                    width:10,
+                    width: 10,
                   ),
                   InkWell(
-                    onTap: (){
-
-                    },
+                    onTap: () {},
                     child: Row(
                       children: [
                         const SizedBox(
-                          width:10,
+                          width: 10,
                         ),
-                        Text('Promo codes',style: GoogleFonts.poppins(
-                            color: Colors.black,fontWeight: FontWeight.w600
-                        ),),
-
+                        Text(
+                          'Promo codes',
+                          style: GoogleFonts.poppins(
+                              color: Colors.black, fontWeight: FontWeight.w600),
+                        ),
                       ],
                     ),
                   ),
@@ -559,57 +594,68 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
               InkWell(
                 onTap: () async {
                   await fetchdrivers();
-                  final prefs =
-                  await SharedPreferences.getInstance();
-                  prefs.setString('Cab Category', cabcategorynames[_selectedindex]);
+                  final prefs = await SharedPreferences.getInstance();
+                  prefs.setString(
+                      'Cab Category', cabcategorynames[_selectedindex]);
                   prefs.setString('Travel Distance', DistanceTravel);
                   prefs.setString('Travel Time', Time);
                   if (kDebugMode) {
                     print('Cab ${prefs.getDouble('Fare')}');
                   }
                   await generateBookingID();
-                  if(isdrivernearby){
+                  if (isdrivernearby) {
                     await generateotp();
-                    prefs.setString('Booking ID', randomFiveDigitNumber.toString());
+                    prefs.setString(
+                        'Booking ID', randomFiveDigitNumber.toString());
                     await generateBookingID();
                     if (kDebugMode) {
                       print(prefs.getString('Booking ID'));
                     }
-                    if(iscashpayment){
-                      await _firestore.collection('Booking IDs').doc(_auth.currentUser!.uid).set(
-                          {
-                            'IDs':FieldValue.arrayUnion([prefs.getString('Booking ID')])
-                          },SetOptions(merge: true));
-                      await _firestore.collection('Ride Details').doc(prefs.getString('Booking ID')).set(
-                          {
-                            'Booking ID':prefs.getString('Booking ID'),
-                            'Pickup Location':pickup,
-                            'Drop Location':dropoffloc,
-                            'Fare':prefs.getDouble('Fare'),
-                            'Cab Category':prefs.getString('Cab Category'),
-                            'Booking Time':FieldValue.serverTimestamp(),
-                            'Ride Accepted':false,
-                            'Ride Verified':false,
-                            'Ride Completed':false,
-                            'Cash Payment':iscashpayment,
-                            'Driver ID':'',
-                            'Pick Longitude':_pickupLocation.longitude,
-                            'Pickup Latitude':_pickupLocation.latitude,
-                            'Drop Latitude':_dropoffLocation.latitude,
-                            'Drop Longitude':_dropoffLocation.longitude,
-                            'Travel Distance':prefs.getString('Travel Distance'),
-                            'Travel Time':prefs.getString('Travel Time'),
-                            'Ride OTP':randomFourDigitNumber,
-                          });
-                      if(prefs.getString('Cab Category')!=null || prefs.getString('Fare')!=null){
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => CabFinding(),));
+                    if (iscashpayment) {
+                      await _firestore
+                          .collection('Booking IDs')
+                          .doc(_auth.currentUser!.uid)
+                          .set({
+                        'IDs': FieldValue.arrayUnion(
+                            [prefs.getString('Booking ID')])
+                      }, SetOptions(merge: true));
+                      await _firestore
+                          .collection('Ride Details')
+                          .doc(prefs.getString('Booking ID'))
+                          .set({
+                        'Booking ID': prefs.getString('Booking ID'),
+                        'Pickup Location': pickup,
+                        'Drop Location': dropoffloc,
+                        'Fare': prefs.getDouble('Fare'),
+                        'Cab Category': prefs.getString('Cab Category'),
+                        'Booking Time': FieldValue.serverTimestamp(),
+                        'Ride Accepted': false,
+                        'Ride Verified': false,
+                        'Ride Completed': false,
+                        'Cash Payment': iscashpayment,
+                        'Driver ID': '',
+                        'Pick Longitude': _pickupLocation.longitude,
+                        'Pickup Latitude': _pickupLocation.latitude,
+                        'Drop Latitude': _dropoffLocation.latitude,
+                        'Drop Longitude': _dropoffLocation.longitude,
+                        'Travel Distance': prefs.getString('Travel Distance'),
+                        'Travel Time': prefs.getString('Travel Time'),
+                        'Ride OTP': randomFourDigitNumber,
+                      });
+                      if (prefs.getString('Cab Category') != null ||
+                          prefs.getString('Fare') != null) {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CabFinding(),
+                            ));
                       }
                     }
-                    if(!iscashpayment){
+                    if (!iscashpayment) {
                       Razorpay razorpay = Razorpay();
                       var options = {
                         'key': Environment.razorpaytestapi,
-                        'amount': (prefs.getDouble('Fare'))!*100,
+                        'amount': (prefs.getDouble('Fare'))! * 100,
                         'name': 'VistaRide',
                         'description': 'Trip to ${dropoffloc} from ${pickup}',
                         'retry': {'enabled': true, 'max_count': 1},
@@ -618,9 +664,12 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                           'wallets': ['paytm']
                         }
                       };
-                      razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, handlePaymentErrorResponse);
-                      razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, handlePaymentSuccessResponse);
-                      razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, handleExternalWalletSelected);
+                      razorpay.on(Razorpay.EVENT_PAYMENT_ERROR,
+                          handlePaymentErrorResponse);
+                      razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS,
+                          handlePaymentSuccessResponse);
+                      razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET,
+                          handleExternalWalletSelected);
                       razorpay.open(options);
                     }
                   }
@@ -631,13 +680,14 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                   child: Container(
                     width: MediaQuery.sizeOf(context).width,
                     height: 50,
-                    decoration:  BoxDecoration(
-                        color:isdrivernearby?Colors.black:Colors.grey,
+                    decoration: BoxDecoration(
+                        color: isdrivernearby ? Colors.black : Colors.grey,
                         borderRadius: BorderRadius.all(Radius.circular(10))),
                     child: Center(
                       child: Text(
-                      isdrivernearby? 'Book ${cabcategorynames[_selectedindex]}':'No drivers nearby',
-
+                        isdrivernearby
+                            ? 'Book ${cabcategorynames[_selectedindex]}'
+                            : 'No drivers nearby',
                         style: GoogleFonts.poppins(
                             color: Colors.white, fontWeight: FontWeight.w600),
                       ),
@@ -758,7 +808,6 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                       indent: 0,
                       endIndent: 0,
                       color: Colors.grey,
-
                       thickness: 0.5,
                     ),
                     Padding(
@@ -810,6 +859,9 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                                     });
                                     fetchdrivers();
                                     try {
+                                      if (kDebugMode) {
+                                        print('Success to calculate');
+                                      }
                                       // Access SharedPreferences
                                       final prefs =
                                           await SharedPreferences.getInstance();
@@ -818,18 +870,27 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                                       double distanceValue = double.parse(
                                           DistanceTravel.replaceAll(
                                               RegExp(r'[^0-9.]'), ''));
-                                      double fare =
-                                          distanceValue.floor().toDouble() *
-                                              cabpricesmultiplier[index];
+                                      double fare = weathercondition == 'Haze'
+                                          ? ((distanceValue.floor().toDouble() *
+                                                  cabpricesmultiplier[index]) +
+                                              cabpriceextended[index])
+                                          : (distanceValue.floor().toDouble() *
+                                              cabpricesmultiplier[index]);
 
                                       // Store the calculated fare
                                       prefs.setDouble('Fare', fare);
                                     } catch (e) {
                                       // If parsing/calculation fails, set a default fare value
+                                      if (kDebugMode) {
+                                        print('Failed to calculate');
+                                      }
                                       final prefs =
                                           await SharedPreferences.getInstance();
                                       prefs.setDouble(
-                                          'Fare', double.parse(DistanceTravel*cabpricesmultiplier[_selectedindex])); // Default fare value
+                                          'Fare',
+                                          double.parse(DistanceTravel *
+                                              cabpricesmultiplier[
+                                                  _selectedindex])); // Default fare value
                                     }
 
                                     if (kDebugMode) {
@@ -842,11 +903,14 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                                   child: Row(
                                     children: [
                                       const SizedBox(
-                                        width: 20,
+                                        width: 10,
                                       ),
                                       Image(
-                                          image: NetworkImage(
-                                              carcategoryimages[index])),
+                                        image: NetworkImage(
+                                            carcategoryimages[index]),
+                                        height: 70,
+                                        width: 70,
+                                      ),
                                       const SizedBox(
                                         width: 20,
                                       ),
@@ -871,11 +935,17 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                                         ],
                                       ),
                                       const Spacer(),
-                                      Text(
-                                        '₹${(double.parse(DistanceTravel.replaceAll(RegExp(r'[^0-9.]'), '')).floor() * cabpricesmultiplier[index])}',
-                                        style: GoogleFonts.poppins(
-                                            fontWeight: FontWeight.w600),
-                                      ),
+                                      weathercondition == 'Haze'
+                                          ? Text(
+                                              '₹${(double.parse(DistanceTravel.replaceAll(RegExp(r'[^0-9.]'), '')).floor() * cabpricesmultiplier[index]) + cabpriceextended[index]}',
+                                              style: GoogleFonts.poppins(
+                                                  fontWeight: FontWeight.w600),
+                                            )
+                                          : Text(
+                                              '₹${(double.parse(DistanceTravel.replaceAll(RegExp(r'[^0-9.]'), '')).floor() * cabpricesmultiplier[index])}',
+                                              style: GoogleFonts.poppins(
+                                                  fontWeight: FontWeight.w600),
+                                            ),
                                       const SizedBox(
                                         width: 20,
                                       )
