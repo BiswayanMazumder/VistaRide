@@ -423,7 +423,6 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
       body: Stack(
         children: [
           GoogleMap(

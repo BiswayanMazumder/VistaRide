@@ -197,22 +197,26 @@ class _PickupandroplocationState extends State<Pickupandroplocation> {
                         ),
                         const SizedBox(width: 20),
                         Expanded(
-                          child: Container(
-                            height: 50,
-                            decoration: BoxDecoration(
-                              borderRadius: const BorderRadius.all(Radius.circular(10)),
-                              border: Border.all(width: 0.5, color: Colors.grey),
-                            ),
-                            child: Center(
-                              child: Padding(
-                                padding: const EdgeInsets.only(left: 10),
-                                child: Text(
-                                  location!,
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.w500,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 20),
+                            child: Container(
+                              height: 45,
+                              decoration: BoxDecoration(
+                                borderRadius: const BorderRadius.all(Radius.circular(10)),
+                                border: Border.all(width: 0.5, color: Colors.grey),
+                              ),
+                              child: Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 10),
+                                  child: Text(
+                                    location!,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.black,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -231,26 +235,28 @@ class _PickupandroplocationState extends State<Pickupandroplocation> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Container(
-                            height: 50,
+                            height: 45,
                             decoration: BoxDecoration(
                               border: Border.all(color: Colors.transparent),
                               borderRadius: const BorderRadius.all(Radius.circular(10)),
                             ),
                             child: Column(
                               children: [
-                                GooglePlaceAutoCompleteTextField(
-
-                                  textEditingController: _destinationController,
-                                  googleAPIKey: Environment.GoogleMapsAPI,
-                                  inputDecoration: InputDecoration(
-                                    hintText: '  Search Destination',
-                                    hintStyle: GoogleFonts.poppins(
-                                      color: Colors.grey,
-                                      fontWeight: FontWeight.w300,
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 20),
+                                  child: GooglePlaceAutoCompleteTextField(
+                                    textEditingController: _destinationController,
+                                    googleAPIKey: Environment.GoogleMapsAPI,
+                                    inputDecoration: InputDecoration(
+                                      hintText: '  Search Destination',
+                                      hintStyle: GoogleFonts.poppins(
+                                        color: Colors.grey,
+                                        fontWeight: FontWeight.w300,
+                                      ),
+                                      border: InputBorder.none,
                                     ),
-                                    border: InputBorder.none,
+                                    itemClick: _onPlaceSelected,
                                   ),
-                                  itemClick: _onPlaceSelected,
                                 ),
                               ],
                             ),
