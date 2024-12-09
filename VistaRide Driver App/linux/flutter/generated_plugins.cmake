@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_linux
   awesome_notifications
+  file_selector_linux
   simple_animation_progress_bar
   url_launcher_linux
 )

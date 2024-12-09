@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:vistaridedriver/OnBoarding%20Pages/documentupload.dart';
 import 'package:vistaridedriver/OnBoarding%20Pages/registeruser.dart';
 
 import '../Home Page/homepage.dart';
-
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -21,7 +21,8 @@ class _LoginPageState extends State<LoginPage> {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
+  bool issubmitted = false;
+  bool isapproved = false;
   // Function to handle Google Sign-In
   Future<void> _handleGoogleSignIn() async {
     try {
@@ -38,7 +39,8 @@ class _LoginPageState extends State<LoginPage> {
         );
 
         // Sign in to Firebase using the credential
-        UserCredential userCredential = await _auth.signInWithCredential(credential);
+        UserCredential userCredential =
+            await _auth.signInWithCredential(credential);
 
         User? user = userCredential.user;
         if (user == null) {
@@ -50,21 +52,35 @@ class _LoginPageState extends State<LoginPage> {
         }
 
         // Check if the user document exists in Firestore
-        final docsnap = await _firestore.collection('VistaRide Driver Details')
+        final docsnap = await _firestore
+            .collection('VistaRide Driver Details')
             .doc(user.uid)
             .get();
 
         // If the document doesn't exist, create it
         if (!docsnap.exists) {
-          await _firestore.collection('VistaRide Driver Details').doc(user.uid).set(
-              {
-                'Name': account.displayName,
-                'Profile Picture': account.photoUrl,
-                'Start Date': FieldValue.serverTimestamp(),
-                'Email Address': account.email,
-              });
+          await _firestore
+              .collection('VistaRide Driver Details')
+              .doc(user.uid)
+              .set({
+            'Name': account.displayName,
+            'Profile Picture': account.photoUrl,
+            'Start Date': FieldValue.serverTimestamp(),
+            'Email Address': account.email,
+          });
         }
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => RegisterUser()));
+        if (docsnap.exists) {
+          issubmitted = docsnap.data()?['Submitted'] ?? false;
+          isapproved = docsnap.data()?['Approved'] ?? false;
+        }
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+                builder: (context) => isapproved
+                    ? HomePage()
+                    : issubmitted
+                        ? DocumentUpload()
+                        : RegisterUser()));
       }
     } catch (error) {
       // Handle sign-in errors
@@ -73,6 +89,7 @@ class _LoginPageState extends State<LoginPage> {
       }
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,8 +115,8 @@ class _LoginPageState extends State<LoginPage> {
             const Image(
               image: NetworkImage(
                   'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2FSc'
-                      'reenshot_2024-11-22_204328-removebg-preview.png?alt=media&token=53712449-daaa-4'
-                      'f70-bb92-0ca64793111e'),
+                  'reenshot_2024-11-22_204328-removebg-preview.png?alt=media&token=53712449-daaa-4'
+                  'f70-bb92-0ca64793111e'),
               height: 150,
               width: 150,
             ),
@@ -131,12 +148,15 @@ class _LoginPageState extends State<LoginPage> {
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
                     children: [
-                      const Image(image: NetworkImage('https://www.google.com/images/hpp/ic_wahlberg_product_core_48.png8.png')),
+                      const Image(
+                          image: NetworkImage(
+                              'https://www.google.com/images/hpp/ic_wahlberg_product_core_48.png8.png')),
                       const SizedBox(width: 50),
-                      Text('Continue using Google', style: GoogleFonts.poppins(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w600,
-                      )),
+                      Text('Continue using Google',
+                          style: GoogleFonts.poppins(
+                            color: Colors.black,
+                            fontWeight: FontWeight.w600,
+                          )),
                     ],
                   ),
                 ),
@@ -167,7 +187,8 @@ class _LoginPageState extends State<LoginPage> {
                     print('Email: ${credential.email}');
                   }
                   if (kDebugMode) {
-                    print('Full Name: ${credential.givenName} ${credential.familyName}');
+                    print(
+                        'Full Name: ${credential.givenName} ${credential.familyName}');
                   }
                 } catch (e) {
                   if (kDebugMode) {
@@ -185,12 +206,14 @@ class _LoginPageState extends State<LoginPage> {
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
                     children: [
-                      const Image(image: NetworkImage('https://www.apple.com/favicon.ico')),
+                      const Image(
+                          image: NetworkImage(
+                              'https://www.apple.com/favicon.ico')),
                       const SizedBox(width: 50),
-                      Text('Continue using Apple', style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600
-                      )),
+                      Text('Continue using Apple',
+                          style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600)),
                     ],
                   ),
                 ),

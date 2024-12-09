@@ -1,19 +1,21 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart'; // Import the image_picker package
 import 'dart:io'; // For File handling
 import 'package:vistaridedriver/OnBoarding%20Pages/documentupload.dart';
-class UploadRC extends StatefulWidget {
-  const UploadRC({super.key});
 
+class UploadDL extends StatefulWidget {
+  final bool needdlnumber;
+  const UploadDL({super.key, required this.needdlnumber});
   @override
-  State<UploadRC> createState() => _UploadRCState();
+  State<UploadDL> createState() => _UploadRCState();
 }
 
-class _UploadRCState extends State<UploadRC> {
+class _UploadRCState extends State<UploadDL> {
   File? _frontImage; // Variable to store the front image
   File? _backImage; // Variable to store the back image
   final ImagePicker _picker = ImagePicker(); // Image picker instance
@@ -39,12 +41,13 @@ class _UploadRCState extends State<UploadRC> {
     }
   }
 
+  final TextEditingController _DLNumber = TextEditingController();
   // Function to upload images to Firebase Storage
   Future<String> _uploadImage(File image, String fileName) async {
     try {
       // Create a reference to the Firebase Storage location
       final storageRef =
-          FirebaseStorage.instance.ref().child('rc_images/$fileName');
+          FirebaseStorage.instance.ref().child('dl_images/$fileName');
 
       // Upload the image to Firebase Storage
       await storageRef.putFile(image);
@@ -58,15 +61,20 @@ class _UploadRCState extends State<UploadRC> {
       throw e;
     }
   }
-  Future<void> fetchrc()async{
-    final docsnap=await _firestore.collection('VistaRide Driver Details').doc(_auth.currentUser!.uid).get();
-    if(docsnap.exists){
+
+  Future<void> fetchrc() async {
+    final docsnap = await _firestore
+        .collection('VistaRide Driver Details')
+        .doc(_auth.currentUser!.uid)
+        .get();
+    if (docsnap.exists) {
       setState(() {
-        _imageURLfront=docsnap.data()?['Front Side RC'];
-        _imageURLback=docsnap.data()?['Back Side RC'];
+        _imageURLfront = docsnap.data()?['Front Side DL'];
+        _imageURLback = docsnap.data()?['Back Side DL'];
       });
     }
   }
+
   // Function to update Firestore with the image URLs
   Future<void> uploadRC() async {
     if (_frontImage != null && _backImage != null) {
@@ -77,19 +85,19 @@ class _UploadRCState extends State<UploadRC> {
       try {
         // Upload the front image and get the download URL
         String frontImageURL = await _uploadImage(
-            _frontImage!, 'front_rc_${_auth.currentUser!.uid}.jpg');
+            _frontImage!, 'front_dl_${_auth.currentUser!.uid}.jpg');
 
         // Upload the back image and get the download URL
         String backImageURL = await _uploadImage(
-            _backImage!, 'back_rc_${_auth.currentUser!.uid}.jpg');
+            _backImage!, 'back_dl_${_auth.currentUser!.uid}.jpg');
 
         // Update Firestore with the image URLs
         await _firestore
             .collection('VistaRide Driver Details')
             .doc(_auth.currentUser!.uid)
             .update({
-          'Front Side RC': frontImageURL,
-          'Back Side RC': backImageURL,
+          'Front Side DL': frontImageURL,
+          'Back Side DL': backImageURL,
         });
 
         // Update local variables with URLs
@@ -106,20 +114,22 @@ class _UploadRCState extends State<UploadRC> {
         setState(() {
           isUploading = false;
         });
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Error uploading images.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error uploading images.')));
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please upload both front and back images')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Please upload both front and back images')));
     }
   }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     fetchrc();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -135,19 +145,41 @@ class _UploadRCState extends State<UploadRC> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               InkWell(
-                onTap: ()async {
-                  if(_frontImage!=null && _backImage!=null){
-                    await uploadRC();
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => DocumentUpload(),));
+                onTap: () async {
+                  if (widget.needdlnumber) {
+                    if (_DLNumber.text.isNotEmpty) {
+                      if (kDebugMode) {
+                        print("DL NUMBER ${_DLNumber.text}");
+                      }
+                      await _firestore.collection('VistaRide Driver Details').doc(_auth.currentUser!.uid).update(
+                          {
+                            'Driving Licence Number':_DLNumber.text
+                          });
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => DocumentUpload(),));
+                    }
+                  }
+                  if (widget.needdlnumber == false) {
+                    if (_frontImage != null && _backImage != null) {
+                      await uploadRC();
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DocumentUpload(),
+                          ));
+                    }
                   }
                 },
                 child: Container(
                   width: MediaQuery.sizeOf(context).width,
                   height: 60,
                   decoration: BoxDecoration(
-                      color: _frontImage != null && _backImage != null
-                          ? Colors.black
-                          : Colors.grey,
+                      color: widget.needdlnumber
+                          ? _DLNumber.text.isNotEmpty
+                              ? Colors.black
+                              : Colors.grey
+                          : _frontImage != null && _backImage != null
+                              ? Colors.black
+                              : Colors.grey,
                       borderRadius:
                           const BorderRadius.all(Radius.circular(10))),
                   child: Center(
@@ -191,7 +223,7 @@ class _UploadRCState extends State<UploadRC> {
                 padding: EdgeInsets.only(left: 40, right: 40),
                 child: Image(
                   image: NetworkImage(
-                      'https://static.toiimg.com/thumb/resizemode-4,msid-92497668,imgsize-68152,width-800/92497668.jpg'),
+                      'https://cdni.iconscout.com/illustration/premium/thumb/driving-license-illustration-download-in-svg-png-gif-file-formats--getting-driver-get-permission-identification-proof-miscellaneous-pack-illustrations-4397188.png'),
                 ),
               ),
               const SizedBox(
@@ -201,8 +233,11 @@ class _UploadRCState extends State<UploadRC> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   InkWell(
-                    onTap: () => _pickImage(
-                        true), // Call the function to pick front image
+                    onTap: () {
+                      if (!widget.needdlnumber) {
+                        _pickImage(true);
+                      }
+                    }, // Call the function to pick front image
                     child: Container(
                       height: 120,
                       width: 150,
@@ -232,14 +267,15 @@ class _UploadRCState extends State<UploadRC> {
                               ),
                             ),
                             // Display the selected image if exists
-                            if(_frontImage==null && _imageURLfront!='')
+                            if (_frontImage == null && _imageURLfront != '')
                               Padding(
                                   padding: const EdgeInsets.only(top: 10),
-                                  child: Image(image: NetworkImage(_imageURLfront),
+                                  child: Image(
+                                    image: NetworkImage(_imageURLfront),
                                     height: 50,
                                     width: 50,
-                                    fit: BoxFit.cover,)
-                              ),
+                                    fit: BoxFit.cover,
+                                  )),
                             if (_frontImage != null)
                               Padding(
                                 padding: const EdgeInsets.only(top: 10),
@@ -256,8 +292,11 @@ class _UploadRCState extends State<UploadRC> {
                     ),
                   ),
                   InkWell(
-                    onTap: () => _pickImage(
-                        false), // Call the function to pick back image
+                    onTap: () {
+                      if (!widget.needdlnumber) {
+                        _pickImage(false);
+                      }
+                    }, // Call the function to pick back image
                     child: Container(
                       height: 120,
                       width: 150,
@@ -285,14 +324,15 @@ class _UploadRCState extends State<UploadRC> {
                                   fontSize: 12),
                             ),
                             // Display the selected image if exists
-                            if(_backImage==null && _imageURLback!='')
+                            if (_backImage == null && _imageURLback != '')
                               Padding(
-                                padding: const EdgeInsets.only(top: 10),
-                                child: Image(image: NetworkImage(_imageURLback),
-                                  height: 50,
-                                  width: 50,
-                                  fit: BoxFit.cover,)
-                              ),
+                                  padding: const EdgeInsets.only(top: 10),
+                                  child: Image(
+                                    image: NetworkImage(_imageURLback),
+                                    height: 50,
+                                    width: 50,
+                                    fit: BoxFit.cover,
+                                  )),
                             if (_backImage != null)
                               Padding(
                                 padding: const EdgeInsets.only(top: 10),
@@ -310,6 +350,48 @@ class _UploadRCState extends State<UploadRC> {
                   ),
                 ],
               ),
+              if (widget.needdlnumber)
+                Column(
+                  children: [
+                    const SizedBox(
+                      height: 40,
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          'Driving Licence Number',
+                          style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.bold, fontSize: 15),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    Container(
+                      width: MediaQuery.sizeOf(context).width,
+                      height: 50,
+                      color: Colors.grey.shade100,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 10, right: 10),
+                        child: TextField(
+                          controller: _DLNumber,
+                          keyboardType: TextInputType.text,
+                          decoration: InputDecoration(
+                              hintText: 'Driving Licence Number',
+                              hintStyle: GoogleFonts.poppins(
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14),
+                              border: InputBorder.none),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                  ],
+                )
             ],
           ),
         ),

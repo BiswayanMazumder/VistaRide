@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -164,6 +166,27 @@ class _RegisterUserState extends State<RegisterUser> {
   }
   int carmodelindex=-1;
   String carmodel='';
+  bool issubmitted=false;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  Future<void> fetchrc() async {
+    final docsnap = await _firestore
+        .collection('VistaRide Driver Details')
+        .doc(_auth.currentUser!.uid)
+        .get();
+    if (docsnap.exists) {
+      setState(() {
+        issubmitted=docsnap.data()?['Submitted']??false;
+      });
+    }
+    issubmitted?Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DocumentUpload(),)):null;
+  }
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    fetchrc();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
