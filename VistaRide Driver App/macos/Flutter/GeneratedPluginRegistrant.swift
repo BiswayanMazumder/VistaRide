@@ -20,6 +20,7 @@ import sign_in_with_apple
 import simple_animation_progress_bar
 import sqflite
 import url_launcher_macos
+import video_player_avfoundation
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   AudioplayersDarwinPlugin.register(with: registry.registrar(forPlugin: "AudioplayersDarwinPlugin"))
@@ -37,4 +38,5 @@ func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   SimpleAnimationProgressBarPlugin.register(with: registry.registrar(forPlugin: "SimpleAnimationProgressBarPlugin"))
   SqflitePlugin.register(with: registry.registrar(forPlugin: "SqflitePlugin"))
   UrlLauncherPlugin.register(with: registry.registrar(forPlugin: "UrlLauncherPlugin"))
+  FVPVideoPlayerPlugin.register(with: registry.registrar(forPlugin: "FVPVideoPlayerPlugin"))
 }

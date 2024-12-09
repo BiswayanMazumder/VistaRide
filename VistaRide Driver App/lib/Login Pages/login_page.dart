@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:vistaridedriver/OnBoarding%20Pages/registeruser.dart';
 
 import '../Home Page/homepage.dart';
 
@@ -63,7 +64,7 @@ class _LoginPageState extends State<LoginPage> {
                 'Email Address': account.email,
               });
         }
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => RegisterUser()));
       }
     } catch (error) {
       // Handle sign-in errors
