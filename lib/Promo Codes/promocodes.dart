@@ -134,7 +134,15 @@ class _PromoCodesState extends State<PromoCodes> {
                               ),
                               const SizedBox(height: 10),
                               Text(
-                                '${validUntilFormatted[i]} • India',
+                                validUntilFormatted[i],
+                                style: GoogleFonts.poppins(
+                                  color: Colors.grey[700],
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                '${usageLimits[i]} trips left • India',
                                 style: GoogleFonts.poppins(
                                   color: Colors.grey[700],
                                   fontWeight: FontWeight.w400,
