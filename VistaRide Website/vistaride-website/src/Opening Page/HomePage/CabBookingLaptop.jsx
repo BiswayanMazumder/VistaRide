@@ -409,6 +409,7 @@ export default function CabBookingLaptop() {
                 "Drop Latitude": parseFloat(selectedDropLocation.lat),
                 "Drop Longitude": parseFloat(selectedDropLocation.lng),
                 "Booking ID": rideId,
+                "Cash Payment":true,
                 // "Booking Owner": user,
                 "Ride OTP": randomotp,
                 "Pickup Location": pickupLocation,
