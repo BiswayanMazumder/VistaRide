@@ -4,6 +4,7 @@ import { arrayRemove, arrayUnion, collection, deleteField, doc, FieldValue, getD
 import { initializeApp } from "firebase/app";
 import { GoogleMap, LoadScript, Marker, Polyline } from '@react-google-maps/api';
 import { Link } from 'react-router-dom';
+import axios from "axios";
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 const firebaseConfig = {
@@ -392,7 +393,7 @@ export default function CabBookingLaptop() {
 
     };
 
-    const writeRideDetails = async (rideId) => {
+    const writeRideDetails = async (rideId,cashpayment) => {
         const randomotp = Math.floor(1000 + Math.random() * 9000);
         const docref = doc(db, "Ride Details", rideId.toString()); // Define docRef outside of the try-);
         let Fare = (localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 10)
@@ -409,7 +410,7 @@ export default function CabBookingLaptop() {
                 "Drop Latitude": parseFloat(selectedDropLocation.lat),
                 "Drop Longitude": parseFloat(selectedDropLocation.lng),
                 "Booking ID": rideId,
-                "Cash Payment":true,
+                "Cash Payment": cashpayment,
                 // "Booking Owner": user,
                 "Ride OTP": randomotp,
                 "Pickup Location": pickupLocation,
@@ -475,6 +476,104 @@ export default function CabBookingLaptop() {
             }
         }
     };
+    const writepaymentidtodb = async (paymennt_id,rideid) => {
+        const docref = doc(db, "Payment ID", rideid.toString()); // Define docRef outside of the try-);
+        try {
+            // Write the initial ride details to Firestore
+            await setDoc(docref, {
+                "Payment ID": paymennt_id,
+            });
+        } catch (error) {
+            console.error("Error writing ride details:", error);
+        }
+    }
+    const handlePayment = async (fare) => {
+        try {
+            // Call the backend to create an order
+            const { data: order } = await axios.post("http://localhost:5000/create-order", {
+                amount: fare, // Amount in INR
+            });
+
+            // Define Razorpay options
+            const options = {
+                key: "rzp_test_gG0pN5dKl2Axrp", // Replace with your Razorpay key_id
+                amount: order.amount,
+                currency: order.currency,
+                name: "VistaRide",
+                description: `Trip for ${localStorage.getItem('Ride ID')}`,
+                order_id: order.id, // Order ID from backend
+                handler: function (response) {
+                    // Payment successful, show details
+                    const paymentId = response.razorpay_payment_id;
+                    localStorage.setItem('Payment ID', paymentId);
+                    const random4DigitNumber = Math.floor(10000 + Math.random() * 90000);
+                    console.log(drivers)
+                    localStorage.setItem('Ride ID', random4DigitNumber);
+                    console.log(drivers);
+                    writeRideDetailsToDB(random4DigitNumber.toString());
+                    writeRideDetails(random4DigitNumber.toString(),false);
+                    writepaymentidtodb(paymentId,random4DigitNumber);
+                    sendriderequesttodriver(random4DigitNumber.toString())
+                    setbookingstarted(true);
+                    // You can also handle the payment details here, e.g., send the payment ID to your backend to update the order status
+                    console.log("Payment Successful:", response);
+                },
+
+            };
+
+            // Initialize Razorpay payment
+            const rzp = new window.Razorpay(options);
+            rzp.open();
+        } catch (error) {
+            console.error("Payment initialization failed:", error);
+            // alert("Something went wrong during payment!");
+        }
+    };
+    const handleRefund = async () => {
+        // Retrieve Payment ID and Fare from localStorage
+        const paymentID = localStorage.getItem('Payment ID');
+        const fare = localStorage.getItem('Fare');
+      
+        // Check if paymentID and fare are available
+        if (!paymentID || !fare) {
+          console.error("Missing Payment ID or Fare from localStorage");
+          return;
+        }
+      
+        const refundData = {
+          paymentId: paymentID,  // paymentId should match what the backend expects
+          amount: parseInt(fare, 10),  // Convert fare to integer (in paise)
+        };
+      
+        try {
+          const response = await fetch('http://localhost:4000/refund', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(refundData),
+          });
+      
+          // Parse the response as JSON
+          const data = await response.json();
+      
+          if (response.ok) {
+            // Refund successful, show an alert
+            // alert('Refund successful!');
+            console.log('Refund successful:', data);
+          } else {
+            // Refund failed, log error message
+            // alert('Refund failed: ' + data.error);
+            console.error('Refund failed:', data.error);
+          }
+        } catch (error) {
+          // Handle network or other errors
+          console.error('Error:', error);
+        //   alert('Error occurred during refund.');
+        }
+      };
+      
+      
     const [cashpayment, setcashpayment] = useState(true);
     useEffect(() => {
         const fetchWeather = async () => {
@@ -514,6 +613,7 @@ export default function CabBookingLaptop() {
         };
         fetchWeather();
     }, []);
+
     const cabpriceextended = [50, 200, 500, 0, 1000]
     const mapCenter = selectedDropLocation
         ? {
@@ -554,6 +654,8 @@ export default function CabBookingLaptop() {
                     )}
                 </div>
             </div>
+            {/* rzp_test_gG0pN5dKl2Axrp */}
+            {/* CnBN8sDEpfRobYiMhV5iSSnJ */}
             <div className="ejhfjhfd">
                 <div className="djhfndj" style={{ display: 'flex', flexDirection: 'row' }}>
                     <div className="fbnbvfnbv">
@@ -667,9 +769,13 @@ export default function CabBookingLaptop() {
                                 </div>
                                 <Link style={{ textDecoration: 'none', color: 'white' }}>
                                     <div className="jjfnvjnf" style={{ backgroundColor: 'black', width: '90%', marginLeft: '5%', marginBottom: '20px', marginTop: '20px' }}
-                                        onClick={() => {
+                                        onClick={async() => {
+                                            if(!cashpayment){
+                                                handleRefund();
+                                            }
                                             removeridfromdb(localStorage.getItem('Ride ID').toString());
                                             removeridfromdriver(localStorage.getItem('Ride ID').toString());
+                                            
                                             setbookingstarted(false);
                                         }}
                                     >
@@ -700,12 +806,16 @@ export default function CabBookingLaptop() {
                                                 localStorage.setItem('Ride ID', random4DigitNumber);
                                                 console.log(drivers);
                                                 writeRideDetailsToDB(random4DigitNumber.toString());
-                                                writeRideDetails(random4DigitNumber.toString());
+                                                writeRideDetails(random4DigitNumber.toString(),true);
                                                 sendriderequesttodriver(random4DigitNumber.toString())
                                                 setbookingstarted(true);
                                             }
                                         } else {
-
+                                            let Fare = (localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 10)
+                                                ? (parseFloat(cabmultiplier[index]) * parseFloat(distanceAndTime.distance)) + cabpriceextended[index]
+                                                : (parseFloat(cabmultiplier[index]) * parseFloat(distanceAndTime.distance));
+                                                localStorage.setItem('Fare',Fare);
+                                            handlePayment(Fare);
                                         }
                                     }}>
                                     Request {cabcategorynames[index]}
