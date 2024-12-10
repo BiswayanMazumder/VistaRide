@@ -605,6 +605,26 @@ class _HomePageState extends State<HomePage> {
                         ),
                         InkWell(
                           onTap: ()async{
+
+                          },
+                          child: Row(
+                            children: [
+                              const Icon(Icons.discount,color: Colors.green,),
+                              const SizedBox(
+                                width: 8,
+                              ),
+                              Text('Promos',style: GoogleFonts.poppins(
+                                color: Colors.black,
+                                fontWeight: FontWeight.w600,
+                              ),),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 20,
+                        ),
+                        InkWell(
+                          onTap: ()async{
                             await _auth.signOut();
                             Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginPage(),));
                           },
