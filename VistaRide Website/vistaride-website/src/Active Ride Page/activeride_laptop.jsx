@@ -95,51 +95,6 @@ export default function Activeride_laptop() {
     const [isridecancelled,setridecancelled]=useState(false);
     const [ridecompleted,setridecompleted]=useState(false);
     const [rideaccepted,setrideaccepted]=useState(false);
-    const [paymentid, setpaymentid] = useState('');
-    const handleRefund = async () => {
-        // Retrieve Payment ID and Fare from localStorage
-        const paymentID = localStorage.getItem('Payment ID');
-      
-        // Check if paymentID and fare are available
-        if (!paymentID || !fare) {
-          console.error("Missing Payment ID or Fare from localStorage");
-          return;
-        }
-      
-        const refundData = {
-          paymentId: paymentID,  // paymentId should match what the backend expects
-          amount: parseInt(fare, 10),  // Convert fare to integer (in paise)
-        };
-      
-        try {
-          const response = await fetch('http://localhost:4000/refund', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(refundData),
-          });
-      
-          // Parse the response as JSON
-          const data = await response.json();
-      
-          if (response.ok) {
-            // Refund successful, show an alert
-            // alert('Refund successful!');
-            console.log('Refund successful:', data);
-            await cancelride();
-          } else {
-            // Refund failed, log error message
-            // alert('Refund failed: ' + data.error);
-            console.error('Refund failed:', data.error);
-          }
-        } catch (error) {
-          // Handle network or other errors
-          console.error('Error:', error);
-        //   alert('Error occurred during refund.');
-        }
-      };
-      
     useEffect(() => {
         let unsubscribe = null;  // Declare unsubscribe variable here
 
@@ -229,7 +184,6 @@ export default function Activeride_laptop() {
     }, [user, db, RideID]);
         const cancelride=async()=>{
             try{
-                
                 const docRef = doc(db, 'Ride Details', RideID);
                 await updateDoc(docRef, {
                     'Ride Accepted': false,
@@ -242,7 +196,6 @@ export default function Activeride_laptop() {
                     'Ride Doing':deleteField(),
                     'Driver Avaliable':true
                 });
-                
                 setridecancelled(true);
                 window.location.replace('/go/home')
             }catch(error){
@@ -329,7 +282,7 @@ export default function Activeride_laptop() {
                                     {droplocations}
                                 </div>
                             </div>
-                            {user!=''? rideverified?<></>:(<div className="rnnfbnfmbn" onClick={handleRefund}>
+                            {user!=''? rideverified?<></>:(<div className="rnnfbnfmbn" onClick={cancelride}>
                                 <div className="mnbngb">
                                     Cancel Ride
                                 </div>
