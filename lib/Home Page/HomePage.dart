@@ -387,7 +387,7 @@ class _HomePageState extends State<HomePage> {
       );
     }
   }
-
+  bool isposteropen=true;
   List carcategoryimages = [
     'https://olawebcdn.com/images/v1/cabs/sl/ic_mini.png',
     'https://olawebcdn.com/images/v1/cabs/sl/ic_prime.png',
@@ -402,6 +402,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       body: Stack(
         children: [
+
           GoogleMap(
             initialCameraPosition: CameraPosition(
               target: _currentLocation,
@@ -415,6 +416,43 @@ class _HomePageState extends State<HomePage> {
             myLocationEnabled: true, // Show the user's location as a blue dot
             myLocationButtonEnabled: false, // Disable the default button
           ),
+         isposteropen? Positioned(
+            top: MediaQuery.sizeOf(context).height / 4, // Adjust top position for centering vertically
+            left: MediaQuery.sizeOf(context).width / 2 - (MediaQuery.sizeOf(context).width - 40) / 2, // Center horizontally
+            child: Container(
+              height: (MediaQuery.sizeOf(context).height / 2)-20,
+              width: MediaQuery.sizeOf(context).width - 40,
+              color: Colors.transparent,
+              child:  Column(
+                children: [
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Row(
+                    children: [
+                       SizedBox(
+                        width: MediaQuery.sizeOf(context).width-70,
+                      ),
+                      InkWell(
+                          onTap: (){
+                            setState(() {
+                              isposteropen=false;
+                            });
+                          },
+                          child: const Icon(Icons.close,color: Colors.black,))
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  const Image(image: NetworkImage('https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2FVistaRide%20Prem'
+                      'ium%20Membership%20poster%20with%20the%20provided%20details%20(1).png?alt=media&token=49d06886-4c91-4c79-8911-f4e02e2f4327'),
+                  fit: BoxFit.fill,
+                  )
+                ],
+              ),
+            ),
+          ):Container(),
           Positioned(
             top: 40,
             left: 75,
