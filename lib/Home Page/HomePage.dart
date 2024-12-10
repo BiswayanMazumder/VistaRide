@@ -17,6 +17,7 @@ import 'package:vistaride/Destination%20Set%20Page/pickupanddroplocationset.dart
 import 'package:vistaride/Login%20Pages/loginpage.dart'; // Import geocoding package
 import 'package:vistaride/Environment%20Files/.env.dart';
 import 'package:vistaride/Profile%20Pages/TripHistory.dart';
+import 'package:vistaride/Promo%20Codes/promocodes.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -605,7 +606,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         InkWell(
                           onTap: ()async{
-
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => PromoCodes(),));
                           },
                           child: Row(
                             children: [
