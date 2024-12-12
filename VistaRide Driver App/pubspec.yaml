@@ -65,6 +65,8 @@ dependencies:
   video_player: ^2.8.5
   image_picker: ^1.0.8
   firebase_storage: ^11.6.9
+  flutter_timer_countdown: ^1.0.7
+  flutter_swipe_button: ^2.1.1+1
 
 dev_dependencies:
   flutter_test:

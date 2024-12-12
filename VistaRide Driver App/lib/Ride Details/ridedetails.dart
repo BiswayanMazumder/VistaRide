@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-
+import 'package:flutter_swipe_button/flutter_swipe_button.dart';
+import 'package:flutter_timer_countdown/flutter_timer_countdown.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -72,6 +73,7 @@ class _RideDetailsState extends State<RideDetails> {
   String Time = '';
   String DistanceTravel = '';
   bool isdrivernearby = false;
+  bool notifyrider = false;
   Future<void> _getCurrentLocation() async {
     await fetchridedetails();
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -522,6 +524,7 @@ class _RideDetailsState extends State<RideDetails> {
           rideverified = docsnap.data()?['Ride Verified'];
           isamountpaid = docsnap.data()?['Amount Paid'] ?? false;
           istripcompleted = docsnap.data()?['Ride Completed'];
+          notifyrider = docsnap.data()?['Driver Arrived'] ?? false;
         });
         print('Ride Verified $rideverified');
       }
@@ -560,6 +563,7 @@ class _RideDetailsState extends State<RideDetails> {
       print('Token $accesstoken');
     }
   }
+
   final TextEditingController _OTPController = TextEditingController();
   @override
   void initState() {
@@ -576,7 +580,7 @@ class _RideDetailsState extends State<RideDetails> {
     // listenForRideRequest();
     fetchridedetails();
     _getCurrentLocation();
-    _timetofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
+    _timetofetch = Timer.periodic(const Duration(seconds: 500), (Timer t) {
       fetchactiverides();
       _getCurrentLocation();
     });
@@ -730,12 +734,12 @@ class _RideDetailsState extends State<RideDetails> {
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    isdrivernearby
+                                    notifyrider
                                         ? const SizedBox(
                                             height: 20,
                                           )
                                         : Container(),
-                                    isdrivernearby
+                                    notifyrider
                                         ? Center(
                                             child: Text(
                                               'Rider has been notified',
@@ -743,6 +747,52 @@ class _RideDetailsState extends State<RideDetails> {
                                                   color: Colors.black,
                                                   fontWeight: FontWeight.w600,
                                                   fontSize: 18),
+                                            ),
+                                          )
+                                        : rideverified
+                                            ? Center(
+                                                child: Text(
+                                                  'Ride has started',
+                                                  style: GoogleFonts.poppins(
+                                                      color: Colors.black,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      fontSize: 18),
+                                                ),
+                                              )
+                                            : Container(),
+                                    notifyrider && !rideverified
+                                        ? const SizedBox(
+                                            height: 20,
+                                          )
+                                        : Container(),
+                                    notifyrider && !rideverified
+                                        ? Center(
+                                            child: TimerCountdown(
+                                              format: CountDownTimerFormat
+                                                  .minutesSeconds,
+                                              enableDescriptions: false,
+                                              timeTextStyle:
+                                                  GoogleFonts.poppins(
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      fontSize: 18),
+                                              colonsTextStyle:
+                                                  GoogleFonts.poppins(
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      fontSize: 18),
+                                              endTime: DateTime.now().add(
+                                                const Duration(
+                                                  minutes: 5,
+                                                  seconds: 00,
+                                                ),
+                                              ),
+                                              onEnd: () {
+                                                if (kDebugMode) {
+                                                  print("Timer finished");
+                                                }
+                                              },
                                             ),
                                           )
                                         : Container(),
@@ -829,6 +879,81 @@ class _RideDetailsState extends State<RideDetails> {
                                     const SizedBox(
                                       height: 30,
                                     ),
+                                    notifyrider
+                                        ? Container()
+                                        : SwipeButton.expand(
+                                            thumb: const Icon(
+                                              Icons.notifications_active,
+                                              color: Colors.white,
+                                            ),
+                                            activeThumbColor: Colors.green,
+                                            activeTrackColor:
+                                                Colors.purple.shade200,
+                                            onSwipe: ()async{
+                                              final prefs =
+                                              await SharedPreferences
+                                                  .getInstance();
+                                              setState(() {
+                                                notifyrider=true;
+                                              });
+                                              await _firestore
+                                                  .collection('Ride Details')
+                                                  .doc(prefs.getString(
+                                                  'Booking ID'))
+                                                  .update({
+                                                'Driver Arrived':true
+                                              });
+                                            },
+                                            child: Text(
+                                              'Arrived at location',
+                                              style: GoogleFonts.poppins(
+                                                  color: Colors.black,
+                                                  fontWeight: FontWeight.w500),
+                                            ),
+                                          ),
+                                    // notifyrider?Container():InkWell(
+                                    //   onTap: ()async{
+                                    //     final prefs =
+                                    //     await SharedPreferences
+                                    //         .getInstance();
+                                    //     setState(() {
+                                    //       notifyrider=true;
+                                    //     });
+                                    //     await _firestore
+                                    //         .collection('Ride Details')
+                                    //         .doc(prefs.getString(
+                                    //         'Booking ID'))
+                                    //         .update({
+                                    //       'Driver Arrived':true
+                                    //     });
+                                    //   },
+                                    //   child: Container(
+                                    //     height: 60,
+                                    //     width:
+                                    //     MediaQuery.sizeOf(context)
+                                    //         .width,
+                                    //     decoration:  BoxDecoration(
+                                    //         borderRadius:
+                                    //         const BorderRadius.all(
+                                    //             Radius.circular(
+                                    //                 50)),
+                                    //         color: Colors.purple.shade200),
+                                    //     child: Center(
+                                    //       child: Text(
+                                    //         'Arrived at location',
+                                    //         style: GoogleFonts.poppins(
+                                    //             color: Colors.black,
+                                    //             fontWeight:
+                                    //             FontWeight.w500),
+                                    //       ),
+                                    //     ),
+                                    //   ),
+                                    // ),
+                                    notifyrider
+                                        ? Container()
+                                        : const SizedBox(
+                                            height: 30,
+                                          ),
                                     rideverified
                                         ? InkWell(
                                             onTap: () async {
@@ -897,38 +1022,47 @@ class _RideDetailsState extends State<RideDetails> {
                                               ),
                                             ),
                                           )
-                                        : Padding(
-                                            padding: const EdgeInsets.only(
-                                                bottom: 20),
-                                            child: InkWell(
-                                              onTap: () {
-                                                setState(() {
-                                                  isotpverification = true;
-                                                });
-                                              },
-                                              child: Container(
-                                                height: 60,
-                                                width:
-                                                    MediaQuery.sizeOf(context)
-                                                        .width,
-                                                decoration: const BoxDecoration(
-                                                    borderRadius:
-                                                        BorderRadius.all(
-                                                            Radius.circular(
-                                                                50)),
-                                                    color: Colors.green),
-                                                child: Center(
-                                                  child: Text(
-                                                    'Verify OTP',
-                                                    style: GoogleFonts.poppins(
-                                                        color: Colors.black,
-                                                        fontWeight:
-                                                            FontWeight.w500),
-                                                  ),
-                                                ),
-                                              ),
+                                        : !notifyrider?Container():Padding(
+                                      padding:
+                                      const EdgeInsets.only(
+                                          bottom: 20),
+                                      child: InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            isotpverification =
+                                            true;
+                                          });
+                                        },
+                                        child: Container(
+                                          height: 60,
+                                          width:
+                                          MediaQuery.sizeOf(
+                                              context)
+                                              .width,
+                                          decoration: const BoxDecoration(
+                                              borderRadius:
+                                              BorderRadius
+                                                  .all(Radius
+                                                  .circular(
+                                                  50)),
+                                              color:
+                                              Colors.green),
+                                          child: Center(
+                                            child: Text(
+                                              'Verify OTP',
+                                              style: GoogleFonts
+                                                  .poppins(
+                                                  color: Colors
+                                                      .black,
+                                                  fontWeight:
+                                                  FontWeight
+                                                      .w500),
                                             ),
                                           ),
+                                        ),
+                                      ),
+                                    )
+
                                   ],
                                 )
                               : Column(
