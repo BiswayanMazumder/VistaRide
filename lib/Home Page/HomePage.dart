@@ -227,6 +227,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
   bool _addressliked=false;
+  String city='';
   // Function to get the current location using Geolocator
   Future<void> _getCurrentLocation() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -258,6 +259,7 @@ class _HomePageState extends State<HomePage> {
             '${placemark.street}, ${placemark.thoroughfare}, ${placemark.subLocality}, '
             '${placemark.locality},${placemark.administrativeArea}, ${placemark.postalCode} , ${placemark.country}'; // Format the address as needed
         _locationcontroller.text = locationName;
+        prefs.setString('Locality', placemark.locality!);
       });
     }
 
@@ -292,7 +294,9 @@ class _HomePageState extends State<HomePage> {
       if (response.statusCode == 200) {
         // Parse the JSON data
         Map<String, dynamic> weatherData = json.decode(response.body);
-
+        if (kDebugMode) {
+          print('Weather $weatherData');
+        }
         // Extract weather information
         String description = weatherData['weather'][0]['main'];
         double temperature = weatherData['main']['temp'];
@@ -644,7 +648,11 @@ class _HomePageState extends State<HomePage> {
                         ),
                         InkWell(
                           onTap: ()async{
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => PromoCodes(),));
+                            final prefs=await SharedPreferences.getInstance();
+                            prefs.setBool('Apply Promo', false);
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => PromoCodes(
+                              ridepage: false,
+                            ),));
                           },
                           child: Row(
                             children: [

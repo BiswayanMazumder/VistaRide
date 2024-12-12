@@ -119,7 +119,9 @@ class _PickupandroplocationState extends State<Pickupandroplocation> {
         print('Dropoff Latitude: $latitude');
         print('Dropoff Longitude: $longitude');
       }
-      Navigator.push(context,MaterialPageRoute(builder: (context) => CabSelectAndPrice(),));
+      Navigator.push(context,MaterialPageRoute(builder: (context) => CabSelectAndPrice(
+        ispromoapplied: false,
+      ),));
       // Update the map and markers
       LatLng newLocation = LatLng(latitude, longitude);
       setState(() {
@@ -139,7 +141,9 @@ class _PickupandroplocationState extends State<Pickupandroplocation> {
       // Optionally navigate to the next screen
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const CabSelectAndPrice()),
+        MaterialPageRoute(builder: (context) => const CabSelectAndPrice(
+          ispromoapplied: false,
+        )),
       );
     } else {
       print("Could not find coordinates for the selected place.");

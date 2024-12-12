@@ -17,9 +17,12 @@ import 'package:image/image.dart' as img;
 // import 'package:http/http.dart' as http;
 import 'package:vistaride/Cab%20Selection%20Page/CabFindingPage.dart';
 import 'package:vistaride/Environment%20Files/.env.dart';
+import 'package:vistaride/Promo%20Codes/promocodes.dart';
 
 class CabSelectAndPrice extends StatefulWidget {
-  const CabSelectAndPrice({super.key});
+  final bool ispromoapplied;  // Declare the field to hold the boolean value
+
+  const CabSelectAndPrice({super.key, required this.ispromoapplied});
 
   @override
   State<CabSelectAndPrice> createState() => _CabSelectAndPriceState();
@@ -119,11 +122,39 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
   }
 
   String? weathercondition;
+  int discountperc=0;
+  int maxamount=0;
+  bool ispromoapplicable = false;
   Future<void> fetchweatherfromcache() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       weathercondition = prefs.getString('Weather Condition');
+      ispromoapplicable = prefs.getBool('Promo Applicable') ?? false;
+      discountperc=prefs.getInt('Discount Amount')??0;
+      maxamount=prefs.getInt('Max Amount')??0;
+      if (kDebugMode) {
+        print('Promo Applied ${widget.ispromoapplied}');
+      }
     });
+    if (widget.ispromoapplied) {
+      // Decrease each value by 40% (multiply by 0.60)
+      cabpricesmultiplier = cabpricesmultiplier
+          .asMap() // Convert the list to a map to access indices
+          .map((index, price) {
+        // If index is 4, don't apply the discount
+        if (index == 3) {
+          return MapEntry(index, price); // Keep the price unchanged at index 3
+        } else {
+          return MapEntry(index, (price - discountperc).roundToDouble()); // Apply discount to other prices
+        }
+      })
+          .values // Get the updated list of values
+          .toList();
+
+      if (kDebugMode) {
+        print('Updated Price $cabpricesmultiplier');
+      } // To see the updated list
+    }
     if (kDebugMode) {
       print('Fetched from cache $weathercondition');
     }
@@ -572,7 +603,17 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                     width: 10,
                   ),
                   InkWell(
-                    onTap: () {},
+                    onTap: () async {
+                      final prefs = await SharedPreferences.getInstance();
+                      prefs.setBool('Apply Promo', true);
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PromoCodes(
+                              ridepage: true,
+                            ),
+                          ));
+                    },
                     child: Row(
                       children: [
                         const SizedBox(
@@ -594,6 +635,7 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
               InkWell(
                 onTap: () async {
                   await fetchdrivers();
+
                   final prefs = await SharedPreferences.getInstance();
                   prefs.setString(
                       'Cab Category', cabcategorynames[_selectedindex]);
