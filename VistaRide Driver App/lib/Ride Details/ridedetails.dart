@@ -580,7 +580,7 @@ class _RideDetailsState extends State<RideDetails> {
     // listenForRideRequest();
     fetchridedetails();
     _getCurrentLocation();
-    _timetofetch = Timer.periodic(const Duration(seconds: 500), (Timer t) {
+    _timetofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
       fetchactiverides();
       _getCurrentLocation();
     });
