@@ -106,7 +106,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
     _fetchRoute();
     fetchridedetails();
     fetchpaymentid();
-    _timertofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
+    _timertofetch = Timer.periodic(const Duration(seconds: 900), (Timer t) {
       fetchridedetails();
       _fetchRoute();
     });
@@ -365,6 +365,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
   String droploc = '';
   double droplat = 0;
   bool isamountpaid=false;
+  bool iscashpayment=false;
   double price=0;
   Future<void> fetchridedetails() async {
     try{
@@ -392,6 +393,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
           rideverified=docsnap.data()?['Ride Verified'];
           istripdone=docsnap.data()?['Ride Completed'];
           isamountpaid=docsnap.data()?['Amount Paid']??false;
+          iscashpayment=docsnap.data()?['Cash Payment']??false;
         });
       }
       print('Trip Done $isamountpaid');
@@ -522,6 +524,23 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
               ),
             ),
           ),
+          rideverified?Positioned(
+              top: 20,
+              right: 20,
+              child: Container(
+            height: 50,
+            width: 100,
+            decoration: const BoxDecoration(
+              color: Colors.purple,
+              borderRadius: BorderRadius.all(Radius.circular(50))
+            ),
+                child: Center(
+                  child: Text('Support',style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600
+                  ),),
+                ),
+          )):Container(),
           istripdone?Container(): Positioned(
               bottom: 0,
               child: Container(
@@ -571,7 +590,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                         padding: const EdgeInsets.only(left: 20),
                         child: Row(
                           children: [
-                            Text('Driver arriving in $Time',style: GoogleFonts.poppins(color: Colors.black,fontWeight: FontWeight.w600),),
+                           rideverified? Text('Reaching destination in $Time ($DistanceTravel)',style: GoogleFonts.poppins(color: Colors.black,fontWeight: FontWeight.w600),):Text('Driver arriving in $Time',style: GoogleFonts.poppins(color: Colors.black,fontWeight: FontWeight.w600),),
                           ],
                         ),
                       ),
@@ -803,7 +822,6 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                               }
                             }
                           },
-
                           child: Container(
                             height: 50,
                             decoration: BoxDecoration(
@@ -822,9 +840,39 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                           ),
                         ),
                       ):Container(),
-                      const SizedBox(
-                        height: 20,
-                      )
+                      Padding(
+                        padding:
+                        const EdgeInsets.only(left: 20, right: 20, top: 10,bottom: 20),
+                        child: InkWell(
+                          child: Container(
+                            width: MediaQuery.sizeOf(context).width,
+                            decoration: BoxDecoration(
+                                border: Border.all(
+                                    color: Colors.grey,width: 0.5
+                                )
+                            ),
+                            height: 40,
+                            child: Row(
+                              children: [
+                                const SizedBox(
+                                  width: 10,
+                                ),
+                               !iscashpayment?const Icon(Icons.credit_card,color: Colors.black,):const Icon(Icons.currency_rupee_sharp,color: Colors.black,),
+                                const SizedBox(
+                                  width: 20,
+                                ),
+                                Expanded(
+                                    child: Text(
+                                      '₹$price (${iscashpayment?'Cash':'Online'})',
+                                      style: GoogleFonts.poppins(color: Colors.black),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    )),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
