@@ -1,5 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter_sound/public/flutter_sound_recorder.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import 'package:path/path.dart' as p;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -8,11 +12,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vistaride/Home%20Page/HomePage.dart';
 import '../Environment Files/.env.dart';
 import 'package:image/image.dart' as img;
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_core/firebase_core.dart';
 class BookedCabDetails extends StatefulWidget {
   const BookedCabDetails({super.key});
 
@@ -33,20 +40,24 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
   String? _pickupAddress;
   String? _dropoffAddress;
   late Timer _timertofetch;
-  String paymentid='';
-  Future<void> fetchpaymentid()async{
+  String paymentid = '';
+  Future<void> fetchpaymentid() async {
     await fetchridedetails();
-    final prefs=await SharedPreferences.getInstance();
-    final docsnap=await _firestore.collection('Payment ID').doc(prefs.getString('Booking ID')).get();
-    if(docsnap.exists){
+    final prefs = await SharedPreferences.getInstance();
+    final docsnap = await _firestore
+        .collection('Payment ID')
+        .doc(prefs.getString('Booking ID'))
+        .get();
+    if (docsnap.exists) {
       setState(() {
-        paymentid=docsnap.data()?['Payment ID'];
+        paymentid = docsnap.data()?['Payment ID'];
       });
     }
     if (kDebugMode) {
       print('Payment ID $paymentid');
     }
   }
+
   Future<void> processRefund() async {
     await fetchridedetails();
     await fetchpaymentid();
@@ -59,11 +70,11 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
         'Basic ${base64Encode(utf8.encode('$keyId:$keySecret'))}';
 
     // API Endpoint
-     String url = 'https://api.razorpay.com/v1/payments/$paymentid/refund';
+    String url = 'https://api.razorpay.com/v1/payments/$paymentid/refund';
 
     // Request body
     final Map<String, dynamic> requestBody = {
-      "amount": price*100,
+      "amount": price * 100,
       "speed": "optimum",
     };
 
@@ -100,32 +111,89 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
       }
     }
   }
+  FlutterSoundRecorder _audioRecorder = FlutterSoundRecorder();
+  String _recordingPath = '';
+  Future<void> uploadToFirebaseStorage(String filePath) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      String? bookingId = prefs.getString('Booking ID');
+
+      if (bookingId == null) {
+        print('Booking ID not found!');
+        return;
+      }
+
+      // Create a reference to Firebase Storage with the booking ID
+      FirebaseStorage storage = FirebaseStorage.instance;
+      Reference storageRef = storage.ref().child('recordings/$bookingId/${DateTime.now().millisecondsSinceEpoch}.wav');
+
+      // Upload the file to Firebase Storage
+      File file = File(filePath);
+      await storageRef.putFile(file);
+
+      // Get the download URL
+      String downloadUrl = await storageRef.getDownloadURL();
+
+      // Save the download URL in Firestore
+      await saveRecordingUrlToFirestore(downloadUrl);
+    } catch (e) {
+      print('Error uploading file: $e');
+    }
+  }
+
+  Future<void> saveRecordingUrlToFirestore(String downloadUrl) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      String? bookingId = prefs.getString('Booking ID');
+
+      if (bookingId == null) {
+        print('Booking ID not found!');
+        return;
+      }
+
+      // Save the URL to Firestore in the Ride Details collection
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
+      await firestore.collection('Ride Details').doc(bookingId).update({
+        'Emergency Audio Recording': FieldValue.arrayUnion([downloadUrl]),
+        'Emergency':true,
+        'Emergency Started':FieldValue.serverTimestamp(),
+      });
+
+      if (kDebugMode) {
+        print('Recording URL saved to Firestore: $downloadUrl');
+      }
+    } catch (e) {
+      print('Error saving URL to Firestore: $e');
+    }
+  }
   @override
   void initState() {
     super.initState();
     _fetchRoute();
     fetchridedetails();
     fetchpaymentid();
-    _timertofetch = Timer.periodic(const Duration(seconds: 900), (Timer t) {
+    _timertofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
       fetchridedetails();
       _fetchRoute();
     });
   }
+
   @override
   void dispose() {
     // TODO: implement dispose
     super.dispose();
     _timertofetch.cancel();
   }
-  String drivercurrentlongitude='';
-  String drivercurrentlatitude='';
+
+  String drivercurrentlongitude = '';
+  String drivercurrentlatitude = '';
   String Time = '';
   String? pickup;
 
   String? dropoffloc;
   String DistanceTravel = '';
-  bool isdrivernearby=false;
-  bool istripdone=false;
+  bool isdrivernearby = false;
+  bool istripdone = false;
   Future<BitmapDescriptor> _getNetworkCarIcon(String imageUrl) async {
     final response = await http.get(Uri.parse(imageUrl));
     if (response.statusCode == 200) {
@@ -137,10 +205,12 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
         throw Exception('Failed to decode image');
       }
 
-      img.Image resizedImage = img.copyResize(originalImage, width: 80, height: 80);
+      img.Image resizedImage =
+          img.copyResize(originalImage, width: 80, height: 80);
 
       // Convert the resized image back to bytes
-      final Uint8List resizedBytes = Uint8List.fromList(img.encodePng(resizedImage));
+      final Uint8List resizedBytes =
+          Uint8List.fromList(img.encodePng(resizedImage));
 
       // Create a BitmapDescriptor from the resized bytes
       return BitmapDescriptor.fromBytes(resizedBytes);
@@ -151,7 +221,10 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
 
   Future<void> _fetchRoute() async {
     await fetchridedetails();
-    if (drivercurrentlatitude.isEmpty || drivercurrentlongitude.isEmpty || pickuplat == 0 || pickuplong == 0) {
+    if (drivercurrentlatitude.isEmpty ||
+        drivercurrentlongitude.isEmpty ||
+        pickuplat == 0 ||
+        pickuplong == 0) {
       print('Invalid coordinates: Unable to fetch route.');
       return;
     }
@@ -168,7 +241,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
     // Update the pickup location
     setState(() {
       _pickupLocation = LatLng(pickuplat, pickuplong);
-      _dropoffLocation=LatLng(droplat, droplong);
+      _dropoffLocation = LatLng(droplat, droplong);
     });
 
     const String apiKey = Environment.GoogleMapsAPI;
@@ -181,7 +254,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
       print('URL $url');
     }
 
-    final response = await http.get(Uri.parse(rideverified?url1:url));
+    final response = await http.get(Uri.parse(rideverified ? url1 : url));
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(response.body);
       if (data['routes'].isNotEmpty) {
@@ -189,7 +262,8 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
         final distance = data['routes'][0]['legs'][0]['distance']['text'];
 
         // Decode the polyline
-        String encodedPolyline = data['routes'][0]['overview_polyline']['points'];
+        String encodedPolyline =
+            data['routes'][0]['overview_polyline']['points'];
         List<LatLng> polylinePoints = _decodePolyline(encodedPolyline);
 
         // Convert distance to kilometers and check if driver is nearby
@@ -202,7 +276,8 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
               'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2Fimages-removebg-preview%20(1).png?alt=media&token=80f80ee3-6787-4ddc-8aad-f9ce400461ea');
         } catch (e) {
           print('Failed to load custom car icon: $e');
-          carIcon = BitmapDescriptor.defaultMarker; // Fallback to default marker
+          carIcon =
+              BitmapDescriptor.defaultMarker; // Fallback to default marker
         }
         BitmapDescriptor pinIcon;
         try {
@@ -210,7 +285,8 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
               'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2Fpngimg.com%20-%20pin_PNG27.png?alt=media&token=a7926167-44dd-4938-b74f-030f0487e5b4');
         } catch (e) {
           print('Failed to load custom car icon: $e');
-          pinIcon = BitmapDescriptor.defaultMarker; // Fallback to default marker
+          pinIcon =
+              BitmapDescriptor.defaultMarker; // Fallback to default marker
         }
         setState(() {
           isdrivernearby = distanceInKm < 1;
@@ -220,22 +296,24 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
 
           // Add markers for driver's current location and pickup location
           _markers.add(Marker(
-            markerId: MarkerId('driver'),
-            position: driverCurrentLocation,
-            icon: carIcon,
-            // Use the custom network car icon
-            infoWindow:  InfoWindow(
-                title:rideverified?'Your current location':'Driver\'s Current Location',
-              snippet:rideverified?'You are $DistanceTravel away from your drop location':'$drivername is $DistanceTravel away from you'
-            )));
+              markerId: MarkerId('driver'),
+              position: driverCurrentLocation,
+              icon: carIcon,
+              // Use the custom network car icon
+              infoWindow: InfoWindow(
+                  title: rideverified
+                      ? 'Your current location'
+                      : 'Driver\'s Current Location',
+                  snippet: rideverified
+                      ? 'You are $DistanceTravel away from your drop location'
+                      : '$drivername is $DistanceTravel away from you')));
           _markers.add(Marker(
             markerId: MarkerId('pickup'),
             icon: pinIcon,
-            position:rideverified?_dropoffLocation: _pickupLocation,
+            position: rideverified ? _dropoffLocation : _pickupLocation,
             infoWindow: InfoWindow(
-                title:rideverified?'Drop Location':'Pickup Location',
-                snippet:
-                'Drop Location arriving in $Time'),
+                title: rideverified ? 'Drop Location' : 'Pickup Location',
+                snippet: 'Drop Location arriving in $Time'),
           ));
 
           // Add polyline for the route
@@ -260,7 +338,6 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
     }
   }
 
-
 // Helper function to convert distance to kilometers
   double _convertDistanceToKm(String distance) {
     if (distance.contains('km')) {
@@ -270,8 +347,6 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
     }
     return 0.0;
   }
-
-
 
   // Method to decode polyline from the Directions API response
   List<LatLng> _decodePolyline(String encoded) {
@@ -347,7 +422,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
   }
 
   bool ridestarted = false;
-  bool rideverified=false;
+  bool rideverified = false;
   String driverid = '';
   String drivername = '';
   String driverprofilephoto = '';
@@ -355,7 +430,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
   String carphoto = '';
   String carname = '';
   double rating = 0;
-  String cabcategory='';
+  String cabcategory = '';
   int rideotp = 0;
   String phonenumber = '';
   double pickuplong = 0;
@@ -364,11 +439,12 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
   String pickuploc = '';
   String droploc = '';
   double droplat = 0;
-  bool isamountpaid=false;
-  bool iscashpayment=false;
-  double price=0;
+  bool isamountpaid = false;
+  bool iscashpayment = false;
+  double price = 0;
+
   Future<void> fetchridedetails() async {
-    try{
+    try {
       final prefs = await SharedPreferences.getInstance();
       final docsnap = await _firestore
           .collection('Ride Details')
@@ -382,18 +458,19 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
           pickuplong = docsnap.data()?['Pick Longitude'];
           pickuplat = docsnap.data()?['Pickup Latitude'];
           droplat = docsnap.data()?['Drop Latitude'];
-          price=docsnap.data()?['Fare'] is int?
-          (docsnap.data()?['Fare']).toDouble()
-              :docsnap.data()?['Fare'] is double
-              ? (docsnap.data()?['Fare'])as double:0.0;
+          price = docsnap.data()?['Fare'] is int
+              ? (docsnap.data()?['Fare']).toDouble()
+              : docsnap.data()?['Fare'] is double
+                  ? (docsnap.data()?['Fare']) as double
+                  : 0.0;
           droplong = docsnap.data()?['Drop Longitude'];
           pickuploc = docsnap.data()?['Pickup Location'];
           droploc = docsnap.data()?['Drop Location'];
-          cabcategory=docsnap.data()?['Cab Category'];
-          rideverified=docsnap.data()?['Ride Verified'];
-          istripdone=docsnap.data()?['Ride Completed'];
-          isamountpaid=docsnap.data()?['Amount Paid']??false;
-          iscashpayment=docsnap.data()?['Cash Payment']??false;
+          cabcategory = docsnap.data()?['Cab Category'];
+          rideverified = docsnap.data()?['Ride Verified'];
+          istripdone = docsnap.data()?['Ride Completed'];
+          isamountpaid = docsnap.data()?['Amount Paid'] ?? false;
+          iscashpayment = docsnap.data()?['Cash Payment'] ?? false;
         });
       }
       print('Trip Done $isamountpaid');
@@ -410,18 +487,24 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
           carnumber = Docsnap.data()?['Car Number Plate'];
           rating = Docsnap.data()?['Rating'];
           phonenumber = Docsnap.data()?['Contact Number'];
-          drivercurrentlatitude=Docsnap.data()?['Current Latitude'];
-          drivercurrentlongitude=Docsnap.data()?['Current Longitude'];
+          drivercurrentlatitude = Docsnap.data()?['Current Latitude'];
+          drivercurrentlongitude = Docsnap.data()?['Current Longitude'];
         });
       }
-      if(isamountpaid){
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
+      if (isamountpaid) {
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomePage(),
+            ));
       }
-    }catch(e){
+    } catch (e) {
       print('Error in fetching ride $e');
     }
   }
-
+  String? recordingpath;
+  final record = AudioRecorder();
+  bool isrecording = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -439,444 +522,779 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
             markers: _markers,
             polylines: _polylines, // Display the polyline here
           ),
-         istripdone?Center(
-            child: Container(
-              height: 250,
-              width: 300,
-              decoration: const BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                color: Colors.white,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  Text('Trip Completed',style: GoogleFonts.poppins(
-                    color: Colors.black,fontWeight: FontWeight.w600,fontSize: 17
-                  ),),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  const Divider(
-                    color: Colors.grey,
-                    thickness: 0.5,
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  Text('₹$price',style: GoogleFonts.poppins(
-                      color: Colors.black,fontWeight: FontWeight.w600,fontSize: 30
-                  ),),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      'Please pay the fare amount (₹$price) to the driver.',
-                      textAlign: TextAlign.center, // Ensures text wraps and stays centered
-                      style: GoogleFonts.poppins(
-                        color: Colors.grey,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 15,
-                      ),
+          istripdone
+              ? Center(
+                  child: Container(
+                    height: 250,
+                    width: 300,
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                      color: Colors.white,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const SizedBox(
+                          height: 20,
+                        ),
+                        Text(
+                          'Trip Completed',
+                          style: GoogleFonts.poppins(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 17),
+                        ),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        const Divider(
+                          color: Colors.grey,
+                          thickness: 0.5,
+                        ),
+                        const SizedBox(
+                          height: 20,
+                        ),
+                        Text(
+                          '₹$price',
+                          style: GoogleFonts.poppins(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 30),
+                        ),
+                        const SizedBox(
+                          height: 20,
+                        ),
+                        Align(
+                          alignment: Alignment.center,
+                          child: Text(
+                            'Please pay the fare amount (₹$price) to the driver.',
+                            textAlign: TextAlign
+                                .center, // Ensures text wraps and stays centered
+                            style: GoogleFonts.poppins(
+                              color: Colors.grey,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 20,
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                ],
-              ),
-            ),
-          ):Container(),
-         istripdone?Container(): Positioned(
-            bottom: 320,
-            left: 20,
-            child: Container(
-              height: 70,
-              width: 85,
-              decoration:  BoxDecoration(
-                  color:isdrivernearby || rideverified?Colors.purple: Colors.white,
-                  borderRadius: BorderRadius.all(Radius.circular(10))),
-              child: Center(
-                child: Column(
-                  children: [
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Text(
-                      '$rideotp',
-                      style: GoogleFonts.poppins(
-                          color:isdrivernearby || rideverified?Colors.white: Colors.purple,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18),
-                    ),
-                    Text(
-                      'Start OTP',
-                      style: GoogleFonts.poppins(
-                          color: isdrivernearby || rideverified?Colors.white: Colors.grey, fontWeight: FontWeight.w500),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          rideverified?Positioned(
-              top: 20,
-              right: 20,
-              child: Container(
-            height: 50,
-            width: 100,
-            decoration: const BoxDecoration(
-              color: Colors.purple,
-              borderRadius: BorderRadius.all(Radius.circular(50))
-            ),
-                child: Center(
-                  child: Text('Support',style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600
-                  ),),
-                ),
-          )):Container(),
-          istripdone?Container(): Positioned(
-              bottom: 0,
-              child: Container(
-                height: 300,
-                width: MediaQuery.sizeOf(context).width,
-                color: Colors.white,
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      const SizedBox(
-                        height: 20,
-                      ),
-                      rideverified?Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                )
+              : Container(),
+          istripdone
+              ? Container()
+              : Positioned(
+                  bottom: 320,
+                  left: 20,
+                  child: Container(
+                    height: 70,
+                    width: 85,
+                    decoration: BoxDecoration(
+                        color: isdrivernearby || rideverified
+                            ? Colors.purple
+                            : Colors.white,
+                        borderRadius: BorderRadius.all(Radius.circular(10))),
+                    child: Center(
+                      child: Column(
                         children: [
-                          const Icon(Icons.check,color: Colors.green,),
                           const SizedBox(
-                            width: 10,
+                            height: 10,
                           ),
                           Text(
-                            "Ride verified successfully.",
+                            '$rideotp',
                             style: GoogleFonts.poppins(
-                                color: Colors.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600),
+                                color: isdrivernearby || rideverified
+                                    ? Colors.white
+                                    : Colors.purple,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18),
+                          ),
+                          Text(
+                            'Start OTP',
+                            style: GoogleFonts.poppins(
+                                color: isdrivernearby || rideverified
+                                    ? Colors.white
+                                    : Colors.grey,
+                                fontWeight: FontWeight.w500),
                           ),
                         ],
-                      ): Text(
-                        "Share the 'OTP' before starting trip.",
-                        style: GoogleFonts.poppins(
-                            color: Colors.black,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600),
                       ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      const Divider(
-                        color: Colors.grey,
-                        thickness: 0.5,
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 20),
-                        child: Row(
-                          children: [
-                           rideverified? Text('Reaching destination in $Time ($DistanceTravel)',style: GoogleFonts.poppins(color: Colors.black,fontWeight: FontWeight.w600),):Text('Driver arriving in $Time',style: GoogleFonts.poppins(color: Colors.black,fontWeight: FontWeight.w600),),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 15,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 20),
-                        child: Row(
-                          children: [
-                            Column(
+                    ),
+                  ),
+                ),
+          rideverified
+              ? Positioned(
+                  bottom: 350,
+                  right: 20,
+                  child: InkWell(
+                    onTap: () {
+                      if (kDebugMode) {
+                        print('Support Started');
+                      }
+                      showModalBottomSheet(
+                        context: context,
+                        builder: (context) {
+                          return Container(
+                            height: 400,
+                            width: MediaQuery.sizeOf(context).width,
+                            color: Colors.white,
+                            child: Column(
                               mainAxisAlignment: MainAxisAlignment.start,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  carnumber,
-                                  style: GoogleFonts.poppins(
-                                      color: Colors.black,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600),
+                                const SizedBox(
+                                  height: 30,
+                                ),
+                                Center(
+                                  child: Text(
+                                    'Safety Toolkit',
+                                    style: GoogleFonts.poppins(
+                                        color: Colors.black,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w600),
+                                  ),
                                 ),
                                 const SizedBox(
-                                  height: 8,
-                                ),
-                                Text(
-                                  carname,
-                                  style: GoogleFonts.poppins(
-                                      color: Colors.grey,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w500),
-                                ),
-                                const SizedBox(
-                                  height: 8,
+                                  height: 40,
                                 ),
                                 Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
                                   children: [
-                                    Text(
-                                      drivername,
-                                      style: GoogleFonts.poppins(
-                                          color: Colors.grey,
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w500),
+                                    const Icon(
+                                      Icons.mic,
+                                      color: Colors.black,
+                                      size: 30,
                                     ),
                                     const SizedBox(
-                                      width: 5,
+                                      width: 20,
                                     ),
-                                    const Icon(Icons.star,color: Colors.yellow,),
-                                    Text(
-                                      rating.toString(),
-                                      style: GoogleFonts.poppins(
-                                          color: Colors.grey,
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w500),
+                                    Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Record Audio',
+                                          style: GoogleFonts.poppins(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 20),
+                                        ),
+                                        Text(
+                                          'Record Audio to send to VistaRide',
+                                          style: GoogleFonts.poppins(
+                                              color: Colors.grey,
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 12),
+                                        ),
+                                      ],
                                     ),
+                                    const SizedBox(
+                                      width: 20,
+                                    ),
+                                    InkWell(
+                                      onTap: () async {
+                                        final prefs = await SharedPreferences.getInstance();
+
+                                        if(isrecording){
+                                         String? filePath=await record.stop();
+                                         if(filePath!=null){
+                                           setState(() {
+                                             isrecording=false;
+                                             recordingpath=filePath;
+                                           });
+                                           if (kDebugMode) {
+                                             print('Saved recording to $recordingpath');
+                                           }
+                                           await uploadToFirebaseStorage(filePath);
+                                         }
+                                        }
+                                        else{
+                                          if(await record.hasPermission()){
+                                            final Directory appdocumentsdir= await getApplicationDocumentsDirectory();
+                                            final String filepath=p.join(appdocumentsdir.path,'${prefs.getString('Booking ID')}recording.wav');
+                                            await record.start(const RecordConfig(), path: filepath);
+                                            setState(() {
+                                              isrecording=true;
+                                              recordingpath=null;
+                                            });
+
+                                          }
+                                        }
+                                      },
+
+                                      child: Container(
+                                        width: 80,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                            borderRadius:
+                                                const BorderRadius.all(
+                                                    Radius.circular(50)),
+                                            color: Colors.grey.shade200),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceEvenly,
+                                          children: [
+                                            Icon(
+                                              isrecording
+                                                  ? Icons.square
+                                                  : Icons.stop_circle,
+                                              color: Colors.red,
+                                            ),
+                                            Text(
+                                              isrecording
+                                                  ? 'STOP'
+                                                  : 'START',
+                                              style: GoogleFonts.poppins(
+                                                  color: isrecording
+                                                      ? Colors.red
+                                                      : Colors.black),
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 50,
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    const Icon(
+                                      Icons.add_road_rounded,
+                                      color: Colors.black,
+                                      size: 30,
+                                    ),
+                                    const SizedBox(
+                                      width: 20,
+                                    ),
+                                    Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Trip Detection',
+                                          style: GoogleFonts.poppins(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 20),
+                                        ),
+                                        Text(
+                                          'Send alert if unwanted route is taken',
+                                          style: GoogleFonts.poppins(
+                                              color: Colors.grey,
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 12),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(
+                                      width: 20,
+                                    ),
+                                    InkWell(
+                                      onTap: () {},
+                                      child: Container(
+                                          width: 80,
+                                          height: 40,
+                                          decoration: BoxDecoration(
+                                              borderRadius:
+                                                  const BorderRadius.all(
+                                                      Radius.circular(50)),
+                                              color: Colors.grey.shade200),
+                                          child: Center(
+                                              child: Text(
+                                            'Active',
+                                            style: GoogleFonts.poppins(
+                                                color: Colors.blue,
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w600),
+                                          ))),
+                                    )
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 50,
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    const Icon(
+                                      Icons.add_road_rounded,
+                                      color: Colors.black,
+                                      size: 30,
+                                    ),
+                                    const SizedBox(
+                                      width: 20,
+                                    ),
+                                    Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '100 Assistance',
+                                          style: GoogleFonts.poppins(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 20),
+                                        ),
+                                        Text(
+                                          'Inform police in case of any emergency',
+                                          style: GoogleFonts.poppins(
+                                              color: Colors.grey,
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 12),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(
+                                      width: 20,
+                                    ),
+                                    InkWell(
+                                      onTap: () async {
+                                        final Uri phoneUri =
+                                            Uri(scheme: 'tel', path: '1111');
+                                        if (await canLaunchUrl(phoneUri)) {
+                                          await launchUrl(phoneUri);
+                                        } else {
+                                          throw 'Could not launch $phoneUri';
+                                        }
+                                      },
+                                      child: Container(
+                                          width: 80,
+                                          height: 40,
+                                          decoration: BoxDecoration(
+                                              borderRadius:
+                                                  const BorderRadius.all(
+                                                      Radius.circular(50)),
+                                              color: Colors.grey.shade200),
+                                          child: Center(
+                                              child: Text(
+                                            'Call',
+                                            style: GoogleFonts.poppins(
+                                                color: Colors.red,
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w600),
+                                          ))),
+                                    )
                                   ],
                                 ),
                               ],
                             ),
-                            const Spacer(),
-                            CircleAvatar(
-                              radius: 28,
-                              backgroundColor: Colors.white,
-                              backgroundImage:NetworkImage(driverprofilephoto) ,
-                            ),
-                            const SizedBox(
-                              width: 20,
-                            ),
-                          ],
-                        ),
+                          );
+                        },
+                      );
+                    },
+                    child: const CircleAvatar(
+                      backgroundColor: Colors.white,
+                      radius: 25,
+                      child: Icon(
+                        Icons.security,
+                        color: Colors.blue,
                       ),
-                      const SizedBox(
-                        height: 20,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 20,right: 20),
-                        child: Row(
-                          children: [
-                            InkWell(
-                              onTap: ()async{
-                                final Uri phoneUri = Uri(scheme: 'tel', path: phonenumber);
-                                if (await canLaunchUrl(phoneUri)) {
-                                  await launchUrl(phoneUri);
-                                } else {
-                                  throw 'Could not launch $phoneUri';
-                                }
-                              },
-                              child: Container(
-                                height: 50,
-                                width: 120,
-                                decoration: BoxDecoration(
-                                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                                  border: Border.all(
-                                    color: Colors.grey,
-                                    width: 0.5
-                                  ),
-                                ),
-                                child:  Padding(padding: const EdgeInsets.only(left: 10,right: 10),
-                                child: Row(
+                    ),
+                  ))
+              : Container(),
+          istripdone
+              ? Container()
+              : Positioned(
+                  bottom: 0,
+                  child: Container(
+                    height: 300,
+                    width: MediaQuery.sizeOf(context).width,
+                    color: Colors.white,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          const SizedBox(
+                            height: 20,
+                          ),
+                          rideverified
+                              ? Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    const Icon(Icons.call,color: Colors.black,),
+                                    const Icon(
+                                      Icons.check,
+                                      color: Colors.green,
+                                    ),
                                     const SizedBox(
                                       width: 10,
                                     ),
-                                    Text('Contact',style: GoogleFonts.poppins(
+                                    Text(
+                                      "Ride verified successfully.",
+                                      style: GoogleFonts.poppins(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600),
+                                    ),
+                                  ],
+                                )
+                              : Text(
+                                  "Share the 'OTP' before starting trip.",
+                                  style: GoogleFonts.poppins(
                                       color: Colors.black,
-                                      fontWeight: FontWeight.w600
-                                    ),)
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          const Divider(
+                            color: Colors.grey,
+                            thickness: 0.5,
+                          ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 20),
+                            child: Row(
+                              children: [
+                                rideverified
+                                    ? Text(
+                                        'Reaching destination in $Time ($DistanceTravel)',
+                                        style: GoogleFonts.poppins(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.w600),
+                                      )
+                                    : Text(
+                                        'Driver arriving in $Time',
+                                        style: GoogleFonts.poppins(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.w600),
+                                      ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 15,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 20),
+                            child: Row(
+                              children: [
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      carnumber,
+                                      style: GoogleFonts.poppins(
+                                          color: Colors.black,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w600),
+                                    ),
+                                    const SizedBox(
+                                      height: 8,
+                                    ),
+                                    Text(
+                                      carname,
+                                      style: GoogleFonts.poppins(
+                                          color: Colors.grey,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w500),
+                                    ),
+                                    const SizedBox(
+                                      height: 8,
+                                    ),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          drivername,
+                                          style: GoogleFonts.poppins(
+                                              color: Colors.grey,
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w500),
+                                        ),
+                                        const SizedBox(
+                                          width: 5,
+                                        ),
+                                        const Icon(
+                                          Icons.star,
+                                          color: Colors.yellow,
+                                        ),
+                                        Text(
+                                          rating.toString(),
+                                          style: GoogleFonts.poppins(
+                                              color: Colors.grey,
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w500),
+                                        ),
+                                      ],
+                                    ),
                                   ],
                                 ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      Padding(
-                        padding:
-                        const EdgeInsets.only(left: 20, right: 20, top: 20),
-                        child: InkWell(
-                          child: Container(
-                            width: MediaQuery.sizeOf(context).width,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Colors.grey,
-                                width: 0.5
-                              )
-                            ),
-                            child: Row(
-                              children: [
-                                const SizedBox(
-                                  width: 10,
-                                ),
-                                const Icon(
-                                  Icons.directions_walk,
-                                  color: Colors.green,
+                                const Spacer(),
+                                CircleAvatar(
+                                  radius: 28,
+                                  backgroundColor: Colors.white,
+                                  backgroundImage:
+                                      NetworkImage(driverprofilephoto),
                                 ),
                                 const SizedBox(
                                   width: 20,
                                 ),
-                                Expanded(
-                                    child: Text(
+                              ],
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 20,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 20, right: 20),
+                            child: Row(
+                              children: [
+                                InkWell(
+                                  onTap: () async {
+                                    final Uri phoneUri =
+                                        Uri(scheme: 'tel', path: phonenumber);
+                                    if (await canLaunchUrl(phoneUri)) {
+                                      await launchUrl(phoneUri);
+                                    } else {
+                                      throw 'Could not launch $phoneUri';
+                                    }
+                                  },
+                                  child: Container(
+                                    height: 50,
+                                    width: 120,
+                                    decoration: BoxDecoration(
+                                      borderRadius: const BorderRadius.all(
+                                          Radius.circular(10)),
+                                      border: Border.all(
+                                          color: Colors.grey, width: 0.5),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(
+                                          left: 10, right: 10),
+                                      child: Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.call,
+                                            color: Colors.black,
+                                          ),
+                                          const SizedBox(
+                                            width: 10,
+                                          ),
+                                          Text(
+                                            'Contact',
+                                            style: GoogleFonts.poppins(
+                                                color: Colors.black,
+                                                fontWeight: FontWeight.w600),
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(
+                                left: 20, right: 20, top: 20),
+                            child: InkWell(
+                              child: Container(
+                                width: MediaQuery.sizeOf(context).width,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                    border: Border.all(
+                                        color: Colors.grey, width: 0.5)),
+                                child: Row(
+                                  children: [
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                    const Icon(
+                                      Icons.directions_walk,
+                                      color: Colors.green,
+                                    ),
+                                    const SizedBox(
+                                      width: 20,
+                                    ),
+                                    Expanded(
+                                        child: Text(
                                       pickuploc,
-                                      style: GoogleFonts.poppins(color: Colors.black),
+                                      style: GoogleFonts.poppins(
+                                          color: Colors.black),
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: 1,
                                     )),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding:
-                        const EdgeInsets.only(left: 20, right: 20, top: 30,bottom: 20),
-                        child: InkWell(
-                          child: Container(
-                            width: MediaQuery.sizeOf(context).width,
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Colors.grey,width: 0.5
-                              )
-                            ),
-                            height: 40,
-                            child: Row(
-                              children: [
-                                const SizedBox(
-                                  width: 10,
+                                  ],
                                 ),
-                                const CircleAvatar(
-                                  radius: 5,
-                                  backgroundColor: Colors.red,
-                                ),
-                                const SizedBox(
-                                  width: 20,
-                                ),
-                                Expanded(
-                                    child: Text(
-                                      droploc,
-                                      style: GoogleFonts.poppins(color: Colors.black),
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                    )),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    !rideverified?  Padding(
-                        padding: const EdgeInsets.only(left: 20, right: 20),
-                        child: InkWell(
-                          onTap: () async {
-                            try {
-                              final prefs = await SharedPreferences.getInstance();
-                              if (kDebugMode) {
-                                print(prefs.getString('Booking ID'));
-                              }
-
-                              // Attempt to fetch payment ID and process refund
-                              await fetchpaymentid();
-
-                              try {
-                                await processRefund(); // If this fails, no further code will execute
-                              } catch (e) {
-                                if (kDebugMode) {
-                                  print('Refund Error: $e');
-                                }
-                                return; // Stop execution if refund fails
-                              }
-
-                              // Proceed to update Firestore and Navigator only if refund was successful
-                              await _firestore.collection('Ride Details').doc(prefs.getString('Booking ID')).update({
-                                'Ride Accepted': false,
-                                'Ride Cancelled': true,
-                                'Cancellation Time': FieldValue.serverTimestamp(),
-                              });
-
-                              await _firestore.collection('VistaRide Driver Details').doc(driverid).update({
-                                'Ride Doing': FieldValue.delete(),
-                                'Driver Avaliable': true,
-                              });
-
-                              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
-
-                            } catch (e) {
-                              if (kDebugMode) {
-                                print('General Error: $e');
-                              }
-                            }
-                          },
-                          child: Container(
-                            height: 50,
-                            decoration: BoxDecoration(
-                                borderRadius:
-                                const BorderRadius.all(Radius.circular(10)),
-                                border: Border.all(color: Colors.grey)),
-                            width: MediaQuery.sizeOf(context).width - 40,
-                            child: Center(
-                              child: Text(
-                                'Cancel Ride',
-                                style: GoogleFonts.poppins(
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.w600),
                               ),
                             ),
                           ),
-                        ),
-                      ):Container(),
-                      Padding(
-                        padding:
-                        const EdgeInsets.only(left: 20, right: 20, top: 10,bottom: 20),
-                        child: InkWell(
-                          child: Container(
-                            width: MediaQuery.sizeOf(context).width,
-                            decoration: BoxDecoration(
-                                border: Border.all(
-                                    color: Colors.grey,width: 0.5
-                                )
-                            ),
-                            height: 40,
-                            child: Row(
-                              children: [
-                                const SizedBox(
-                                  width: 10,
-                                ),
-                               !iscashpayment?const Icon(Icons.credit_card,color: Colors.black,):const Icon(Icons.currency_rupee_sharp,color: Colors.black,),
-                                const SizedBox(
-                                  width: 20,
-                                ),
-                                Expanded(
-                                    child: Text(
-                                      '₹$price (${iscashpayment?'Cash':'Online'})',
-                                      style: GoogleFonts.poppins(color: Colors.black),
+                          Padding(
+                            padding: const EdgeInsets.only(
+                                left: 20, right: 20, top: 30, bottom: 20),
+                            child: InkWell(
+                              child: Container(
+                                width: MediaQuery.sizeOf(context).width,
+                                decoration: BoxDecoration(
+                                    border: Border.all(
+                                        color: Colors.grey, width: 0.5)),
+                                height: 40,
+                                child: Row(
+                                  children: [
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                    const CircleAvatar(
+                                      radius: 5,
+                                      backgroundColor: Colors.red,
+                                    ),
+                                    const SizedBox(
+                                      width: 20,
+                                    ),
+                                    Expanded(
+                                        child: Text(
+                                      droploc,
+                                      style: GoogleFonts.poppins(
+                                          color: Colors.black),
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: 1,
                                     )),
-                              ],
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                          !rideverified
+                              ? Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 20, right: 20),
+                                  child: InkWell(
+                                    onTap: () async {
+                                      try {
+                                        final prefs = await SharedPreferences
+                                            .getInstance();
+                                        if (kDebugMode) {
+                                          print(prefs.getString('Booking ID'));
+                                        }
+
+                                        // Attempt to fetch payment ID and process refund
+                                        await fetchpaymentid();
+
+                                        try {
+                                          await processRefund(); // If this fails, no further code will execute
+                                        } catch (e) {
+                                          if (kDebugMode) {
+                                            print('Refund Error: $e');
+                                          }
+                                          return; // Stop execution if refund fails
+                                        }
+
+                                        // Proceed to update Firestore and Navigator only if refund was successful
+                                        await _firestore
+                                            .collection('Ride Details')
+                                            .doc(prefs.getString('Booking ID'))
+                                            .update({
+                                          'Ride Accepted': false,
+                                          'Ride Cancelled': true,
+                                          'Cancellation Time':
+                                              FieldValue.serverTimestamp(),
+                                        });
+
+                                        await _firestore
+                                            .collection(
+                                                'VistaRide Driver Details')
+                                            .doc(driverid)
+                                            .update({
+                                          'Ride Doing': FieldValue.delete(),
+                                          'Driver Avaliable': true,
+                                        });
+
+                                        Navigator.pushReplacement(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => HomePage(),
+                                            ));
+                                      } catch (e) {
+                                        if (kDebugMode) {
+                                          print('General Error: $e');
+                                        }
+                                      }
+                                    },
+                                    child: Container(
+                                      height: 50,
+                                      decoration: BoxDecoration(
+                                          borderRadius: const BorderRadius.all(
+                                              Radius.circular(10)),
+                                          border:
+                                              Border.all(color: Colors.grey)),
+                                      width:
+                                          MediaQuery.sizeOf(context).width - 40,
+                                      child: Center(
+                                        child: Text(
+                                          'Cancel Ride',
+                                          style: GoogleFonts.poppins(
+                                              color: Colors.red,
+                                              fontWeight: FontWeight.w600),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : Container(),
+                          Padding(
+                            padding: const EdgeInsets.only(
+                                left: 20, right: 20, top: 10, bottom: 20),
+                            child: InkWell(
+                              child: Container(
+                                width: MediaQuery.sizeOf(context).width,
+                                decoration: BoxDecoration(
+                                    border: Border.all(
+                                        color: Colors.grey, width: 0.5)),
+                                height: 40,
+                                child: Row(
+                                  children: [
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                    !iscashpayment
+                                        ? const Icon(
+                                            Icons.credit_card,
+                                            color: Colors.black,
+                                          )
+                                        : const Icon(
+                                            Icons.currency_rupee_sharp,
+                                            color: Colors.black,
+                                          ),
+                                    const SizedBox(
+                                      width: 20,
+                                    ),
+                                    Expanded(
+                                        child: Text(
+                                      '₹$price (${iscashpayment ? 'Cash' : 'Online'})',
+                                      style: GoogleFonts.poppins(
+                                          color: Colors.black),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    )),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-              ))
+                    ),
+                  ))
         ],
       ),
     );
