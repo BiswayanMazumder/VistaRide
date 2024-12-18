@@ -14,6 +14,7 @@ import geolocator_apple
 import google_sign_in_ios
 import path_provider_foundation
 import record_darwin
+import share_plus
 import shared_preferences_foundation
 import simple_animation_progress_bar
 import sqflite
@@ -29,6 +30,7 @@ func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   FLTGoogleSignInPlugin.register(with: registry.registrar(forPlugin: "FLTGoogleSignInPlugin"))
   PathProviderPlugin.register(with: registry.registrar(forPlugin: "PathProviderPlugin"))
   RecordPlugin.register(with: registry.registrar(forPlugin: "RecordPlugin"))
+  SharePlusMacosPlugin.register(with: registry.registrar(forPlugin: "SharePlusMacosPlugin"))
   SharedPreferencesPlugin.register(with: registry.registrar(forPlugin: "SharedPreferencesPlugin"))
   SimpleAnimationProgressBarPlugin.register(with: registry.registrar(forPlugin: "SimpleAnimationProgressBarPlugin"))
   SqflitePlugin.register(with: registry.registrar(forPlugin: "SqflitePlugin"))

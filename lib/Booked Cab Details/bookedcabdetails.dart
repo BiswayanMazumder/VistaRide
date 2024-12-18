@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter_sound/public/flutter_sound_recorder.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:path/path.dart' as p;
@@ -13,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:record/record.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vistaride/Home%20Page/HomePage.dart';
@@ -20,6 +23,7 @@ import '../Environment Files/.env.dart';
 import 'package:image/image.dart' as img;
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_core/firebase_core.dart';
+
 class BookedCabDetails extends StatefulWidget {
   const BookedCabDetails({super.key});
 
@@ -111,6 +115,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
       }
     }
   }
+
   FlutterSoundRecorder _audioRecorder = FlutterSoundRecorder();
   String _recordingPath = '';
   Future<void> uploadToFirebaseStorage(String filePath) async {
@@ -125,7 +130,8 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
 
       // Create a reference to Firebase Storage with the booking ID
       FirebaseStorage storage = FirebaseStorage.instance;
-      Reference storageRef = storage.ref().child('recordings/$bookingId/${DateTime.now().millisecondsSinceEpoch}.wav');
+      Reference storageRef = storage.ref().child(
+          'recordings/$bookingId/${DateTime.now().millisecondsSinceEpoch}.wav');
 
       // Upload the file to Firebase Storage
       File file = File(filePath);
@@ -155,8 +161,8 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
       FirebaseFirestore firestore = FirebaseFirestore.instance;
       await firestore.collection('Ride Details').doc(bookingId).update({
         'Emergency Audio Recording': FieldValue.arrayUnion([downloadUrl]),
-        'Emergency':true,
-        'Emergency Started':FieldValue.serverTimestamp(),
+        'Emergency': true,
+        'Emergency Started': FieldValue.serverTimestamp(),
       });
 
       if (kDebugMode) {
@@ -166,16 +172,36 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
       print('Error saving URL to Firestore: $e');
     }
   }
+
+  late Stream<Position> _positionStream;
   @override
   void initState() {
     super.initState();
     _fetchRoute();
     fetchridedetails();
     fetchpaymentid();
-    _timertofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
-      fetchridedetails();
-      _fetchRoute();
+    _positionStream = Geolocator.getPositionStream(
+      desiredAccuracy: LocationAccuracy.high,
+      distanceFilter:
+          10, // Update location when the user moves at least 10 meters
+    );
+    _positionStream.listen((Position position) {
+      _updateUserLocation(position); // Update location every time it changes
     });
+    _timertofetch = Timer.periodic(const Duration(seconds: 300), (Timer t) {
+      fetchridedetails();
+      // _fetchRoute();
+    });
+  }
+
+  LatLng _userCurrentLocation = LatLng(0.0, 0.0);
+  Future<void> _updateUserLocation(Position position) async {
+    setState(() {
+      _userCurrentLocation = LatLng(position.latitude, position.longitude);
+    });
+
+    // Now fetch the route every time the location updates
+    await _fetchRoute();
   }
 
   @override
@@ -219,36 +245,30 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
     }
   }
 
+  bool isEmergency = false;
   Future<void> _fetchRoute() async {
     await fetchridedetails();
-    if (drivercurrentlatitude.isEmpty ||
-        drivercurrentlongitude.isEmpty ||
-        pickuplat == 0 ||
-        pickuplong == 0) {
+
+    // Check if pickup and dropoff locations are valid
+    if (pickuplat == 0 || pickuplong == 0 || droplat == 0 || droplong == 0) {
       print('Invalid coordinates: Unable to fetch route.');
       return;
     }
 
-    // Driver's current location as origin
-    LatLng driverCurrentLocation = LatLng(
-      double.parse(drivercurrentlatitude),
-      double.parse(drivercurrentlongitude),
-    );
-    LatLng droplocation = LatLng(
-      double.parse(droplat.toString()),
-      double.parse(droplong.toString()),
-    );
-    // Update the pickup location
+    // User's current location as origin
+    LatLng userCurrentLocation = _userCurrentLocation;
+
+    // Update the pickup and dropoff locations
     setState(() {
       _pickupLocation = LatLng(pickuplat, pickuplong);
       _dropoffLocation = LatLng(droplat, droplong);
     });
 
     const String apiKey = Environment.GoogleMapsAPI;
-    final String url1 = //use it when ride is verified
-        'https://maps.googleapis.com/maps/api/directions/json?origin=${driverCurrentLocation.latitude},${driverCurrentLocation.longitude}&destination=${_dropoffLocation.latitude},${_dropoffLocation.longitude}&key=$apiKey';
+    final String url1 =
+        'https://maps.googleapis.com/maps/api/directions/json?origin=${userCurrentLocation.latitude},${userCurrentLocation.longitude}&destination=${_dropoffLocation.latitude},${_dropoffLocation.longitude}&key=$apiKey';
     final String url =
-        'https://maps.googleapis.com/maps/api/directions/json?origin=${driverCurrentLocation.latitude},${driverCurrentLocation.longitude}&destination=${_pickupLocation.latitude},${_pickupLocation.longitude}&key=$apiKey';
+        'https://maps.googleapis.com/maps/api/directions/json?origin=${userCurrentLocation.latitude},${userCurrentLocation.longitude}&destination=${_pickupLocation.latitude},${_pickupLocation.longitude}&key=$apiKey';
 
     if (kDebugMode) {
       print('URL $url');
@@ -266,8 +286,19 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
             data['routes'][0]['overview_polyline']['points'];
         List<LatLng> polylinePoints = _decodePolyline(encodedPolyline);
 
-        // Convert distance to kilometers and check if driver is nearby
+        // Convert distance to kilometers and check if user is nearby
         double distanceInKm = _convertDistanceToKm(distance);
+
+        // Check if the user is deviating from the expected route
+        if (_isDeviatingFromRoute(userCurrentLocation, polylinePoints)) {
+          setState(() {
+            isEmergency = true; // Set emergency flag if deviating
+          });
+        } else {
+          setState(() {
+            isEmergency = false; // No emergency
+          });
+        }
 
         // Fetch the custom car icon from the network
         BitmapDescriptor carIcon;
@@ -279,6 +310,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
           carIcon =
               BitmapDescriptor.defaultMarker; // Fallback to default marker
         }
+
         BitmapDescriptor pinIcon;
         try {
           pinIcon = await _getNetworkCarIcon(
@@ -288,25 +320,26 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
           pinIcon =
               BitmapDescriptor.defaultMarker; // Fallback to default marker
         }
+
         setState(() {
           isdrivernearby = distanceInKm < 1;
 
           Time = duration;
           DistanceTravel = distance;
 
-          // Add markers for driver's current location and pickup location
+          // Add markers for user's current location and pickup location
           _markers.add(Marker(
-              markerId: MarkerId('driver'),
-              position: driverCurrentLocation,
+              markerId: MarkerId('user'),
+              position: userCurrentLocation,
               icon: carIcon,
-              // Use the custom network car icon
               infoWindow: InfoWindow(
                   title: rideverified
                       ? 'Your current location'
-                      : 'Driver\'s Current Location',
+                      : 'User\'s Current Location',
                   snippet: rideverified
                       ? 'You are $DistanceTravel away from your drop location'
                       : '$drivername is $DistanceTravel away from you')));
+
           _markers.add(Marker(
             markerId: MarkerId('pickup'),
             icon: pinIcon,
@@ -330,12 +363,82 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
         if (kDebugMode) {
           print('Estimated travel time: $Time');
           print('Estimated distance: $DistanceTravel');
-          print('Is driver nearby: $isdrivernearby');
+          print('Is user nearby: $isdrivernearby');
+          print('Is Emergency: $isEmergency');
         }
       }
     } else {
       print('Failed to load route');
     }
+  }
+
+// Method to check if the user is deviating from the route
+  bool _isDeviatingFromRoute(LatLng userLocation, List<LatLng> polylinePoints) {
+    const double threshold = 100.0; // 100 meters threshold for deviation
+
+    // Find the closest point on the polyline to the user's current location
+    double minDistance = double.infinity;
+
+    for (LatLng point in polylinePoints) {
+      double distance = _calculateDistance(userLocation.latitude,
+          userLocation.longitude, point.latitude, point.longitude);
+      if (distance < minDistance) {
+        minDistance = distance;
+      }
+    }
+
+    return minDistance > threshold;
+  }
+
+// Helper method to calculate distance between two lat/lng points
+  double _calculateDistance(
+      double lat1, double lon1, double lat2, double lon2) {
+    const double earthRadius = 6371000; // meters
+    double dLat = _degToRad(lat2 - lat1);
+    double dLon = _degToRad(lon2 - lon1);
+
+    double a = (sin(dLat / 2) * sin(dLat / 2)) +
+        (cos(_degToRad(lat1)) *
+            cos(_degToRad(lat2)) *
+            sin(dLon / 2) *
+            sin(dLon / 2));
+    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+
+    return earthRadius * c; // Returns the distance in meters
+  }
+
+// Helper method to convert degrees to radians
+  double _degToRad(double deg) {
+    return deg * (pi / 180);
+  }
+
+  Future<Position?> _getUserLocation() async {
+    // Check if location services are enabled
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      print('Location services are disabled.');
+      return null;
+    }
+
+    // Check location permission
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        print('Location permission denied.');
+        return null;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      print('Location permission permanently denied.');
+      return null;
+    }
+
+    // Get the user's current position
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    return position;
   }
 
 // Helper function to convert distance to kilometers
@@ -502,6 +605,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
       print('Error in fetching ride $e');
     }
   }
+
   String? recordingpath;
   final record = AudioRecorder();
   bool isrecording = false;
@@ -522,6 +626,35 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
             markers: _markers,
             polylines: _polylines, // Display the polyline here
           ),
+          isEmergency? Positioned(
+            top: 60,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 30, right: 30),
+              child: Container(
+                // height: 100,
+                decoration: const BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.all(Radius.circular(20))
+                ),
+                width: MediaQuery.of(context).size.width -
+                    60, // Subtract 30px from each side
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 20,right: 20,top: 20,bottom: 20),
+                    child: Text(
+                        "Hi ${_auth.currentUser!.displayName}, it seems the driver is on the wrong route. We're on it and working to get you "
+                            "back on track quickly and safely. Please don't worry—your safety is our priority. Thanks for your understanding!"
+                      ,style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 13,
+                      // letterSpacing: 5,
+                      fontWeight: FontWeight.w400
+                    ),),
+                  ),
+                ),
+              ),
+            ),
+          ):Container(),
           istripdone
               ? Center(
                   child: Container(
@@ -627,6 +760,26 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                     ),
                   ),
                 ),
+           Positioned(
+            bottom: 350,
+            right: 80,
+            child: InkWell(
+              onTap: ()async{
+                final prefs=await SharedPreferences.getInstance();
+                Share.share("I've booked an VistaRide. Track this ride: https://vistaride.vercel.app/ride/${prefs.getString('Booking ID')}\n"
+                    "Vehicle number: $carnumber\n"
+                    "Start OTP: $rideotp (needed to start the ride)\n"
+                    "Driver contact number: $phonenumber");
+              },
+              child: const CircleAvatar(
+              backgroundColor: Colors.white,
+              radius: 25,
+              child: Icon(
+                Icons.telegram,
+                color: Colors.blue,
+              ),
+                        ),
+            ),),
           rideverified
               ? Positioned(
                   bottom: 350,
@@ -672,7 +825,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                                       size: 30,
                                     ),
                                     const SizedBox(
-                                      width: 20,
+                                      width: 10,
                                     ),
                                     Column(
                                       mainAxisAlignment:
@@ -701,35 +854,41 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                                     ),
                                     InkWell(
                                       onTap: () async {
-                                        final prefs = await SharedPreferences.getInstance();
+                                        final prefs = await SharedPreferences
+                                            .getInstance();
 
-                                        if(isrecording){
-                                         String? filePath=await record.stop();
-                                         if(filePath!=null){
-                                           setState(() {
-                                             isrecording=false;
-                                             recordingpath=filePath;
-                                           });
-                                           if (kDebugMode) {
-                                             print('Saved recording to $recordingpath');
-                                           }
-                                           await uploadToFirebaseStorage(filePath);
-                                         }
-                                        }
-                                        else{
-                                          if(await record.hasPermission()){
-                                            final Directory appdocumentsdir= await getApplicationDocumentsDirectory();
-                                            final String filepath=p.join(appdocumentsdir.path,'${prefs.getString('Booking ID')}recording.wav');
-                                            await record.start(const RecordConfig(), path: filepath);
+                                        if (isrecording) {
+                                          String? filePath =
+                                              await record.stop();
+                                          if (filePath != null) {
                                             setState(() {
-                                              isrecording=true;
-                                              recordingpath=null;
+                                              isrecording = false;
+                                              recordingpath = filePath;
                                             });
-
+                                            if (kDebugMode) {
+                                              print(
+                                                  'Saved recording to $recordingpath');
+                                            }
+                                            await uploadToFirebaseStorage(
+                                                filePath);
+                                          }
+                                        } else {
+                                          if (await record.hasPermission()) {
+                                            final Directory appdocumentsdir =
+                                                await getApplicationDocumentsDirectory();
+                                            final String filepath = p.join(
+                                                appdocumentsdir.path,
+                                                '${prefs.getString('Booking ID')}recording.wav');
+                                            await record.start(
+                                                const RecordConfig(),
+                                                path: filepath);
+                                            setState(() {
+                                              isrecording = true;
+                                              recordingpath = null;
+                                            });
                                           }
                                         }
                                       },
-
                                       child: Container(
                                         width: 80,
                                         height: 40,
@@ -749,9 +908,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                                               color: Colors.red,
                                             ),
                                             Text(
-                                              isrecording
-                                                  ? 'STOP'
-                                                  : 'START',
+                                              isrecording ? 'STOP' : 'START',
                                               style: GoogleFonts.poppins(
                                                   color: isrecording
                                                       ? Colors.red
@@ -776,7 +933,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                                       size: 30,
                                     ),
                                     const SizedBox(
-                                      width: 20,
+                                      width: 10,
                                     ),
                                     Column(
                                       mainAxisAlignment:
@@ -801,7 +958,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                                       ],
                                     ),
                                     const SizedBox(
-                                      width: 20,
+                                      width: 10,
                                     ),
                                     InkWell(
                                       onTap: () {},

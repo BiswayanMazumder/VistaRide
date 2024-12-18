@@ -9,6 +9,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   firebase_storage
   permission_handler_windows
   record_windows
+  share_plus
   simple_animation_progress_bar
   url_launcher_windows
 )
