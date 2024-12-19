@@ -577,11 +577,14 @@ class _RideDetailsState extends State<RideDetails> {
   double droplat = 0;
   bool isamountpaid = false;
   bool istripcompleted = false;
+  String ridername='';
   bool iscashpayment = false;
+  String rideruid='';
   double price = 0;
   Future<void> fetchridedetails() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+
       final docsnap = await _firestore
           .collection('Ride Details')
           .doc(prefs.getString('Booking ID'))
@@ -602,6 +605,7 @@ class _RideDetailsState extends State<RideDetails> {
           droplong = docsnap.data()?['Drop Longitude'];
           pickuploc = docsnap.data()?['Pickup Location'];
           iscashpayment = docsnap.data()?['Cash Payment'];
+          rideruid=docsnap.data()?['Ride Owner'];
           droploc = docsnap.data()?['Drop Location'];
           cabcategory = docsnap.data()?['Cab Category'];
           rideverified = docsnap.data()?['Ride Verified'];
@@ -626,11 +630,108 @@ class _RideDetailsState extends State<RideDetails> {
           phonenumber = Docsnap.data()?['Contact Number'];
         });
       }
+      // final prefs=await SharedPreferences.getInstance();
+      final Docsnaprider = await _firestore
+          .collection('VistaRide User Details')
+          .doc(rideruid)
+          .get();
+      if (Docsnaprider.exists) {
+        setState(() {
+          ridername = Docsnaprider.data()?['User Name'];
+        });
+      }
+      prefs.setString('Rider Name', ridername);
     } catch (e) {
-      print('Ride Details Error $e');
+      if (kDebugMode) {
+        print('Ride Details Error $e');
+      }
     }
   }
+  StreamSubscription<QuerySnapshot>? _messageSubscription;
 
+  Future<void> _listenToMessages() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? bookingId = prefs.getString('Booking ID');
+
+    if (bookingId == null || bookingId.isEmpty) {
+      if (kDebugMode) {
+        print('Booking ID is null or empty.');
+      }
+      return;
+    }
+
+    String senderId = _auth.currentUser!.uid;
+
+    try {
+      final Set<String> processedMessageIds = {}; // To track processed messages
+
+      _messageSubscription = _firestore
+          .collection('Trip Chat') // Main collection
+          .doc(bookingId) // Document with Booking ID as the identifier
+          .collection('Messages') // Sub-collection for messages
+          .snapshots()
+          .listen((snapshot) {
+        for (var doc in snapshot.docs) {
+          if (!processedMessageIds.contains(doc.id)) {
+            // Check if the message has already been processed
+            processedMessageIds.add(doc.id); // Mark the message as processed
+            var data = doc.data();
+            if(data['Driver']==false){
+              ridermessagenotification(data['message']);
+            }
+            if (kDebugMode) {
+              print(
+                  'New Message: ${data['message']}, SenderId: ${data['senderId']}, Driver: ${data['Driver']}');
+            }
+          }
+        }
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error listening to messages: $e');
+      }
+    }
+  }
+  Future<void> ridermessagenotification(String message) async {
+    await getDeviceToken(); // Assuming this sets a valid `token`
+    await fetchservercode();
+    if(ridername==''){
+      await fetchridedetails();
+    }
+    // Replace this with your actual server token.
+    // const String serverToken = Environment.ServerToken;
+
+    final response = await http.post(
+      Uri.parse(
+          'https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
+      headers: {
+        'Content-Type': 'application/json', // Correct Content-Type header
+        'Authorization': 'Bearer $ServerToken', // Correct Authorization header
+      },
+      body: jsonEncode({
+        "message": {
+          "token": '$token',
+          "notification": {
+            "body":
+            '$ridername Sent you a message: $message',
+            "title": drivername
+          }
+        }
+      }), // Convert the body Map to JSON string
+    );
+
+    if (response.statusCode == 200) {
+      if (kDebugMode) {
+        print('Notification sent');
+      }
+    } else {
+      if (kDebugMode) {
+        print(
+            'Failed to send notification. Status code: ${response.statusCode}');
+        print('Response: ${response.body}');
+      }
+    }
+  }
   @override
   void dispose() {
     // TODO: implement dispose
@@ -671,6 +772,7 @@ class _RideDetailsState extends State<RideDetails> {
     // TODO: implement initState
     super.initState();
     fetchservercode();
+    _listenToMessages();
     notificationService.requestnotificationpermission();
     notificationService.getDeviceToken();
     notificationService.firebaseInit(context);

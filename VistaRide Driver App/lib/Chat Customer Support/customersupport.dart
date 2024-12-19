@@ -76,7 +76,7 @@ class _DriverChatState extends State<DriverChat> {
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(
-          'Message Driver',
+          'Message Rider',
           style: GoogleFonts.poppins(
             color: Colors.black,
             fontWeight: FontWeight.w600,
