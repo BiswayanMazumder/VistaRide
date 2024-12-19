@@ -190,8 +190,9 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
     }
     print('Mic Working $_micWorking');
   }
-
+  bool isvoicemergency=false;
   void _startListening() async {
+    print('Listening');
     bool available = await _speechToText.initialize();
     if (available) {
       setState(() {
@@ -208,11 +209,14 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
           if (kDebugMode) {
             print("Recognized speech: ${result.recognizedWords}");
           }
-          if(result.recognizedWords.contains('help')){
-
+          if(result.recognizedWords.contains('emergency')){
+            setState(() {
+              // isrecording=true;
+              // _micWorking=false;
+              isvoicemergency=true;
+            });
             if (kDebugMode) {
               print('Emergency');
-
             }
           }
         },
@@ -240,7 +244,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
     super.initState();
     _fetchRoute();
     fetchridedetails();
-    _requestPermissions();
+    // _requestPermissions();
     fetchpaymentid();
     _positionStream = Geolocator.getPositionStream(
       desiredAccuracy: LocationAccuracy.high,
@@ -250,11 +254,11 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
     _positionStream.listen((Position position) {
       _updateUserLocation(position); // Update location every time it changes
     });
-    _timertofetch = Timer.periodic(const Duration(seconds: 10), (Timer t) {
+    _timertofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
       fetchridedetails();
-      if(!isrecording){
-        _requestPermissions();
-      }
+      // if(!isrecording){
+      //   _startListening();
+      // }
       // _fetchRoute();
     });
   }

@@ -539,6 +539,7 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
       'Ride Verified': false,
       'Ride Completed': false,
       'Driver ID': '',
+      'Ride Owner':_auth.currentUser!.uid,
       'Pick Longitude': _pickupLocation.longitude,
       'Pickup Latitude': _pickupLocation.latitude,
       'Drop Latitude': _dropoffLocation.latitude,
