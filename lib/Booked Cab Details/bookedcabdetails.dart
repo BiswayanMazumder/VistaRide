@@ -20,6 +20,7 @@ import 'package:record/record.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:vistaride/Driver%20Chat/chatpage.dart';
 import 'package:vistaride/Home%20Page/HomePage.dart';
 import '../Environment Files/.env.dart';
 import 'package:image/image.dart' as img;
@@ -254,12 +255,9 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
     _positionStream.listen((Position position) {
       _updateUserLocation(position); // Update location every time it changes
     });
-    _timertofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
+    _timertofetch = Timer.periodic(const Duration(seconds: 300), (Timer t) {
       fetchridedetails();
-      // if(!isrecording){
-      //   _startListening();
-      // }
-      // _fetchRoute();
+
     });
   }
 
@@ -696,6 +694,23 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
             markers: _markers,
             polylines: _polylines, // Display the polyline here
           ),
+          Positioned(
+            top: 40,
+            right: 20,
+            child: InkWell(
+            onTap: ()async{
+              final prefs=await SharedPreferences.getInstance();
+              Navigator.push(context, MaterialPageRoute(builder: (context) => DriverChat(RideID: prefs.getString('Booking ID')!),));
+            },
+            child: const CircleAvatar(
+              backgroundColor: Colors.white,
+              radius: 25,
+              child: Icon(
+                Icons.chat,
+                color: Colors.blue,
+              ),
+            ),
+          ),),
           showaudiorecord?Positioned(
             top: 60,
             child: Padding(
@@ -1437,83 +1452,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                               ),
                             ),
                           ),
-                          !rideverified
-                              ? Padding(
-                                  padding: const EdgeInsets.only(
-                                      left: 20, right: 20),
-                                  child: InkWell(
-                                    onTap: () async {
-                                      try {
-                                        final prefs = await SharedPreferences
-                                            .getInstance();
-                                        if (kDebugMode) {
-                                          print(prefs.getString('Booking ID'));
-                                        }
 
-                                        // Attempt to fetch payment ID and process refund
-                                        await fetchpaymentid();
-
-                                        try {
-                                          await processRefund(); // If this fails, no further code will execute
-                                        } catch (e) {
-                                          if (kDebugMode) {
-                                            print('Refund Error: $e');
-                                          }
-                                          return; // Stop execution if refund fails
-                                        }
-
-                                        // Proceed to update Firestore and Navigator only if refund was successful
-                                        await _firestore
-                                            .collection('Ride Details')
-                                            .doc(prefs.getString('Booking ID'))
-                                            .update({
-                                          'Ride Accepted': false,
-                                          'Ride Cancelled': true,
-                                          'Cancellation Time':
-                                              FieldValue.serverTimestamp(),
-                                        });
-
-                                        await _firestore
-                                            .collection(
-                                                'VistaRide Driver Details')
-                                            .doc(driverid)
-                                            .update({
-                                          'Ride Doing': FieldValue.delete(),
-                                          'Driver Avaliable': true,
-                                        });
-
-                                        Navigator.pushReplacement(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => HomePage(),
-                                            ));
-                                      } catch (e) {
-                                        if (kDebugMode) {
-                                          print('General Error: $e');
-                                        }
-                                      }
-                                    },
-                                    child: Container(
-                                      height: 50,
-                                      decoration: BoxDecoration(
-                                          borderRadius: const BorderRadius.all(
-                                              Radius.circular(10)),
-                                          border:
-                                              Border.all(color: Colors.grey)),
-                                      width:
-                                          MediaQuery.sizeOf(context).width - 40,
-                                      child: Center(
-                                        child: Text(
-                                          'Cancel Ride',
-                                          style: GoogleFonts.poppins(
-                                              color: Colors.red,
-                                              fontWeight: FontWeight.w600),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              : Container(),
                           Padding(
                             padding: const EdgeInsets.only(
                                 left: 20, right: 20, top: 10, bottom: 20),
@@ -1554,6 +1493,83 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                               ),
                             ),
                           ),
+                          !rideverified
+                              ? Padding(
+                            padding: const EdgeInsets.only(
+                                left: 20, right: 20,bottom: 20),
+                            child: InkWell(
+                              onTap: () async {
+                                try {
+                                  final prefs = await SharedPreferences
+                                      .getInstance();
+                                  if (kDebugMode) {
+                                    print(prefs.getString('Booking ID'));
+                                  }
+
+                                  // Attempt to fetch payment ID and process refund
+                                  await fetchpaymentid();
+
+                                  try {
+                                    await processRefund(); // If this fails, no further code will execute
+                                  } catch (e) {
+                                    if (kDebugMode) {
+                                      print('Refund Error: $e');
+                                    }
+                                    return; // Stop execution if refund fails
+                                  }
+
+                                  // Proceed to update Firestore and Navigator only if refund was successful
+                                  await _firestore
+                                      .collection('Ride Details')
+                                      .doc(prefs.getString('Booking ID'))
+                                      .update({
+                                    'Ride Accepted': false,
+                                    'Ride Cancelled': true,
+                                    'Cancellation Time':
+                                    FieldValue.serverTimestamp(),
+                                  });
+
+                                  await _firestore
+                                      .collection(
+                                      'VistaRide Driver Details')
+                                      .doc(driverid)
+                                      .update({
+                                    'Ride Doing': FieldValue.delete(),
+                                    'Driver Avaliable': true,
+                                  });
+
+                                  Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => HomePage(),
+                                      ));
+                                } catch (e) {
+                                  if (kDebugMode) {
+                                    print('General Error: $e');
+                                  }
+                                }
+                              },
+                              child: Container(
+                                height: 50,
+                                decoration: BoxDecoration(
+                                    borderRadius: const BorderRadius.all(
+                                        Radius.circular(10)),
+                                    border:
+                                    Border.all(color: Colors.grey)),
+                                width:
+                                MediaQuery.sizeOf(context).width - 40,
+                                child: Center(
+                                  child: Text(
+                                    'Cancel Ride',
+                                    style: GoogleFonts.poppins(
+                                        color: Colors.red,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                              : Container(),
                         ],
                       ),
                     ),

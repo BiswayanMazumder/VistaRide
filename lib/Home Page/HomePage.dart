@@ -224,6 +224,7 @@ class _HomePageState extends State<HomePage> {
     fetchdrivers();
     _timertofetch = Timer.periodic(const Duration(seconds: 10), (Timer t) {
       fetchdrivers();
+
     });
   }
   bool _addressliked=false;
