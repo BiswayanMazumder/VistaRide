@@ -67,7 +67,9 @@ dependencies:
   firebase_storage: ^11.6.9
   flutter_timer_countdown: ^1.0.7
   flutter_swipe_button: ^2.1.1+1
-
+  record: ^5.0.5
+  path_provider: ^2.1.4
+  flutter_sound: ^9.2.13
 dev_dependencies:
   flutter_test:
     sdk: flutter

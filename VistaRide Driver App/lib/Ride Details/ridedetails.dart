@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_swipe_button/flutter_swipe_button.dart';
 import 'package:flutter_timer_countdown/flutter_timer_countdown.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -15,6 +17,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:otp_text_field/otp_field.dart';
 import 'package:otp_text_field/style.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
+import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image/image.dart' as img;
 import 'package:http/http.dart' as http;
@@ -114,7 +119,7 @@ class _RideDetailsState extends State<RideDetails> {
     setState(() {
       _currentLocation = LatLng(position.latitude, position.longitude);
       _markers.add(Marker(
-        markerId: MarkerId('currentLocation'),
+        markerId: const MarkerId('currentLocation'),
         position: _currentLocation,
         icon: carIcon,
         infoWindow: InfoWindow(title: locationName),
@@ -588,7 +593,61 @@ class _RideDetailsState extends State<RideDetails> {
 
   bool isotpverification = false;
   // String? token;
+  bool isrecording = false;
+  String? recordingpath;
+  final record = AudioRecorder();
+  Future<void> uploadToFirebaseStorage(String filePath) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      String? bookingId = prefs.getString('Booking ID');
 
+      if (bookingId == null) {
+        print('Booking ID not found!');
+        return;
+      }
+
+      // Create a reference to Firebase Storage with the booking ID
+      FirebaseStorage storage = FirebaseStorage.instance;
+      Reference storageRef = storage.ref().child(
+          'recordings/$bookingId/${DateTime.now().millisecondsSinceEpoch}.wav');
+
+      // Upload the file to Firebase Storage
+      File file = File(filePath);
+      await storageRef.putFile(file);
+
+      // Get the download URL
+      String downloadUrl = await storageRef.getDownloadURL();
+
+      // Save the download URL in Firestore
+      await saveRecordingUrlToFirestore(downloadUrl);
+    } catch (e) {
+      print('Error uploading file: $e');
+    }
+  }
+
+  Future<void> saveRecordingUrlToFirestore(String downloadUrl) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      String? bookingId = prefs.getString('Booking ID');
+
+      if (bookingId == null) {
+        print('Booking ID not found!');
+        return;
+      }
+
+      // Save the URL to Firestore in the Ride Details collection
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
+      await firestore.collection('Ride Details').doc(bookingId).update({
+        'Emergency Audio Recording Driver Side': FieldValue.arrayUnion([downloadUrl]),
+      });
+
+      if (kDebugMode) {
+        print('Recording URL saved to Firestore: $downloadUrl');
+      }
+    } catch (e) {
+      print('Error saving URL to Firestore: $e');
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -689,35 +748,82 @@ class _RideDetailsState extends State<RideDetails> {
                   ),
                 )
               : Container(),
-          rideverified
-              ? Positioned(
-                  top: 30,
-                  right: 20,
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => DriverChat(RideID: rideid),
-                          ));
-                    },
-                    child: Container(
-                      height: 50,
-                      width: 130,
-                      decoration: BoxDecoration(
-                          color: Colors.purple.shade500,
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(50))),
-                      child: Center(
-                        child: Text(
-                          'Message Rider',
-                          style: GoogleFonts.poppins(
-                              color: Colors.white, fontWeight: FontWeight.w600),
-                        ),
-                      ),
+          Positioned(
+              bottom: 330,
+              right: 30,
+              child: InkWell(
+                onTap: () async {
+                  final prefs = await SharedPreferences
+                      .getInstance();
+
+                  if (isrecording) {
+                    String? filePath =
+                    await record.stop();
+                    if (filePath != null) {
+                      setState(() {
+                        isrecording = false;
+                        recordingpath = filePath;
+                      });
+                      if (kDebugMode) {
+                        print(
+                            'Saved recording to $recordingpath');
+                      }
+                      await uploadToFirebaseStorage(
+                          filePath);
+                    }
+                  } else {
+                    if (await record.hasPermission()) {
+                      final Directory appdocumentsdir =
+                      await getApplicationDocumentsDirectory();
+                      final String filepath = p.join(
+                          appdocumentsdir.path,
+                          '${prefs.getString('Booking ID')}recording.wav');
+                      await record.start(
+                          const RecordConfig(),
+                          path: filepath);
+                      setState(() {
+                        isrecording = true;
+                        recordingpath = null;
+                      });
+                    }
+                  }
+                },
+                child:  CircleAvatar(
+                  backgroundColor: Colors.white,
+                  radius: 25,
+                  child: Icon(
+                   isrecording?Icons.stop: Icons.record_voice_over,
+                    color:isrecording?Colors.red: Colors.blue,
+                  ),
+                ),
+              )),
+          Positioned(
+              top: 30,
+              right: 20,
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => DriverChat(RideID: rideid),
+                      ));
+                },
+                child: Container(
+                  height: 50,
+                  width: 130,
+                  decoration: BoxDecoration(
+                      color: Colors.purple.shade500,
+                      borderRadius:
+                          const BorderRadius.all(Radius.circular(50))),
+                  child: Center(
+                    child: Text(
+                      'Message Rider',
+                      style: GoogleFonts.poppins(
+                          color: Colors.white, fontWeight: FontWeight.w600),
                     ),
-                  ))
-              : Container(),
+                  ),
+                ),
+              )),
           istripcompleted
               ? Container()
               : Positioned(
@@ -889,20 +995,19 @@ class _RideDetailsState extends State<RideDetails> {
                                             activeThumbColor: Colors.green,
                                             activeTrackColor:
                                                 Colors.purple.shade200,
-                                            onSwipe: ()async{
+                                            onSwipe: () async {
                                               final prefs =
-                                              await SharedPreferences
-                                                  .getInstance();
+                                                  await SharedPreferences
+                                                      .getInstance();
                                               setState(() {
-                                                notifyrider=true;
+                                                notifyrider = true;
                                               });
                                               await _firestore
                                                   .collection('Ride Details')
-                                                  .doc(prefs.getString(
-                                                  'Booking ID'))
-                                                  .update({
-                                                'Driver Arrived':true
-                                              });
+                                                  .doc(prefs
+                                                      .getString('Booking ID'))
+                                                  .update(
+                                                      {'Driver Arrived': true});
                                             },
                                             child: Text(
                                               'Arrived at location',
@@ -1022,47 +1127,46 @@ class _RideDetailsState extends State<RideDetails> {
                                               ),
                                             ),
                                           )
-                                        : !notifyrider?Container():Padding(
-                                      padding:
-                                      const EdgeInsets.only(
-                                          bottom: 20),
-                                      child: InkWell(
-                                        onTap: () {
-                                          setState(() {
-                                            isotpverification =
-                                            true;
-                                          });
-                                        },
-                                        child: Container(
-                                          height: 60,
-                                          width:
-                                          MediaQuery.sizeOf(
-                                              context)
-                                              .width,
-                                          decoration: const BoxDecoration(
-                                              borderRadius:
-                                              BorderRadius
-                                                  .all(Radius
-                                                  .circular(
-                                                  50)),
-                                              color:
-                                              Colors.green),
-                                          child: Center(
-                                            child: Text(
-                                              'Verify OTP',
-                                              style: GoogleFonts
-                                                  .poppins(
-                                                  color: Colors
-                                                      .black,
-                                                  fontWeight:
-                                                  FontWeight
-                                                      .w500),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    )
-
+                                        : !notifyrider
+                                            ? Container()
+                                            : Padding(
+                                                padding: const EdgeInsets.only(
+                                                    bottom: 20),
+                                                child: InkWell(
+                                                  onTap: () {
+                                                    setState(() {
+                                                      isotpverification = true;
+                                                    });
+                                                  },
+                                                  child: Container(
+                                                    height: 60,
+                                                    width: MediaQuery.sizeOf(
+                                                            context)
+                                                        .width,
+                                                    decoration:
+                                                        const BoxDecoration(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .all(Radius
+                                                                        .circular(
+                                                                            50)),
+                                                            color:
+                                                                Colors.green),
+                                                    child: Center(
+                                                      child: Text(
+                                                        'Verify OTP',
+                                                        style:
+                                                            GoogleFonts.poppins(
+                                                                color: Colors
+                                                                    .black,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w500),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              )
                                   ],
                                 )
                               : Column(
