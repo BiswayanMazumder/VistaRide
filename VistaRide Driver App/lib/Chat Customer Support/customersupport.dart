@@ -3,16 +3,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class ChatSupport extends StatefulWidget {
+class DriverChat extends StatefulWidget {
   final String RideID; // Pass RideID to this widget
 
-  const ChatSupport({super.key, required this.RideID});
+  const DriverChat({super.key, required this.RideID});
 
   @override
-  State<ChatSupport> createState() => _ChatSupportState();
+  State<DriverChat> createState() => _DriverChatState();
 }
 
-class _ChatSupportState extends State<ChatSupport> {
+class _DriverChatState extends State<DriverChat> {
   final TextEditingController _messageController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -53,12 +53,13 @@ class _ChatSupportState extends State<ChatSupport> {
 
       try {
         await _firestore
-            .collection('Driver Chat Support') // Main collection for chats
+            .collection('Trip Chat') // Main collection for chats
             .doc(widget.RideID) // Document with RideID as the identifier
             .collection('Messages') // Sub-collection for messages
             .add({
           'message': messageText, // Message content
           'senderId': senderId, // Sender's UID
+          'Driver':true,
           'timestamp': FieldValue.serverTimestamp(), // Timestamp
         });
 
@@ -75,7 +76,7 @@ class _ChatSupportState extends State<ChatSupport> {
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(
-          'Chat Support',
+          'Message Driver',
           style: GoogleFonts.poppins(
             color: Colors.black,
             fontWeight: FontWeight.w600,
@@ -91,7 +92,7 @@ class _ChatSupportState extends State<ChatSupport> {
       )
           : StreamBuilder<QuerySnapshot>(
         stream: _firestore
-            .collection('Driver Chat Support')
+            .collection('Trip Chat')
             .doc(widget.RideID) // Using RideID to find the chat
             .collection('Messages') // Sub-collection for messages
             .orderBy('timestamp', descending: false) // Order by timestamp
@@ -117,7 +118,7 @@ class _ChatSupportState extends State<ChatSupport> {
                     itemBuilder: (context, index) {
                       var messageData = chatDocs[index];
                       bool isSender =
-                          messageData['senderId'] == _auth.currentUser!.uid;
+                          messageData['Driver'] == true;
 
                       return Align(
                         alignment: isSender

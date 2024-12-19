@@ -691,26 +691,26 @@ class _RideDetailsState extends State<RideDetails> {
               : Container(),
           rideverified
               ? Positioned(
-                  top: 20,
+                  top: 30,
                   right: 20,
                   child: InkWell(
                     onTap: () {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => ChatSupport(RideID: rideid),
+                            builder: (context) => DriverChat(RideID: rideid),
                           ));
                     },
                     child: Container(
                       height: 50,
-                      width: 100,
+                      width: 130,
                       decoration: BoxDecoration(
                           color: Colors.purple.shade500,
                           borderRadius:
                               const BorderRadius.all(Radius.circular(50))),
                       child: Center(
                         child: Text(
-                          'Support',
+                          'Message Rider',
                           style: GoogleFonts.poppins(
                               color: Colors.white, fontWeight: FontWeight.w600),
                         ),
