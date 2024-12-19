@@ -439,7 +439,85 @@ class _RideDetailsState extends State<RideDetails> {
       }
     }
   }
+  Future<void> recordingstarted() async {
+    await getDeviceToken(); // Assuming this sets a valid `token`
+    await fetchservercode();
+    if (kDebugMode) {
+      print('Server Code $ServerToken');
+    }
+    // Replace this with your actual server token.
+    // const String serverToken = Environment.ServerToken;
 
+    final response = await http.post(
+      Uri.parse(
+          'https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
+      headers: {
+        'Content-Type': 'application/json', // Correct Content-Type header
+        'Authorization': 'Bearer $ServerToken', // Correct Authorization header
+      },
+      body: jsonEncode({
+        "message": {
+          "token": '$token',
+          "notification": {
+            "body":
+            "Important: The voice recording for this ride has started for emergency purposes. "
+                "Please be aware that it will be used only in case of emergencies. "
+                "Thank you for your understanding.",
+            "title": "Recording Started"
+          }
+        }
+      }), // Convert the body Map to JSON string
+    );
+
+    if (response.statusCode == 200) {
+      if (kDebugMode) {
+        print('Notification sent');
+      }
+    } else {
+      if (kDebugMode) {
+        print(
+            'Failed to send notification. Status code: ${response.statusCode}');
+        print('Response: ${response.body}');
+      }
+    }
+  }
+  Future<void> recordingstopped() async {
+    await getDeviceToken(); // Assuming this sets a valid `token`
+    await fetchservercode();
+    if (kDebugMode) {
+      print('Server Code $ServerToken');
+    }
+    final response = await http.post(
+      Uri.parse(
+          'https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
+      headers: {
+        'Content-Type': 'application/json', // Correct Content-Type header
+        'Authorization': 'Bearer $ServerToken', // Correct Authorization header
+      },
+      body: jsonEncode({
+        "message": {
+          "token": '$token',
+          "notification": {
+            "body":
+            "Recording has stopped and has been saved. You can contact customer support anytime to report an issue, with the recording attached for reference.",
+            "title": "Recording Stopped and Saved"
+          }
+        }
+      }), // Convert the body Map to JSON string
+    );
+
+    if (response.statusCode == 200) {
+      if (kDebugMode) {
+        print('Notification sent');
+      }
+    } else {
+      if (kDebugMode) {
+        print(
+            'Failed to send notification. Status code: ${response.statusCode}');
+        print('Response: ${response.body}');
+      }
+    }
+  }
   String rideid = '';
   late AudioPlayer player = AudioPlayer();
   Future<void> fetchactiverides() async {
@@ -603,7 +681,7 @@ class _RideDetailsState extends State<RideDetails> {
     // listenForRideRequest();
     fetchridedetails();
     _getCurrentLocation();
-    _timetofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
+    _timetofetch = Timer.periodic(const Duration(seconds: 300), (Timer t) {
       fetchactiverides();
       _getCurrentLocation();
     });
@@ -787,6 +865,7 @@ class _RideDetailsState extends State<RideDetails> {
                         print(
                             'Saved recording to $recordingpath');
                       }
+                      await recordingstopped();
                       await uploadToFirebaseStorage(
                           filePath);
                     }
@@ -804,10 +883,10 @@ class _RideDetailsState extends State<RideDetails> {
                         isrecording = true;
                         recordingpath = null;
                       });
+                      await recordingstarted();
                       _startTimer();
                     }
                   }
-
                 },
                 child: isrecording?Container(
                   height: 50,
@@ -1203,7 +1282,10 @@ class _RideDetailsState extends State<RideDetails> {
                                                     ),
                                                   ),
                                                 ),
-                                              )
+                                              ),
+                                    const SizedBox(
+                                      height: 20,
+                                    ),
                                   ],
                                 )
                               : Column(
