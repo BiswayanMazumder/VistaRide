@@ -4,7 +4,9 @@ import 'dart:math';
 import 'package:flutter_sound/public/flutter_sound_recorder.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:path/path.dart' as p;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -161,8 +163,6 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
       FirebaseFirestore firestore = FirebaseFirestore.instance;
       await firestore.collection('Ride Details').doc(bookingId).update({
         'Emergency Audio Recording': FieldValue.arrayUnion([downloadUrl]),
-        'Emergency': true,
-        'Emergency Started': FieldValue.serverTimestamp(),
       });
 
       if (kDebugMode) {
@@ -174,11 +174,73 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
   }
 
   late Stream<Position> _positionStream;
+  stt.SpeechToText _speechToText = stt.SpeechToText();
+  bool _isListening = false;
+  String _text = "Say something...";
+  bool _micWorking = true;
+  Future<void> _requestPermissions() async {
+    PermissionStatus status = await Permission.microphone.request();
+    if (status.isGranted) {
+        _startListening();
+
+    } else {
+      setState(() {
+        _micWorking = false;  // If permission is denied
+      });
+    }
+    print('Mic Working $_micWorking');
+  }
+
+  void _startListening() async {
+    bool available = await _speechToText.initialize();
+    if (available) {
+      setState(() {
+        _isListening = true;
+        _micWorking = true;
+      });
+      _speechToText.listen(
+        onResult: (result) {
+          setState(() {
+            _text = result.recognizedWords;
+          });
+
+          // Print the recognized speech in real-time
+          if (kDebugMode) {
+            print("Recognized speech: ${result.recognizedWords}");
+          }
+          if(result.recognizedWords.contains('help')){
+
+            if (kDebugMode) {
+              print('Emergency');
+
+            }
+          }
+        },
+        listenFor: const Duration(seconds: 10), // Listen for 30 seconds or however long you need
+        pauseFor: const Duration(seconds: 3), // If there's a pause for 3 seconds, it will still keep recognizing
+      );
+    } else {
+      setState(() {
+        _micWorking = false;  // If initialization fails
+      });
+      print("Microphone is not working. Please check your device.");
+    }
+  }
+
+  // Stop listening
+  void _stopListening() {
+    setState(() {
+      _isListening = false;
+    });
+    print('Listening Stopped');
+    _speechToText.stop();
+  }
   @override
   void initState() {
     super.initState();
     _fetchRoute();
     fetchridedetails();
+    _requestPermissions();
     fetchpaymentid();
     _positionStream = Geolocator.getPositionStream(
       desiredAccuracy: LocationAccuracy.high,
@@ -188,8 +250,11 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
     _positionStream.listen((Position position) {
       _updateUserLocation(position); // Update location every time it changes
     });
-    _timertofetch = Timer.periodic(const Duration(seconds: 300), (Timer t) {
+    _timertofetch = Timer.periodic(const Duration(seconds: 10), (Timer t) {
       fetchridedetails();
+      if(!isrecording){
+        _requestPermissions();
+      }
       // _fetchRoute();
     });
   }
@@ -207,6 +272,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
   @override
   void dispose() {
     // TODO: implement dispose
+    _speechToText.stop();
     super.dispose();
     _timertofetch.cancel();
   }
@@ -215,7 +281,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
   String drivercurrentlatitude = '';
   String Time = '';
   String? pickup;
-
+  bool showaudiorecord=true;
   String? dropoffloc;
   String DistanceTravel = '';
   bool isdrivernearby = false;
@@ -626,6 +692,42 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
             markers: _markers,
             polylines: _polylines, // Display the polyline here
           ),
+          showaudiorecord?Positioned(
+            top: 60,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 30, right: 30),
+              child: GestureDetector(
+                onHorizontalDragUpdate: (value) {
+                  setState(() {
+                    showaudiorecord=false;
+                  });
+                },
+                child: Container(
+                  // height: 100,
+                  decoration: const BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.all(Radius.circular(20))
+                  ),
+                  width: MediaQuery.of(context).size.width -
+                      60, // Subtract 30px from each side
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 20,right: 20,top: 20,bottom: 20),
+                      child: Text(
+                        "For your safety and security, please be aware that audio recording will take place throughout the trip. "
+                            "This helps monitor the environment and ensure a secure experience for everyone. Thank you."
+                        ,style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 13,
+                          // letterSpacing: 5,
+                          fontWeight: FontWeight.w400
+                      ),),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ):Container(),
           isEmergency? Positioned(
             top: 60,
             child: Padding(
@@ -760,7 +862,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                     ),
                   ),
                 ),
-           Positioned(
+           rideverified?Positioned(
             bottom: 350,
             right: 80,
             child: InkWell(
@@ -779,7 +881,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                 color: Colors.blue,
               ),
                         ),
-            ),),
+            ),):Container(),
           rideverified
               ? Positioned(
                   bottom: 350,

@@ -10,6 +10,10 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>Vistaride</string>
+	<key>NSMicrophoneUsageDescription</key>
+    <string>We need access to your microphone to listen to your voice</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>We need access to speech recognition to convert your speech to text</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
