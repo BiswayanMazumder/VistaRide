@@ -558,6 +558,7 @@ class _RideDetailsState extends State<RideDetails> {
     // TODO: implement dispose
     super.dispose();
     _timetofetch.cancel();
+    _timer.cancel();
   }
 
   NotificationService notificationService = NotificationService();
@@ -567,6 +568,23 @@ class _RideDetailsState extends State<RideDetails> {
     if (kDebugMode) {
       print('Token $accesstoken');
     }
+  }
+  int _counter = 0; // To keep track of the time
+  late Timer _timer;
+  void _startTimer() {
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        _counter++; // Increment the counter every second
+      });
+    });
+  }
+
+  // Function to stop the timer
+  void _stopTimer() {
+    setState(() {
+      _counter=0;
+    });
+    _timer.cancel();
   }
 
   final TextEditingController _OTPController = TextEditingController();
@@ -764,6 +782,7 @@ class _RideDetailsState extends State<RideDetails> {
                         isrecording = false;
                         recordingpath = filePath;
                       });
+                      _stopTimer();
                       if (kDebugMode) {
                         print(
                             'Saved recording to $recordingpath');
@@ -785,15 +804,33 @@ class _RideDetailsState extends State<RideDetails> {
                         isrecording = true;
                         recordingpath = null;
                       });
+                      _startTimer();
                     }
                   }
+
                 },
-                child:  CircleAvatar(
+                child: isrecording?Container(
+                  height: 50,
+                  width: 80,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.all(Radius.circular(50))
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const Icon(Icons.stop,color: Colors.red,),
+                      Text('$_counter',style: GoogleFonts.poppins(
+                        color: Colors.black,fontWeight: FontWeight.w600
+                      ),)
+                    ],
+                  ),
+                ): const CircleAvatar(
                   backgroundColor: Colors.white,
                   radius: 25,
                   child: Icon(
-                   isrecording?Icons.stop: Icons.record_voice_over,
-                    color:isrecording?Colors.red: Colors.blue,
+                   Icons.record_voice_over,
+                    color:Colors.blue,
                   ),
                 ),
               )),
