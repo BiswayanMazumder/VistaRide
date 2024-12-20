@@ -23,6 +23,7 @@ import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image/image.dart' as img;
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import 'package:vistaridedriver/Chat%20Customer%20Support/customersupport.dart';
 import 'package:vistaridedriver/Home%20Page/homepage.dart';
 
@@ -79,6 +80,8 @@ class _RideDetailsState extends State<RideDetails> {
   String DistanceTravel = '';
   bool isdrivernearby = false;
   bool notifyrider = false;
+  String directionurl='';
+  String riderpickupurl='';
   Future<void> _getCurrentLocation() async {
     await fetchridedetails();
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -154,6 +157,10 @@ class _RideDetailsState extends State<RideDetails> {
       _dropoffLocation = LatLng(droplat, droplong);
     });
     const String apiKey = Environment.GoogleMapsAPI;
+    setState(() {
+      directionurl='https://www.google.com/maps/dir/?api=1&origin=${driverCurrentLocation.latitude},${driverCurrentLocation.longitude}&destination=${_dropoffLocation.latitude},${_dropoffLocation.longitude}&travelmode=driving';
+      riderpickupurl='https://www.google.com/maps/dir/?api=1&origin=${driverCurrentLocation.latitude},${driverCurrentLocation.longitude}&destination=${_pickupLocation.latitude},${_pickupLocation.longitude}&travelmode=driving';
+    });
     final String url1 = //use it when ride is verified
         'https://maps.googleapis.com/maps/api/directions/json?origin=${driverCurrentLocation.latitude},${driverCurrentLocation.longitude}&destination=${_dropoffLocation.latitude},${_dropoffLocation.longitude}&key=$apiKey';
     final String url =
@@ -948,6 +955,26 @@ class _RideDetailsState extends State<RideDetails> {
               : Container(),
           Positioned(
               bottom: 330,
+              right: 90,
+              child: InkWell(
+                onTap: ()async{
+                  if (await canLaunch(rideverified?directionurl:riderpickupurl)) {
+                    await launch(rideverified?directionurl:riderpickupurl);
+                  } else {
+                    throw 'Could not launch ${rideverified?directionurl:riderpickupurl}';
+                  }
+                },
+                child: const CircleAvatar(
+                  backgroundColor: Colors.white,
+                  radius: 25,
+                  child: Icon(
+                    Icons.map_sharp,
+                    color:Colors.blue,
+                  ),
+                ),
+              )),
+          Positioned(
+              bottom: 330,
               right: 30,
               child: InkWell(
                 onTap: () async {
@@ -1351,10 +1378,11 @@ class _RideDetailsState extends State<RideDetails> {
                                                 padding: const EdgeInsets.only(
                                                     bottom: 20),
                                                 child: InkWell(
-                                                  onTap: () {
+                                                  onTap: ()async{
                                                     setState(() {
                                                       isotpverification = true;
                                                     });
+
                                                   },
                                                   child: Container(
                                                     height: 60,
@@ -1453,6 +1481,10 @@ class _RideDetailsState extends State<RideDetails> {
                                             isotpverification = false;
                                             rideverified = true;
                                           });
+                                          await player.setSourceUrl(
+                                            'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2FConnor-2024_12_20-4.mp3?alt=media&token=2954ca35-6b84-49e5-b4eb-2995639c292b',
+                                          );
+                                          await player.resume();
                                         } else {
                                           if (kDebugMode) {
                                             print("Invalid OTP");
