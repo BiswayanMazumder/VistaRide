@@ -70,6 +70,7 @@ dependencies:
   record: ^5.0.5
   path_provider: ^2.1.4
   flutter_sound: ^9.2.13
+  floating: ^5.0.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
