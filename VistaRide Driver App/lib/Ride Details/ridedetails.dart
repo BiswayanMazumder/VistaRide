@@ -339,7 +339,6 @@ class _RideDetailsState extends State<RideDetails> {
   String? token;
   Future<void> getDeviceToken() async {
     FirebaseMessaging messaging = FirebaseMessaging.instance;
-
     try {
       token = await messaging.getToken();
       if (token != null) {
@@ -370,7 +369,7 @@ class _RideDetailsState extends State<RideDetails> {
           'https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
       headers: {
         'Content-Type': 'application/json', // Correct Content-Type header
-        'Authorization': 'Bearer $ServerToken', // Correct Authorization header
+        'Authorization': 'Bearer $serverkey', // Correct Authorization header
       },
       body: jsonEncode({
         "message": {
@@ -422,7 +421,7 @@ class _RideDetailsState extends State<RideDetails> {
           'https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
       headers: {
         'Content-Type': 'application/json', // Correct Content-Type header
-        'Authorization': 'Bearer $ServerToken', // Correct Authorization header
+        'Authorization': 'Bearer $serverkey', // Correct Authorization header
       },
       body: jsonEncode({
         "message": {
@@ -463,7 +462,7 @@ class _RideDetailsState extends State<RideDetails> {
           'https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
       headers: {
         'Content-Type': 'application/json', // Correct Content-Type header
-        'Authorization': 'Bearer $ServerToken', // Correct Authorization header
+        'Authorization': 'Bearer $serverkey', // Correct Authorization header
       },
       body: jsonEncode({
         "message": {
@@ -502,7 +501,7 @@ class _RideDetailsState extends State<RideDetails> {
           'https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
       headers: {
         'Content-Type': 'application/json', // Correct Content-Type header
-        'Authorization': 'Bearer $ServerToken', // Correct Authorization header
+        'Authorization': 'Bearer $serverkey', // Correct Authorization header
       },
       body: jsonEncode({
         "message": {
@@ -624,6 +623,7 @@ class _RideDetailsState extends State<RideDetails> {
           isamountpaid = docsnap.data()?['Amount Paid'] ?? false;
           istripcompleted = docsnap.data()?['Ride Completed'];
           notifyrider = docsnap.data()?['Driver Arrived'] ?? false;
+          // print('Ride Verified $pickuploc');
         });
         if (kDebugMode) {
           print('Ride Verified $rideverified');
@@ -723,7 +723,7 @@ class _RideDetailsState extends State<RideDetails> {
           'https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
       headers: {
         'Content-Type': 'application/json', // Correct Content-Type header
-        'Authorization': 'Bearer $ServerToken', // Correct Authorization header
+        'Authorization': 'Bearer $serverkey', // Correct Authorization header
       },
       body: jsonEncode({
         "message": {
@@ -756,11 +756,14 @@ class _RideDetailsState extends State<RideDetails> {
     _timetofetch.cancel();
     _timer.cancel();
   }
-
+  String serverkey='';
   NotificationService notificationService = NotificationService();
   Future<void> fetchservertoken() async {
     GetServerKey getserertoken = GetServerKey();
     String accesstoken = await getserertoken.getserertoken();
+    setState(() {
+      serverkey=accesstoken;
+    });
     if (kDebugMode) {
       print('Token $accesstoken');
     }
