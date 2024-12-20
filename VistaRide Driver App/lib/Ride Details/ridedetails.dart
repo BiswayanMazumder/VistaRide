@@ -80,8 +80,8 @@ class _RideDetailsState extends State<RideDetails> {
   String DistanceTravel = '';
   bool isdrivernearby = false;
   bool notifyrider = false;
-  String directionurl='';
-  String riderpickupurl='';
+  String directionurl = '';
+  String riderpickupurl = '';
   Future<void> _getCurrentLocation() async {
     await fetchridedetails();
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -158,8 +158,10 @@ class _RideDetailsState extends State<RideDetails> {
     });
     const String apiKey = Environment.GoogleMapsAPI;
     setState(() {
-      directionurl='https://www.google.com/maps/dir/?api=1&origin=${driverCurrentLocation.latitude},${driverCurrentLocation.longitude}&destination=${_dropoffLocation.latitude},${_dropoffLocation.longitude}&travelmode=driving';
-      riderpickupurl='https://www.google.com/maps/dir/?api=1&origin=${driverCurrentLocation.latitude},${driverCurrentLocation.longitude}&destination=${_pickupLocation.latitude},${_pickupLocation.longitude}&travelmode=driving';
+      directionurl =
+          'https://www.google.com/maps/dir/?api=1&origin=${driverCurrentLocation.latitude},${driverCurrentLocation.longitude}&destination=${_dropoffLocation.latitude},${_dropoffLocation.longitude}&travelmode=driving';
+      riderpickupurl =
+          'https://www.google.com/maps/dir/?api=1&origin=${driverCurrentLocation.latitude},${driverCurrentLocation.longitude}&destination=${_pickupLocation.latitude},${_pickupLocation.longitude}&travelmode=driving';
     });
     final String url1 = //use it when ride is verified
         'https://maps.googleapis.com/maps/api/directions/json?origin=${driverCurrentLocation.latitude},${driverCurrentLocation.longitude}&destination=${_dropoffLocation.latitude},${_dropoffLocation.longitude}&key=$apiKey';
@@ -446,6 +448,7 @@ class _RideDetailsState extends State<RideDetails> {
       }
     }
   }
+
   Future<void> recordingstarted() async {
     await getDeviceToken(); // Assuming this sets a valid `token`
     await fetchservercode();
@@ -466,8 +469,7 @@ class _RideDetailsState extends State<RideDetails> {
         "message": {
           "token": '$token',
           "notification": {
-            "body":
-            "Important: The voice recording for this ride has started for emergency purposes. "
+            "body": "Important: The voice recording for this ride has started for emergency purposes. "
                 "Please be aware that it will be used only in case of emergencies. "
                 "Thank you for your understanding.",
             "title": "Recording Started"
@@ -488,6 +490,7 @@ class _RideDetailsState extends State<RideDetails> {
       }
     }
   }
+
   Future<void> recordingstopped() async {
     await getDeviceToken(); // Assuming this sets a valid `token`
     await fetchservercode();
@@ -506,7 +509,7 @@ class _RideDetailsState extends State<RideDetails> {
           "token": '$token',
           "notification": {
             "body":
-            "Recording has stopped and has been saved. You can contact customer support anytime to report an issue, with the recording attached for reference.",
+                "Recording has stopped and has been saved. You can contact customer support anytime to report an issue, with the recording attached for reference.",
             "title": "Recording Stopped and Saved"
           }
         }
@@ -525,6 +528,7 @@ class _RideDetailsState extends State<RideDetails> {
       }
     }
   }
+
   String rideid = '';
   late AudioPlayer player = AudioPlayer();
   Future<void> fetchactiverides() async {
@@ -584,10 +588,11 @@ class _RideDetailsState extends State<RideDetails> {
   double droplat = 0;
   bool isamountpaid = false;
   bool istripcompleted = false;
-  String ridername='';
+  String ridername = '';
   bool iscashpayment = false;
-  String rideruid='';
+  String rideruid = '';
   double price = 0;
+  String riderprofilephoto = '';
   Future<void> fetchridedetails() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -612,7 +617,7 @@ class _RideDetailsState extends State<RideDetails> {
           droplong = docsnap.data()?['Drop Longitude'];
           pickuploc = docsnap.data()?['Pickup Location'];
           iscashpayment = docsnap.data()?['Cash Payment'];
-          rideruid=docsnap.data()?['Ride Owner'];
+          rideruid = docsnap.data()?['Ride Owner'];
           droploc = docsnap.data()?['Drop Location'];
           cabcategory = docsnap.data()?['Cab Category'];
           rideverified = docsnap.data()?['Ride Verified'];
@@ -620,7 +625,9 @@ class _RideDetailsState extends State<RideDetails> {
           istripcompleted = docsnap.data()?['Ride Completed'];
           notifyrider = docsnap.data()?['Driver Arrived'] ?? false;
         });
-        print('Ride Verified $rideverified');
+        if (kDebugMode) {
+          print('Ride Verified $rideverified');
+        }
       }
       final Docsnap = await _firestore
           .collection('VistaRide Driver Details')
@@ -645,6 +652,7 @@ class _RideDetailsState extends State<RideDetails> {
       if (Docsnaprider.exists) {
         setState(() {
           ridername = Docsnaprider.data()?['User Name'];
+          riderprofilephoto = Docsnaprider.data()?['Profile Picture'];
         });
       }
       prefs.setString('Rider Name', ridername);
@@ -654,6 +662,7 @@ class _RideDetailsState extends State<RideDetails> {
       }
     }
   }
+
   StreamSubscription<QuerySnapshot>? _messageSubscription;
 
   Future<void> _listenToMessages() async {
@@ -683,7 +692,7 @@ class _RideDetailsState extends State<RideDetails> {
             // Check if the message has already been processed
             processedMessageIds.add(doc.id); // Mark the message as processed
             var data = doc.data();
-            if(data['Driver']==false){
+            if (data['Driver'] == false) {
               ridermessagenotification(data['message']);
             }
             if (kDebugMode) {
@@ -699,10 +708,11 @@ class _RideDetailsState extends State<RideDetails> {
       }
     }
   }
+
   Future<void> ridermessagenotification(String message) async {
     await getDeviceToken(); // Assuming this sets a valid `token`
     await fetchservercode();
-    if(ridername==''){
+    if (ridername == '') {
       await fetchridedetails();
     }
     // Replace this with your actual server token.
@@ -719,8 +729,7 @@ class _RideDetailsState extends State<RideDetails> {
         "message": {
           "token": '$token',
           "notification": {
-            "body":
-            '$ridername Sent you a message: $message',
+            "body": '$ridername Sent you a message: $message',
             "title": drivername
           }
         }
@@ -739,6 +748,7 @@ class _RideDetailsState extends State<RideDetails> {
       }
     }
   }
+
   @override
   void dispose() {
     // TODO: implement dispose
@@ -755,6 +765,7 @@ class _RideDetailsState extends State<RideDetails> {
       print('Token $accesstoken');
     }
   }
+
   int _counter = 0; // To keep track of the time
   late Timer _timer;
   void _startTimer() {
@@ -768,7 +779,7 @@ class _RideDetailsState extends State<RideDetails> {
   // Function to stop the timer
   void _stopTimer() {
     setState(() {
-      _counter=0;
+      _counter = 0;
     });
     _timer.cancel();
   }
@@ -843,7 +854,8 @@ class _RideDetailsState extends State<RideDetails> {
       // Save the URL to Firestore in the Ride Details collection
       FirebaseFirestore firestore = FirebaseFirestore.instance;
       await firestore.collection('Ride Details').doc(bookingId).update({
-        'Emergency Audio Recording Driver Side': FieldValue.arrayUnion([downloadUrl]),
+        'Emergency Audio Recording Driver Side':
+            FieldValue.arrayUnion([downloadUrl]),
       });
 
       if (kDebugMode) {
@@ -853,6 +865,7 @@ class _RideDetailsState extends State<RideDetails> {
       print('Error saving URL to Firestore: $e');
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -953,24 +966,68 @@ class _RideDetailsState extends State<RideDetails> {
                   ),
                 )
               : Container(),
+         !rideverified? Positioned(
+              top: 75,
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Container(
+                  width: MediaQuery.sizeOf(context).width - 40,
+                  // height: 150,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.7),
+                    borderRadius: const BorderRadius.all(Radius.circular(20))
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Center(
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: "Picking up ",
+                              style: GoogleFonts.poppins(color: Colors.white),
+                            ),
+                            TextSpan(
+                              text: ridername,
+                              style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.white),
+                            ),
+                            TextSpan(
+                              text: " at ",
+                              style: GoogleFonts.poppins(color: Colors.white),
+                            ),
+                            TextSpan(
+                              text: pickuploc,
+                              style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.white),
+                            ),
+                            TextSpan(
+                              text: ". Ensure confirmation of name and location before starting the trip.",
+                              style: GoogleFonts.poppins(color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      )
+
+                    ),
+                  ),
+                ),
+              )):Container(),
           Positioned(
               bottom: 330,
               right: 90,
               child: InkWell(
-                onTap: ()async{
-                  if (await canLaunch(rideverified?directionurl:riderpickupurl)) {
-                    await launch(rideverified?directionurl:riderpickupurl);
+                onTap: () async {
+                  if (await canLaunch(
+                      rideverified ? directionurl : riderpickupurl)) {
+                    await launch(rideverified ? directionurl : riderpickupurl);
                   } else {
-                    throw 'Could not launch ${rideverified?directionurl:riderpickupurl}';
+                    throw 'Could not launch ${rideverified ? directionurl : riderpickupurl}';
                   }
                 },
                 child: const CircleAvatar(
                   backgroundColor: Colors.white,
                   radius: 25,
-                  child: Icon(
-                    Icons.map_sharp,
-                    color:Colors.blue,
-                  ),
+                  backgroundImage: NetworkImage(
+                      'https://www.google.com/images/branding/product/2x/maps_96in128dp.png'),
                 ),
               )),
           Positioned(
@@ -978,12 +1035,10 @@ class _RideDetailsState extends State<RideDetails> {
               right: 30,
               child: InkWell(
                 onTap: () async {
-                  final prefs = await SharedPreferences
-                      .getInstance();
+                  final prefs = await SharedPreferences.getInstance();
 
                   if (isrecording) {
-                    String? filePath =
-                    await record.stop();
+                    String? filePath = await record.stop();
                     if (filePath != null) {
                       setState(() {
                         isrecording = false;
@@ -991,23 +1046,18 @@ class _RideDetailsState extends State<RideDetails> {
                       });
                       _stopTimer();
                       if (kDebugMode) {
-                        print(
-                            'Saved recording to $recordingpath');
+                        print('Saved recording to $recordingpath');
                       }
                       await recordingstopped();
-                      await uploadToFirebaseStorage(
-                          filePath);
+                      await uploadToFirebaseStorage(filePath);
                     }
                   } else {
                     if (await record.hasPermission()) {
                       final Directory appdocumentsdir =
-                      await getApplicationDocumentsDirectory();
-                      final String filepath = p.join(
-                          appdocumentsdir.path,
+                          await getApplicationDocumentsDirectory();
+                      final String filepath = p.join(appdocumentsdir.path,
                           '${prefs.getString('Booking ID')}recording.wav');
-                      await record.start(
-                          const RecordConfig(),
-                          path: filepath);
+                      await record.start(const RecordConfig(), path: filepath);
                       setState(() {
                         isrecording = true;
                         recordingpath = null;
@@ -1017,30 +1067,38 @@ class _RideDetailsState extends State<RideDetails> {
                     }
                   }
                 },
-                child: isrecording?Container(
-                  height: 50,
-                  width: 80,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.all(Radius.circular(50))
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      const Icon(Icons.stop,color: Colors.red,),
-                      Text('$_counter',style: GoogleFonts.poppins(
-                        color: Colors.black,fontWeight: FontWeight.w600
-                      ),)
-                    ],
-                  ),
-                ): const CircleAvatar(
-                  backgroundColor: Colors.white,
-                  radius: 25,
-                  child: Icon(
-                   Icons.record_voice_over,
-                    color:Colors.blue,
-                  ),
-                ),
+                child: isrecording
+                    ? Container(
+                        height: 50,
+                        width: 80,
+                        decoration: const BoxDecoration(
+                            color: Colors.white,
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(50))),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            const Icon(
+                              Icons.stop,
+                              color: Colors.red,
+                            ),
+                            Text(
+                              '$_counter',
+                              style: GoogleFonts.poppins(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w600),
+                            )
+                          ],
+                        ),
+                      )
+                    : const CircleAvatar(
+                        backgroundColor: Colors.white,
+                        radius: 25,
+                        child: Icon(
+                          Icons.record_voice_over,
+                          color: Colors.blue,
+                        ),
+                      ),
               )),
           Positioned(
               top: 30,
@@ -1378,11 +1436,10 @@ class _RideDetailsState extends State<RideDetails> {
                                                 padding: const EdgeInsets.only(
                                                     bottom: 20),
                                                 child: InkWell(
-                                                  onTap: ()async{
+                                                  onTap: () async {
                                                     setState(() {
                                                       isotpverification = true;
                                                     });
-
                                                   },
                                                   child: Container(
                                                     height: 60,
