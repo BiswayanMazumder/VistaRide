@@ -71,6 +71,10 @@ dependencies:
   path_provider: ^2.1.4
   flutter_sound: ^9.2.13
   floating: ^5.0.1
+  tflite_flutter: ^0.10.4
+  camera: ^0.10.5+9
+  flutter_tesseract_ocr: ^0.4.26
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

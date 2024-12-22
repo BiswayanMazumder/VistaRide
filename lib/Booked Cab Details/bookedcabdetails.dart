@@ -257,7 +257,6 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
     });
     _timertofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
       fetchridedetails();
-
     });
   }
 
