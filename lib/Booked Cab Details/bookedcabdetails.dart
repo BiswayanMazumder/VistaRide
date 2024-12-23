@@ -246,6 +246,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
     super.initState();
     _fetchRoute();
     fetchridedetails();
+    fetchWiFiPassword();
     // _requestPermissions();
     fetchpaymentid();
     _positionStream = Geolocator.getPositionStream(
@@ -659,6 +660,22 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
       iscashpayment=false;
     });
   }
+  String globalAlphanumericString = '';
+
+// Function to generate and store the alphanumeric string
+  String generateAlphanumericString() {
+    const int length = 10; // Fixed length of 10
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    final random = Random();
+
+    return String.fromCharCodes(
+      Iterable.generate(
+        length,
+            (_) => characters.codeUnitAt(random.nextInt(characters.length)),
+      ),
+    );
+  }
+
   bool ridestarted = false;
   bool rideverified = false;
   String driverid = '';
@@ -748,7 +765,46 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
       print('Error in fetching ride $e');
     }
   }
+  Future<void> fetchWiFiPassword() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bookingId = prefs.getString('Booking ID');
+    if (bookingId == null) {
+      if (kDebugMode) {
+        print('No booking ID found.');
+      }
+      return;
+    }
 
+    final firestoreDoc = await FirebaseFirestore.instance.collection('Ride Details').doc(bookingId).get();
+
+    if (firestoreDoc.exists) {
+      // If the document exists, fetch the 'WiFi Password'
+      var fetchedPassword = firestoreDoc.data()?['WiFi Password'];
+
+      if (fetchedPassword != null) {
+        // If password is found, update the global variable
+        globalAlphanumericString = fetchedPassword;
+      } else {
+        // If no WiFi password is found, generate a new one
+        globalAlphanumericString = generateAlphanumericString();
+        // Update Firestore with the newly generated password
+        await FirebaseFirestore.instance.collection('Ride Details').doc(bookingId).update({
+          'WiFi Password': globalAlphanumericString,
+        });
+      }
+    } else {
+      // If document does not exist, generate and set new WiFi password
+      globalAlphanumericString = generateAlphanumericString();
+      await FirebaseFirestore.instance.collection('Ride Details').doc(bookingId).set({
+        'WiFi Password': globalAlphanumericString,
+      });
+    }
+
+    // Debugging output
+    if (kDebugMode) {
+      print('WiFi Password: $globalAlphanumericString');
+    }
+  }
   String? recordingpath;
   final record = AudioRecorder();
   bool isrecording = false;
@@ -1567,7 +1623,6 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                               ),
                             ),
                           ),
-
                           Padding(
                             padding: const EdgeInsets.only(
                                 left: 20, right: 20, top: 10, bottom: 20),
@@ -1608,6 +1663,41 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                               ),
                             ),
                           ),
+                         cabcategory=='LUX' && rideverified? Padding(
+                            padding: const EdgeInsets.only(
+                                left: 20, right: 20, top: 10, bottom: 20),
+                            child: InkWell(
+                              child: Container(
+                                width: MediaQuery.sizeOf(context).width,
+                                decoration: BoxDecoration(
+                                    border: Border.all(
+                                        color: Colors.grey, width: 0.5)),
+                                height: 40,
+                                child: Row(
+                                  children: [
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                   const Icon(
+                                      Icons.wifi,
+                                      color: Colors.black,
+                                    ),
+                                    const SizedBox(
+                                      width: 20,
+                                    ),
+                                    Expanded(
+                                        child: Text(
+                                          globalAlphanumericString,
+                                          style: GoogleFonts.poppins(
+                                              color: Colors.black),
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                        )),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ):Container(),
                           !rideverified
                               ? Padding(
                             padding: const EdgeInsets.only(
