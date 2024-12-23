@@ -82,6 +82,7 @@ class _RideDetailsState extends State<RideDetails> {
   bool notifyrider = false;
   String directionurl = '';
   String riderpickupurl = '';
+
   Future<void> _getCurrentLocation() async {
     await fetchridedetails();
     final SharedPreferences prefs = await SharedPreferences.getInstance();
