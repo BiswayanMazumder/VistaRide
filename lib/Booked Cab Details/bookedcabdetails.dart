@@ -256,7 +256,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
     _positionStream.listen((Position position) {
       _updateUserLocation(position);
     });
-    _timertofetch = Timer.periodic(const Duration(seconds: 300), (Timer t) {
+    _timertofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
       fetchridedetails();
     });
   }
@@ -646,6 +646,10 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
 
   void handlePaymentSuccessResponse(PaymentSuccessResponse response) async {
     final prefs = await SharedPreferences.getInstance();
+    await _firestore
+        .collection('Payment ID')
+        .doc(prefs.getString('Booking ID'))
+        .set({'Payment ID': response.paymentId});
     await _firestore.collection('Ride Details').doc(prefs.getString('Booking ID')).update(
         {
           'Cash Payment':false
@@ -676,7 +680,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
   bool isamountpaid = false;
   bool iscashpayment = false;
   double price = 0;
-
+  bool isridecancelled=false;
   Future<void> fetchridedetails() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -697,6 +701,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
               : docsnap.data()?['Fare'] is double
                   ? (docsnap.data()?['Fare']) as double
                   : 0.0;
+          isridecancelled=docsnap.data()?['Ride Cancelled']??false;
           droplong = docsnap.data()?['Drop Longitude'];
           pickuploc = docsnap.data()?['Pickup Location'];
           droploc = docsnap.data()?['Drop Location'];
@@ -724,6 +729,13 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
           drivercurrentlatitude = Docsnap.data()?['Current Latitude'];
           drivercurrentlongitude = Docsnap.data()?['Current Longitude'];
         });
+      }
+      if(isridecancelled){
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomePage(),
+            ));
       }
       if (isamountpaid) {
         Navigator.pushReplacement(
@@ -1602,55 +1614,202 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                                 left: 20, right: 20,bottom: 20),
                             child: InkWell(
                               onTap: () async {
-                                try {
-                                  final prefs = await SharedPreferences
-                                      .getInstance();
-                                  if (kDebugMode) {
-                                    print(prefs.getString('Booking ID'));
-                                  }
+                                showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    String? selectedReason; // Variable to store selected cancellation reason
 
-                                  // Attempt to fetch payment ID and process refund
-                                  await fetchpaymentid();
+                                    return AlertDialog(
+                                      backgroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      title: Center(
+                                        child: Text(
+                                          'Cancel Ride',
+                                          style: GoogleFonts.poppins(
+                                            color: Colors.black,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      content: StatefulBuilder(
+                                        builder: (BuildContext context, StateSetter setState) {
+                                          return Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              ListTile(
+                                                title: Text(
+                                                  'Driver is taking too long',
+                                                  style: GoogleFonts.poppins(fontSize: 14, color: Colors.black),
+                                                ),
+                                                leading: Radio<String>(
+                                                  value: 'Driver is taking too long',
+                                                  groupValue: selectedReason,
+                                                  onChanged: (String? value) {
+                                                    setState(() {
+                                                      selectedReason = value;
+                                                    });
+                                                  },
+                                                ),
+                                              ),
+                                              ListTile(
+                                                title: Text(
+                                                  'Change of plans',
+                                                  style: GoogleFonts.poppins(fontSize: 14, color: Colors.black),
+                                                ),
+                                                leading: Radio<String>(
+                                                  value: 'Change of plans',
+                                                  groupValue: selectedReason,
+                                                  onChanged: (String? value) {
+                                                    setState(() {
+                                                      selectedReason = value;
+                                                    });
+                                                  },
+                                                ),
+                                              ),
+                                              ListTile(
+                                                title: Text(
+                                                  'Booked another cab',
+                                                  style: GoogleFonts.poppins(fontSize: 14, color: Colors.black),
+                                                ),
+                                                leading: Radio<String>(
+                                                  value: 'Booked another cab',
+                                                  groupValue: selectedReason,
+                                                  onChanged: (String? value) {
+                                                    setState(() {
+                                                      selectedReason = value;
+                                                    });
+                                                  },
+                                                ),
+                                              ),
+                                              ListTile(
+                                                title: Text(
+                                                  'Fare is too high',
+                                                  style: GoogleFonts.poppins(fontSize: 14, color: Colors.black),
+                                                ),
+                                                leading: Radio<String>(
+                                                  value: 'Fare is too high',
+                                                  groupValue: selectedReason,
+                                                  onChanged: (String? value) {
+                                                    setState(() {
+                                                      selectedReason = value;
+                                                    });
+                                                  },
+                                                ),
+                                              ),
+                                              ListTile(
+                                                title: Text(
+                                                  'Other',
+                                                  style: GoogleFonts.poppins(fontSize: 14, color: Colors.black),
+                                                ),
+                                                leading: Radio<String>(
+                                                  value: 'Other',
+                                                  groupValue: selectedReason,
+                                                  onChanged: (String? value) {
+                                                    setState(() {
+                                                      selectedReason = value;
+                                                    });
+                                                  },
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop(); // Close dialog
+                                          },
+                                          child: Text(
+                                            'Cancel',
+                                            style: GoogleFonts.poppins(
+                                              color: Colors.grey,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: ()async{
+                                            if (selectedReason != null) {
+                                              // Handle the selected cancellation reason
+                                              if (kDebugMode) {
+                                                print("Selected Reason: $selectedReason");
+                                              }
+                                              try {
+                                                final prefs = await SharedPreferences
+                                                    .getInstance();
+                                                if (kDebugMode) {
+                                                  print(prefs.getString('Booking ID'));
+                                                }
 
-                                  try {
-                                    await processRefund(); // If this fails, no further code will execute
-                                  } catch (e) {
-                                    if (kDebugMode) {
-                                      print('Refund Error: $e');
-                                    }
-                                    return; // Stop execution if refund fails
-                                  }
+                                                // Attempt to fetch payment ID and process refund
+                                                await fetchpaymentid();
 
-                                  // Proceed to update Firestore and Navigator only if refund was successful
-                                  await _firestore
-                                      .collection('Ride Details')
-                                      .doc(prefs.getString('Booking ID'))
-                                      .update({
-                                    'Ride Accepted': false,
-                                    'Ride Cancelled': true,
-                                    'Cancellation Time':
-                                    FieldValue.serverTimestamp(),
-                                  });
+                                                try {
+                                                  await processRefund(); // If this fails, no further code will execute
+                                                } catch (e) {
+                                                  if (kDebugMode) {
+                                                    print('Refund Error: $e');
+                                                  }
+                                                  return; // Stop execution if refund fails
+                                                }
 
-                                  await _firestore
-                                      .collection(
-                                      'VistaRide Driver Details')
-                                      .doc(driverid)
-                                      .update({
-                                    'Ride Doing': FieldValue.delete(),
-                                    'Driver Avaliable': true,
-                                  });
+                                                // Proceed to update Firestore and Navigator only if refund was successful
+                                                await _firestore
+                                                    .collection('Ride Details')
+                                                    .doc(prefs.getString('Booking ID'))
+                                                    .update({
+                                                  'Ride Accepted': false,
+                                                  'Ride Cancelled': true,
+                                                  'Cancellation Time':
+                                                  FieldValue.serverTimestamp(),
+                                                });
 
-                                  Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => HomePage(),
-                                      ));
-                                } catch (e) {
-                                  if (kDebugMode) {
-                                    print('General Error: $e');
-                                  }
-                                }
+                                                await _firestore
+                                                    .collection(
+                                                    'VistaRide Driver Details')
+                                                    .doc(driverid)
+                                                    .update({
+                                                  'Ride Doing': FieldValue.delete(),
+                                                  'Driver Avaliable': true,
+                                                });
+
+                                                Navigator.pushReplacement(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) => HomePage(),
+                                                    ));
+                                              } catch (e) {
+                                                if (kDebugMode) {
+                                                  print('General Error: $e');
+                                                }
+                                              }
+                                              Navigator.of(context).pop();
+                                            } else {
+                                              // Show a message if no reason is selected
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                const SnackBar(
+                                                  content: Text('Please select a reason to cancel the ride'),
+                                                ),
+                                              );
+                                            }
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.red, // Change to your desired color
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'Submit',
+                                            style: GoogleFonts.poppins(fontSize: 14, color: Colors.white),
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
                               },
                               child: Container(
                                 height: 50,
@@ -1672,7 +1831,216 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                               ),
                             ),
                           )
-                              : Container(),
+                              : Padding(
+                            padding: const EdgeInsets.only(
+                                left: 20, right: 20,bottom: 20),
+                            child: InkWell(
+                              onTap: () async {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    String? selectedReason; // Variable to store selected cancellation reason
+
+                                    return AlertDialog(
+                                      backgroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      title: Center(
+                                        child: Text(
+                                          'Cancel Ride',
+                                          style: GoogleFonts.poppins(
+                                            color: Colors.black,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      content: StatefulBuilder(
+                                        builder: (BuildContext context, StateSetter setState) {
+                                          return Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              ListTile(
+                                                title: Text(
+                                                  'Driver is taking too long',
+                                                  style: GoogleFonts.poppins(fontSize: 14, color: Colors.black),
+                                                ),
+                                                leading: Radio<String>(
+                                                  value: 'Driver is taking too long',
+                                                  groupValue: selectedReason,
+                                                  onChanged: (String? value) {
+                                                    setState(() {
+                                                      selectedReason = value;
+                                                    });
+                                                  },
+                                                ),
+                                              ),
+                                              ListTile(
+                                                title: Text(
+                                                  'Change of plans',
+                                                  style: GoogleFonts.poppins(fontSize: 14, color: Colors.black),
+                                                ),
+                                                leading: Radio<String>(
+                                                  value: 'Change of plans',
+                                                  groupValue: selectedReason,
+                                                  onChanged: (String? value) {
+                                                    setState(() {
+                                                      selectedReason = value;
+                                                    });
+                                                  },
+                                                ),
+                                              ),
+                                              ListTile(
+                                                title: Text(
+                                                  'Booked another cab',
+                                                  style: GoogleFonts.poppins(fontSize: 14, color: Colors.black),
+                                                ),
+                                                leading: Radio<String>(
+                                                  value: 'Booked another cab',
+                                                  groupValue: selectedReason,
+                                                  onChanged: (String? value) {
+                                                    setState(() {
+                                                      selectedReason = value;
+                                                    });
+                                                  },
+                                                ),
+                                              ),
+                                              ListTile(
+                                                title: Text(
+                                                  'Fare is too high',
+                                                  style: GoogleFonts.poppins(fontSize: 14, color: Colors.black),
+                                                ),
+                                                leading: Radio<String>(
+                                                  value: 'Fare is too high',
+                                                  groupValue: selectedReason,
+                                                  onChanged: (String? value) {
+                                                    setState(() {
+                                                      selectedReason = value;
+                                                    });
+                                                  },
+                                                ),
+                                              ),
+                                              ListTile(
+                                                title: Text(
+                                                  'Other',
+                                                  style: GoogleFonts.poppins(fontSize: 14, color: Colors.black),
+                                                ),
+                                                leading: Radio<String>(
+                                                  value: 'Other',
+                                                  groupValue: selectedReason,
+                                                  onChanged: (String? value) {
+                                                    setState(() {
+                                                      selectedReason = value;
+                                                    });
+                                                  },
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop(); // Close dialog
+                                          },
+                                          child: Text(
+                                            'Cancel',
+                                            style: GoogleFonts.poppins(
+                                              color: Colors.grey,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: ()async{
+                                            if (selectedReason != null) {
+                                              // Handle the selected cancellation reason
+                                              if (kDebugMode) {
+                                                print("Selected Reason: $selectedReason");
+                                              }
+                                              try {
+                                                final prefs = await SharedPreferences
+                                                    .getInstance();
+                                                if (kDebugMode) {
+                                                  print(prefs.getString('Booking ID'));
+                                                }
+                                                // Proceed to update Firestore and Navigator only if refund was successful
+                                                await _firestore
+                                                    .collection('Ride Details')
+                                                    .doc(prefs.getString('Booking ID'))
+                                                    .update({
+                                                  'Ride Accepted': false,
+                                                  'Ride Cancelled': true,
+                                                  'Ride Cancelled After Starting':true,
+                                                  'Cancellation Reason':selectedReason,
+                                                  'Cancellation Time':
+                                                  FieldValue.serverTimestamp(),
+                                                });
+                                                await _firestore
+                                                    .collection(
+                                                    'VistaRide Driver Details')
+                                                    .doc(driverid)
+                                                    .update({
+                                                  'Ride Doing': FieldValue.delete(),
+                                                  'Driver Avaliable': true,
+                                                });
+                                                Navigator.pushReplacement(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) => HomePage(),
+                                                    ));
+                                              } catch (e) {
+                                                if (kDebugMode) {
+                                                  print('General Error: $e');
+                                                }
+                                              }
+                                              Navigator.of(context).pop();
+                                            } else {
+                                              // Show a message if no reason is selected
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(
+                                                  content: Text('Please select a reason to cancel the ride'),
+                                                ),
+                                              );
+                                            }
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.red, // Change to your desired color
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'Submit',
+                                            style: GoogleFonts.poppins(fontSize: 14, color: Colors.white),
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+
+                              },
+                              child: Container(
+                                height: 50,
+                                decoration: BoxDecoration(
+                                    borderRadius: const BorderRadius.all(
+                                        Radius.circular(10)),
+                                    border:
+                                    Border.all(color: Colors.grey)),
+                                width:
+                                MediaQuery.sizeOf(context).width - 40,
+                                child: Center(
+                                  child: Text(
+                                    'Cancel Ride',
+                                    style: GoogleFonts.poppins(
+                                        color: Colors.red,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
