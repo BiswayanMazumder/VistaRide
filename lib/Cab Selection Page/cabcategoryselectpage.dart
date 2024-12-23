@@ -606,14 +606,14 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                   InkWell(
                     onTap: () async {
                       final prefs = await SharedPreferences.getInstance();
-                      prefs.setBool('Apply Promo', true);
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => PromoCodes(
-                              ridepage: true,
-                            ),
-                          ));
+                      // prefs.setBool('Apply Promo', true);
+                      // Navigator.push(
+                      //     context,
+                      //     MaterialPageRoute(
+                      //       builder: (context) => PromoCodes(
+                      //         ridepage: true,
+                      //       ),
+                      //     ));
                     },
                     child: Row(
                       children: [

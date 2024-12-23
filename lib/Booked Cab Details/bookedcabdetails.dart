@@ -253,7 +253,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
           10, // Update location when the user moves at least 10 meters
     );
     _positionStream.listen((Position position) {
-      _updateUserLocation(position); // Update location every time it changes
+      _updateUserLocation(position);
     });
     _timertofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
       fetchridedetails();

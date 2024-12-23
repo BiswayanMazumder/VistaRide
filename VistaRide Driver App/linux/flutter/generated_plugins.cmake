@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  animated_rating_stars
   audioplayers_linux
   awesome_notifications
   file_selector_linux

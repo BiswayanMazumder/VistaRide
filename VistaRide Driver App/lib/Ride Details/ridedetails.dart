@@ -165,6 +165,7 @@ class _RideDetailsState extends State<RideDetails> {
       riderpickupurl =
           'https://www.google.com/maps/dir/?api=1&origin=${driverCurrentLocation.latitude},${driverCurrentLocation.longitude}&destination=${_pickupLocation.latitude},${_pickupLocation.longitude}&travelmode=driving';
     });
+    print('Direction URL $directionurl');
     final String url1 = //use it when ride is verified
         'https://maps.googleapis.com/maps/api/directions/json?origin=${driverCurrentLocation.latitude},${driverCurrentLocation.longitude}&destination=${_dropoffLocation.latitude},${_dropoffLocation.longitude}&key=$apiKey';
     final String url =
@@ -532,41 +533,52 @@ class _RideDetailsState extends State<RideDetails> {
 
   String rideid = '';
   late AudioPlayer player = AudioPlayer();
-  Future<void> fetchactiverides() async {
-    final docsnap = await _firestore
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? rideListener;
+
+  Future<void> fetchactiverides()async {
+    rideListener = _firestore
         .collection('VistaRide Driver Details')
         .doc(_auth.currentUser!.uid)
-        .get();
-    if (docsnap.exists) {
-      setState(() {
-        rideid = docsnap.data()?['Ride Doing'] ?? '';
-      });
-    }
-    if (kDebugMode) {
-      print('Ride Doing $rideid');
-    }
-    if (rideid == '') {
-      player.setReleaseMode(ReleaseMode.stop);
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        try {
-          await player.setSourceUrl(
-            'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2Fuber_cancel.mp3?alt=media&token=ce740648-57ef-4c44-8349-7a3a626f1cae',
-          );
-          await player.resume();
-        } catch (e) {
-          if (kDebugMode) {
-            print("Error playing sound: $e");
-          }
+        .snapshots()
+        .listen((docsnap) async {
+      if (docsnap.exists) {
+        setState(() {
+          rideid = docsnap.data()?['Ride Doing'] ?? '';
+        });
+        if (kDebugMode) {
+          print('Ride Doing: $rideid');
         }
-      });
-      await sendnotification();
-      Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomePage(),
-          ));
-    }
+
+        // If no active ride, perform the desired actions
+        if (rideid.isEmpty) {
+          player.setReleaseMode(ReleaseMode.stop);
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            try {
+              await player.setSourceUrl(
+                'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2Fuber_cancel.mp3?alt=media&token=ce740648-57ef-4c44-8349-7a3a626f1cae',
+              );
+              await player.resume();
+            } catch (e) {
+              if (kDebugMode) {
+                print("Error playing sound: $e");
+              }
+            }
+          });
+
+          await sendnotification();
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomePage(),
+            ),
+          );
+        }
+      }
+    });
   }
+
+
 
   late Timer _timetofetch;
   bool ridestarted = false;
@@ -594,75 +606,101 @@ class _RideDetailsState extends State<RideDetails> {
   String rideruid = '';
   double price = 0;
   String riderprofilephoto = '';
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? rideDetailsListener;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? driverDetailsListener;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? riderDetailsListener;
+
   Future<void> fetchridedetails() async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      final docsnap = await _firestore
+      // Listen for Ride Details changes
+      rideDetailsListener = _firestore
           .collection('Ride Details')
           .doc(prefs.getString('Booking ID'))
-          .get();
-      if (docsnap.exists) {
-        setState(() {
-          ridestarted = docsnap.data()?['Ride Accepted'];
-          driverid = docsnap.data()?['Driver ID'];
-          rideotp = docsnap.data()?['Ride OTP'];
-          pickuplong = docsnap.data()?['Pick Longitude'];
-          pickuplat = docsnap.data()?['Pickup Latitude'];
-          droplat = docsnap.data()?['Drop Latitude'];
-          price = docsnap.data()?['Fare'] is int
-              ? (docsnap.data()?['Fare']).toDouble()
-              : docsnap.data()?['Fare'] is double
-                  ? (docsnap.data()?['Fare']) as double
-                  : 0.0;
-          droplong = docsnap.data()?['Drop Longitude'];
-          pickuploc = docsnap.data()?['Pickup Location'];
-          iscashpayment = docsnap.data()?['Cash Payment'];
-          rideruid = docsnap.data()?['Ride Owner'];
-          droploc = docsnap.data()?['Drop Location'];
-          cabcategory = docsnap.data()?['Cab Category'];
-          rideverified = docsnap.data()?['Ride Verified'];
-          isamountpaid = docsnap.data()?['Amount Paid'] ?? false;
-          istripcompleted = docsnap.data()?['Ride Completed'];
-          notifyrider = docsnap.data()?['Driver Arrived'] ?? false;
-          // print('Ride Verified $pickuploc');
-        });
-        if (kDebugMode) {
-          print('Ride Verified $rideverified');
+          .snapshots()
+          .listen((docsnap) async {
+        if (docsnap.exists) {
+          setState(() {
+            ridestarted = docsnap.data()?['Ride Accepted'] ?? false;
+            driverid = docsnap.data()?['Driver ID'] ?? '';
+            rideotp = docsnap.data()?['Ride OTP'] ?? '';
+            pickuplong = docsnap.data()?['Pick Longitude'] ?? 0.0;
+            pickuplat = docsnap.data()?['Pickup Latitude'] ?? 0.0;
+            droplat = docsnap.data()?['Drop Latitude'] ?? 0.0;
+            price = docsnap.data()?['Fare'] is int
+                ? (docsnap.data()?['Fare']).toDouble()
+                : (docsnap.data()?['Fare'] ?? 0.0);
+            droplong = docsnap.data()?['Drop Longitude'] ?? 0.0;
+            pickuploc = docsnap.data()?['Pickup Location'] ?? '';
+            iscashpayment = docsnap.data()?['Cash Payment'] ?? false;
+            rideruid = docsnap.data()?['Ride Owner'] ?? '';
+            droploc = docsnap.data()?['Drop Location'] ?? '';
+            cabcategory = docsnap.data()?['Cab Category'] ?? '';
+            rideverified = docsnap.data()?['Ride Verified'] ?? false;
+            isamountpaid = docsnap.data()?['Amount Paid'] ?? false;
+            istripcompleted = docsnap.data()?['Ride Completed'] ?? false;
+            notifyrider = docsnap.data()?['Driver Arrived'] ?? false;
+          });
+
+          if (kDebugMode) {
+            print('Ride Verified $rideverified');
+          }
+          // await _getCurrentLocation();
+          // Set up listener for Driver Details
+          if (driverid.isNotEmpty) {
+            startDriverDetailsListener(driverid);
+          }
+
+          // Set up listener for Rider Details
+          if (rideruid.isNotEmpty) {
+            startRiderDetailsListener(rideruid, prefs);
+          }
         }
-      }
-      final Docsnap = await _firestore
-          .collection('VistaRide Driver Details')
-          .doc(driverid)
-          .get();
-      if (Docsnap.exists) {
-        setState(() {
-          drivername = Docsnap.data()?['Name'];
-          driverprofilephoto = Docsnap.data()?['Profile Picture'];
-          carname = Docsnap.data()?['Car Name'];
-          carphoto = Docsnap.data()?['Car Photo'];
-          carnumber = Docsnap.data()?['Car Number Plate'];
-          rating = Docsnap.data()?['Rating'];
-          phonenumber = Docsnap.data()?['Contact Number'];
-        });
-      }
-      // final prefs=await SharedPreferences.getInstance();
-      final Docsnaprider = await _firestore
-          .collection('VistaRide User Details')
-          .doc(rideruid)
-          .get();
-      if (Docsnaprider.exists) {
-        setState(() {
-          ridername = Docsnaprider.data()?['User Name'];
-          riderprofilephoto = Docsnaprider.data()?['Profile Picture'];
-        });
-      }
-      prefs.setString('Rider Name', ridername);
+      });
     } catch (e) {
       if (kDebugMode) {
-        print('Ride Details Error $e');
+        print('Ride Details Listener Error: $e');
       }
     }
+  }
+
+  void startDriverDetailsListener(String driverId) {
+    driverDetailsListener?.cancel(); // Cancel any existing listener
+    driverDetailsListener = _firestore
+        .collection('VistaRide Driver Details')
+        .doc(driverId)
+        .snapshots()
+        .listen((docsnap) {
+      if (docsnap.exists) {
+        setState(() {
+          drivername = docsnap.data()?['Name'];
+          driverprofilephoto = docsnap.data()?['Profile Picture'];
+          carname = docsnap.data()?['Car Name'];
+          carphoto = docsnap.data()?['Car Photo'];
+          carnumber = docsnap.data()?['Car Number Plate'];
+          rating = docsnap.data()?['Rating'];
+          phonenumber = docsnap.data()?['Contact Number'];
+        });
+      }
+    });
+  }
+
+  void startRiderDetailsListener(String riderId, SharedPreferences prefs) {
+    riderDetailsListener?.cancel(); // Cancel any existing listener
+    riderDetailsListener = _firestore
+        .collection('VistaRide User Details')
+        .doc(riderId)
+        .snapshots()
+        .listen((docsnap) {
+      if (docsnap.exists) {
+        setState(() {
+          ridername = docsnap.data()?['User Name'];
+          riderprofilephoto = docsnap.data()?['Profile Picture'];
+        });
+        prefs.setString('Rider Name', ridername);
+      }
+    });
   }
 
   StreamSubscription<QuerySnapshot>? _messageSubscription;
@@ -757,6 +795,10 @@ class _RideDetailsState extends State<RideDetails> {
     super.dispose();
     _timetofetch.cancel();
     _timer.cancel();
+    rideDetailsListener?.cancel();
+    rideListener?.cancel();
+    driverDetailsListener?.cancel();
+    riderDetailsListener?.cancel();
   }
   String serverkey='';
   NotificationService notificationService = NotificationService();
@@ -806,8 +848,8 @@ class _RideDetailsState extends State<RideDetails> {
     // listenForRideRequest();
     fetchridedetails();
     _getCurrentLocation();
-    _timetofetch = Timer.periodic(const Duration(seconds: 300), (Timer t) {
-      fetchactiverides();
+    _timetofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
+      // fetchactiverides();
       _getCurrentLocation();
     });
   }
