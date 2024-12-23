@@ -1017,7 +1017,7 @@ class _RideDetailsState extends State<RideDetails> {
               )):Container(),
           Positioned(
               bottom: 330,
-              right: 90,
+              right:isrecording?125: 90,
               child: InkWell(
                 onTap: () async {
                   if (await canLaunch(
@@ -1039,6 +1039,7 @@ class _RideDetailsState extends State<RideDetails> {
               right: 30,
               child: InkWell(
                 onTap: () async {
+
                   final prefs = await SharedPreferences.getInstance();
 
                   if (isrecording) {
