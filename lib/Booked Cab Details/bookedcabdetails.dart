@@ -5,6 +5,7 @@ import 'package:flutter_sound/public/flutter_sound_recorder.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'dart:io';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:path/path.dart' as p;
@@ -255,12 +256,11 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
     _positionStream.listen((Position position) {
       _updateUserLocation(position);
     });
-    _timertofetch = Timer.periodic(const Duration(seconds: 5), (Timer t) {
+    _timertofetch = Timer.periodic(const Duration(seconds: 300), (Timer t) {
       fetchridedetails();
     });
   }
-
-  LatLng _userCurrentLocation = LatLng(0.0, 0.0);
+  LatLng _userCurrentLocation = const LatLng(0.0, 0.0);
   Future<void> _updateUserLocation(Position position) async {
     setState(() {
       _userCurrentLocation = LatLng(position.latitude, position.longitude);
@@ -590,7 +590,71 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
   }
+  Future<void> capturepayment(String paymentid) async {
+    final prefs = await SharedPreferences.getInstance();
+    // Razorpay credentials
+    const String keyId = Environment.razorpaytestapi;
+    const String keySecret = Environment.razorpaytestkeysecret;
 
+    // Base64 encode the credentials
+    String basicAuth =
+        'Basic ${base64Encode(utf8.encode('$keyId:$keySecret'))}';
+
+    // API Endpoint
+    String url = 'https://api.razorpay.com/v1/payments/$paymentid/capture';
+
+    // Request body
+    final Map<String, dynamic> requestBody = {
+      "amount": (prefs.getDouble('Fare'))! * 100,
+      "currency": "INR"
+    };
+
+    try {
+      // Make the HTTP POST request
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': basicAuth,
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      // Check the response
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (kDebugMode) {
+          print("Refund processed successfully:");
+        }
+        if (kDebugMode) {
+          print(response.body);
+        }
+      } else {
+        if (kDebugMode) {
+          print("Failed to process refund:");
+        }
+        if (kDebugMode) {
+          print(response.body);
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error occurred: $e");
+      }
+    }
+  }
+  void handlePaymentErrorResponse(PaymentFailureResponse response) {}
+
+  void handlePaymentSuccessResponse(PaymentSuccessResponse response) async {
+    final prefs = await SharedPreferences.getInstance();
+    await _firestore.collection('Ride Details').doc(prefs.getString('Booking ID')).update(
+        {
+          'Cash Payment':false
+        });
+    await capturepayment(response.paymentId!);
+    setState(() {
+      iscashpayment=false;
+    });
+  }
   bool ridestarted = false;
   bool rideverified = false;
   String driverid = '';
@@ -1378,6 +1442,46 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                                     ),
                                   ),
                                 ),
+                                const SizedBox(
+                                  width: 20,
+                                ),
+                               iscashpayment? InkWell(
+                                  onTap: () async {
+                                    Razorpay razorpay = Razorpay();
+                                    var options = {
+                                      'key': Environment.razorpaytestapi,
+                                      'amount': price * 100,
+                                      'name': 'VistaRide',
+                                      'description': 'Trip to $dropoffloc from $pickup',
+                                      'retry': {'enabled': true, 'max_count': 1},
+                                      'send_sms_hash': true,
+                                      'external': {
+                                        'wallets': ['paytm']
+                                      }
+                                    };
+                                    razorpay.on(Razorpay.EVENT_PAYMENT_ERROR,
+                                        handlePaymentErrorResponse);
+                                    razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS,
+                                        handlePaymentSuccessResponse);
+                                    razorpay.open(options);
+                                  },
+                                  child: Container(
+                                    height: 50,
+                                    width: 120,
+                                    decoration: BoxDecoration(
+                                      borderRadius: const BorderRadius.all(
+                                          Radius.circular(10)),
+                                      border: Border.all(
+                                          color: Colors.grey, width: 0.5),
+                                    ),
+                                    child: const Padding(
+                                      padding: EdgeInsets.only(
+                                          left: 10, right: 10),
+                                      child: Image(image: NetworkImage('https://cdn.iconscout.com/icon/free/png-256/free-upi-logo-icon-download-in-svg-png-gif-file-'
+                                          'formats--unified-payments-interface-payment-money-transfer-logos-icons-1747946.png?f=webp'))
+                                    ),
+                                  ),
+                                ):Container(),
                               ],
                             ),
                           ),
