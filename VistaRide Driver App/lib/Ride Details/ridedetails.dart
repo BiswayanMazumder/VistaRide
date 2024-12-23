@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:animated_rating_stars/animated_rating_stars.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_swipe_button/flutter_swipe_button.dart';
 import 'package:flutter_timer_countdown/flutter_timer_countdown.dart';
@@ -1533,16 +1534,17 @@ class _RideDetailsState extends State<RideDetails> {
                                           if (kDebugMode) {
                                             print("Verified");
                                           }
+                                          setState(() {
+                                            isotpverification = false;
+                                            rideverified = true;
+                                          });
                                           await _firestore
                                               .collection('Ride Details')
                                               .doc(
                                                   prefs.getString('Booking ID'))
                                               .update({'Ride Verified': true});
                                           await _getCurrentLocation();
-                                          setState(() {
-                                            isotpverification = false;
-                                            rideverified = true;
-                                          });
+
                                           await player.setSourceUrl(
                                             'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2FConnor-2024_12_20-4.mp3?alt=media&token=2954ca35-6b84-49e5-b4eb-2995639c292b',
                                           );
