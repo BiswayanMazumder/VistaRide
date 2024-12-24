@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -488,8 +489,15 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
     '',
     'Our most luxurious ride'
   ];
-
   List cabpricesmultiplier = [36, 40, 65, 15, 100];
+  void getfare()async{
+    final prefs=await SharedPreferences.getInstance();
+    if(prefs.getBool('Apple')==true){
+      setState(() {
+        cabpricesmultiplier=[40, 44, 70, 20, 104];
+      });
+    }
+  }
   int _selectedindex = 0;
   // Add this function to initialize the map controller
   void _onMapCreated(GoogleMapController controller) {

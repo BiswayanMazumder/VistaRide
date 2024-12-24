@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+import 'dart:io';
 import 'package:image/image.dart' as img;
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -220,6 +221,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _getCurrentLocation();
     fetchuserdetails();
+    checkPlatform();
     fetchactiveride();
     fetchdrivers();
     _timertofetch = Timer.periodic(const Duration(seconds: 10), (Timer t) {
@@ -228,6 +230,27 @@ class _HomePageState extends State<HomePage> {
     });
   }
   bool _addressliked=false;
+  bool isandroid=false;
+  bool isios=true;
+  void checkPlatform()async{
+    final prefs=await SharedPreferences.getInstance();
+    if (Platform.isAndroid || Platform.isWindows || Platform.isLinux) {
+      prefs.setBool('Android', true);
+      if (kDebugMode) {
+        print("This device is running Android");
+      }
+    } else if (Platform.isIOS || Platform.isMacOS) {
+      prefs.setBool('Apple', true);
+      if (kDebugMode) {
+        print("This device is running iOS");
+      }
+    } else {
+      prefs.setBool('Android', true);
+      if (kDebugMode) {
+        print("This device is running on an unsupported platform");
+      }
+    }
+  }
   String city='';
   // Function to get the current location using Geolocator
   Future<void> _getCurrentLocation() async {
@@ -421,43 +444,7 @@ class _HomePageState extends State<HomePage> {
             myLocationEnabled: true, // Show the user's location as a blue dot
             myLocationButtonEnabled: false, // Disable the default button
           ),
-         isposteropen? Positioned(
-            top: MediaQuery.sizeOf(context).height / 4, // Adjust top position for centering vertically
-            left: MediaQuery.sizeOf(context).width / 2 - (MediaQuery.sizeOf(context).width - 40) / 2, // Center horizontally
-            child: Container(
-              height: (MediaQuery.sizeOf(context).height / 2)-20,
-              width: MediaQuery.sizeOf(context).width - 40,
-              color: Colors.transparent,
-              child:  Column(
-                children: [
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  Row(
-                    children: [
-                       SizedBox(
-                        width: MediaQuery.sizeOf(context).width-70,
-                      ),
-                      InkWell(
-                          onTap: (){
-                            setState(() {
-                              isposteropen=false;
-                            });
-                          },
-                          child: const Icon(Icons.close,color: Colors.black,))
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  const Image(image: NetworkImage('https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2FVistaRide%20Prem'
-                      'ium%20Membership%20poster%20with%20the%20provided%20details%20(1).png?alt=media&token=49d06886-4c91-4c79-8911-f4e02e2f4327'),
-                  fit: BoxFit.fill,
-                  )
-                ],
-              ),
-            ),
-          ):Container(),
+
           Positioned(
             top: 40,
             left: 75,

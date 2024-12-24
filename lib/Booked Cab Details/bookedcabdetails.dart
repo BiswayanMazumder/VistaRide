@@ -252,7 +252,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
     _positionStream = Geolocator.getPositionStream(
       desiredAccuracy: LocationAccuracy.high,
       distanceFilter:
-          10, // Update location when the user moves at least 10 meters
+          10,
     );
     _positionStream.listen((Position position) {
       _updateUserLocation(position);
