@@ -370,6 +370,8 @@ class _DocumentUploadState extends State<DocumentUpload> {
                               'Car Name':prefs.get('Car Name'),
                               'Car Number Plate':prefs.getString('Car Number Plate'),
                               'Contact Number':prefs.getString('Contact Number'),
+                              'Driver Avaliable':false,
+                              'Driver Online':false
                             });
                             setState(() {
                               issubmitted=true;

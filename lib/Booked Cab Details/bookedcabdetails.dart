@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_sound/public/flutter_sound_recorder.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:path_provider/path_provider.dart';
@@ -192,6 +193,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
     }
     print('Mic Working $_micWorking');
   }
+  late AudioPlayer player = AudioPlayer();
   bool isvoicemergency=false;
   void _startListening() async {
     print('Listening');
@@ -238,13 +240,16 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
     setState(() {
       _isListening = false;
     });
-    print('Listening Stopped');
+    if (kDebugMode) {
+      print('Listening Stopped');
+    }
     _speechToText.stop();
   }
   @override
   void initState() {
     super.initState();
     _fetchRoute();
+    playwarningaudio();
     fetchridedetails();
     fetchWiFiPassword();
     // _requestPermissions();
@@ -698,6 +703,18 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
   bool iscashpayment = false;
   double price = 0;
   bool isridecancelled=false;
+  Future<void> playwarningaudio()async{
+    final prefs=await SharedPreferences.getInstance();
+    await fetchridedetails();
+    if(rideverified){
+      prefs.setBool('Warning Played', false);
+      await player.setSourceUrl(
+        'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2FCarl%20Bishop-2024_12_24-3.mp3?alt=media&token=d579b36a-133d-40b4-8c2b-30f09deedcd7',
+      );
+      await player.resume();
+    }
+    prefs.setBool('Warning Played', true);
+  }
   Future<void> fetchridedetails() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -729,7 +746,10 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
           iscashpayment = docsnap.data()?['Cash Payment'] ?? false;
         });
       }
-      print('Trip Done $isamountpaid');
+      if (kDebugMode) {
+        print('Trip Done $isamountpaid');
+      }
+
       final Docsnap = await _firestore
           .collection('VistaRide Driver Details')
           .doc(driverid)
@@ -747,6 +767,12 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
           drivercurrentlongitude = Docsnap.data()?['Current Longitude'];
         });
       }
+      // if(prefs.getBool('Warning Played')==false && rideverified){
+      //   await player.setSourceUrl(
+      //     'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2FCarl%20Bishop-2024_12_24-3.mp3?alt=media&token=d579b36a-133d-40b4-8c2b-30f09deedcd7',
+      //   );
+      //   await player.resume();
+      // }
       if(isridecancelled){
         Navigator.pushReplacement(
             context,
@@ -1513,7 +1539,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                                 const SizedBox(
                                   width: 20,
                                 ),
-                               iscashpayment? InkWell(
+                               iscashpayment && rideverified? InkWell(
                                   onTap: () async {
                                     Razorpay razorpay = Razorpay();
                                     var options = {

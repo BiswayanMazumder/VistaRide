@@ -39,10 +39,10 @@
               "client_type": 3
             },
             {
-              "client_id": "1025680611513-2smtpj996a93pcb0h2jme6093uomku5c.apps.googleusercontent.com",
+              "client_id": "1025680611513-1arni48h8dofhu096otgl02grkvjqe5f.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.vistafeedd"
+                "bundle_id": "com.example.vistaride"
               }
             }
           ]
@@ -57,6 +57,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "1025680611513-700mqqp5me1ktsj0jmr7btg2hej9qubk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.vistaride",
+            "certificate_hash": "260f49fb11ac1b05a6aaaeb4fe9d1e20a37fbb83"
+          }
+        },
         {
           "client_id": "1025680611513-ilae3fm3uegnqa0c9agakg5ccgvaqodl.apps.googleusercontent.com",
           "client_type": 3
@@ -75,10 +83,54 @@
               "client_type": 3
             },
             {
-              "client_id": "1025680611513-2smtpj996a93pcb0h2jme6093uomku5c.apps.googleusercontent.com",
+              "client_id": "1025680611513-1arni48h8dofhu096otgl02grkvjqe5f.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.vistafeedd"
+                "bundle_id": "com.example.vistaride"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1025680611513:android:617f907c91fdd5b11ea368",
+        "android_client_info": {
+          "package_name": "com.example.vistaridedriver"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1025680611513-ql89qa0sbc2ok30qrkrd4uh0kdolkjb8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.vistaridedriver",
+            "certificate_hash": "260f49fb11ac1b05a6aaaeb4fe9d1e20a37fbb83"
+          }
+        },
+        {
+          "client_id": "1025680611513-ilae3fm3uegnqa0c9agakg5ccgvaqodl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD6NjVZRN9pMg8FyHuWaTM6YCgAPo6jYv4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1025680611513-ilae3fm3uegnqa0c9agakg5ccgvaqodl.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1025680611513-1arni48h8dofhu096otgl02grkvjqe5f.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.vistaride"
               }
             }
           ]

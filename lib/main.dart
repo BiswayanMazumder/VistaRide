@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:vistaride/Home%20Page/HomePage.dart';
 import 'package:vistaride/Login%20Pages/loginpage.dart';
 import 'package:vistaride/Splash%20Screen/splash_screen.dart';
-
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'firebase_options.dart';
 
 void main()async{
@@ -14,6 +14,7 @@ void main()async{
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
   runApp(
       kDebugMode?  DevicePreview(
         enabled:true,

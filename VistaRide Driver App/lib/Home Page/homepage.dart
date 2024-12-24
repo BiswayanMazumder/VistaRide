@@ -292,44 +292,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
   NotificationService notificationService = NotificationService();
-  Future<void> sendnotification() async {
-    await getDeviceToken(); // Assuming this sets a valid `token`
-    await fetchservercode();
-    // Replace this with your actual server token.
-    const String serverToken = Environment.ServerToken;
-
-    final response = await http.post(
-      Uri.parse(
-          'https://fcm.googleapis.com/v1/projects/vistafeedd/messages:send'),
-      headers: {
-        'Content-Type': 'application/json', // Correct Content-Type header
-        'Authorization': 'Bearer $ServerToken', // Correct Authorization header
-      },
-      body: jsonEncode({
-        "message": {
-          "token": '$token',
-          "notification": {
-            "body":
-                "Unfortunately, your rider has cancelled the trip. Please wait for some time till we assign you a new ride.",
-            "title": "Ride Cancelled"
-          }
-        }
-      }), // Convert the body Map to JSON string
-    );
-
-    if (response.statusCode == 200) {
-      if (kDebugMode) {
-        print('Notification sent');
-      }
-    } else {
-      if (kDebugMode) {
-        print(
-            'Failed to send notification. Status code: ${response.statusCode}');
-        print('Response: ${response.body}');
-      }
-    }
-  }
-
   Future<void> sendrideacceptnotification() async {
     await fetchRideDetails(riderequestid);
     await getDeviceToken();

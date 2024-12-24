@@ -159,6 +159,9 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
     if (kDebugMode) {
       print('Fetched from cache $weathercondition');
     }
+    setState(() {
+      isLoading=false;
+    });
   }
 
   Future<void> fetchdrivers() async {
@@ -294,13 +297,14 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
   void initState() {
     super.initState();
     _fetchRoute();
+    getfare();
     fetchweatherfromcache();
   }
 
   String Time = '';
   String? pickup;
   String? dropoffloc;
-  String DistanceTravel = '';
+  String DistanceTravel = '5 km';
 
   // Fetch route and travel time using the Google Directions API
   Future<void> _fetchRoute() async {
@@ -351,7 +355,6 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
       if (data['routes'].isNotEmpty) {
         final duration = data['routes'][0]['legs'][0]['duration']['text'];
         final distance = data['routes'][0]['legs'][0]['distance']['text'];
-
         // Get polyline for the route
         String encodedPolyline =
             data['routes'][0]['overview_polyline']['points'];
@@ -393,6 +396,9 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
           print('Estimated distance: $DistanceTravel');
         }
       }
+      setState(() {
+        isLoading=false;
+      });
     } else {
       print('Failed to load route');
     }
@@ -473,30 +479,41 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
     super.dispose();
   }
 
-  List cabpriceextended = [50, 200, 500, 0, 1000];
+  List cabpriceextended = [50, 200, 500, 0, 1000,10];
   List carcategoryimages = [
     'https://olawebcdn.com/images/v1/cabs/sl/ic_mini.png',
     'https://olawebcdn.com/images/v1/cabs/sl/ic_prime.png',
     'https://olawebcdn.com/images/v1/cabs/sl/ic_suv.png',
     'https://olawebcdn.com/images/v1/cabs/sl/ic_kp.png',
-    'https://d1a3f4spazzrp4.cloudfront.net/car-types/haloProductImages/v1.1/Black_Premium_Driver_Red_Carpet.png'
+    'https://d1a3f4spazzrp4.cloudfront.net/car-types/haloProductImages/v1.1/Black_Premium_Driver_Red_Carpet.png',
+    'https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1648431773/assets/1d/db8c56-0204-4ce4-81ce-56a11a07fe98/original/Uber_Auto_558x372_pixels_Desktop.png'
   ];
-  List cabcategorynames = ['Mini', 'Prime', 'SUV', 'Non AC Taxi', 'LUX'];
+  List cabcategorynames = ['Mini', 'Prime', 'SUV', 'Non AC Taxi', 'LUX','Auto'];
   List cabcategorydescription = [
     'Highly Discounted fare',
     'Spacious sedans, top drivers',
     'Spacious SUVs',
     '',
-    'Our most luxurious ride'
+    'Our most luxurious ride',
+    'Affordable autos for trips'
   ];
-  List cabpricesmultiplier = [36, 40, 65, 15, 100];
+  bool isLoading=true;
+  List cabpricesmultiplier = [];
   void getfare()async{
     final prefs=await SharedPreferences.getInstance();
     if(prefs.getBool('Apple')==true){
       setState(() {
-        cabpricesmultiplier=[40, 44, 70, 20, 104];
+        cabpricesmultiplier=[40, 44, 70, 20, 104,35];
       });
     }
+    else if(prefs.getBool('Android')==true){
+      setState(() {
+        cabpricesmultiplier=[36, 40, 65, 15, 100,30];
+      });
+    }
+    setState(() {
+      isLoading=false;
+    });
   }
   int _selectedindex = 0;
   // Add this function to initialize the map controller
@@ -750,7 +767,9 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
           ),
         ),
       ),
-      body: Stack(
+      body:isLoading?const CircularProgressIndicator(
+        color: Colors.black,
+      ): Stack(
         children: [
           GoogleMap(
             initialCameraPosition: CameraPosition(
@@ -861,7 +880,7 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                       color: Colors.grey,
                       thickness: 0.5,
                     ),
-                    Padding(
+                   Padding(
                       padding: const EdgeInsets.only(left: 20, top: 10),
                       child: Row(
                         children: [
@@ -877,7 +896,7 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                     ),
                     Expanded(
                         child: ListView.builder(
-                      itemCount: carcategoryimages.length,
+                      itemCount:double.parse(DistanceTravel.replaceAll(RegExp(r'[^0-9.]'), '')).floor()<=15? carcategoryimages.length:carcategoryimages.length-1,
                       itemBuilder: (context, index) {
                         return Column(
                           mainAxisAlignment: MainAxisAlignment.start,

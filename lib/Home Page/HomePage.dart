@@ -65,109 +65,112 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> fetchdrivers() async {
-    await _getCurrentLocation();
-    try {
-      final QuerySnapshot docsnap = await _firestore
-          .collection('VistaRide Driver Details')
-          .get(); // Fetch all drivers regardless of their "Driver Online" status
+  void fetchdrivers() {
+    _firestore
+        .collection('VistaRide Driver Details')
+        .snapshots()
+        .listen((QuerySnapshot snapshot) async {
+      await _getCurrentLocation();
+      try {
+        List<dynamic> nearbyDrivers = [];
+        Set<Marker> driverMarkers = {}; // Temporary set for driver markers
 
-      List<dynamic> nearbyDrivers = [];
-      Set<Marker> driverMarkers = {}; // Temporary set for driver markers
+        for (var doc in snapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          final String driverLatitude = data['Current Latitude'] ?? "0.0";
+          final String driverLongitude = data['Current Longitude'] ?? "0.0";
+          final String cabcategory = data['Car Category'] ?? '';
+          final bool isDriverOnline = data['Driver Online'] ?? false;
+          final bool isDriverAvaliable = data['Driver Avaliable'] ?? true;
 
-      for (var doc in docsnap.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        final String driverLatitude = data['Current Latitude'] ?? "0.0";
-        final String driverLongitude = data['Current Longitude'] ?? "0.0";
-        final String cabcategory = data['Car Category'] ?? '';
-        final bool isDriverOnline = data['Driver Online'] ?? false;
-        final bool isDriverAvaliable = data['Driver Avaliable'] ?? true;
-        // Skip offline drivers and remove their markers if they are already on the map
-        if (!isDriverOnline) {
-          setState(() {
-            _markers.removeWhere(
-              (marker) =>
-                  marker.markerId.value.startsWith('driver_') &&
-                  marker.markerId.value == 'driver_${doc.id}',
-            );
-          });
-          continue;
-        }
-
-        // Calculate the distance between user and driver
-        double distance = _calculateDistance(
-          _currentLocation.latitude,
-          _currentLocation.longitude,
-          double.parse(driverLatitude),
-          double.parse(driverLongitude),
-        );
-
-        if (kDebugMode) {
-          print('Distance $distance');
-        }
-
-        if (distance <= 15.0 && isDriverAvaliable) {
-          // Within 15 km
-          nearbyDrivers.add({
-            'driverId': doc.id,
-            'latitude': driverLatitude,
-            'longitude': driverLongitude,
-            'otherDetails': data,
-          });
-
-          BitmapDescriptor carIcon;
-          try {
-            carIcon = await _getNetworkCarIcon(
-                'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2Fimages-removebg-preview%20(1).png?alt=media&token=80f80ee3-6787-4ddc-8aad-f9ce400461ea');
-          } catch (e) {
-            print('Failed to load custom car icon: $e');
-            carIcon =
-                BitmapDescriptor.defaultMarker; // Fallback to default marker
+          // Skip offline drivers and remove their markers if they are already on the map
+          if (!isDriverOnline) {
+            setState(() {
+              _markers.removeWhere(
+                    (marker) =>
+                marker.markerId.value.startsWith('driver_') &&
+                    marker.markerId.value == 'driver_${doc.id}',
+              );
+            });
+            continue;
           }
 
-          // Add a marker for this driver
-          driverMarkers.add(
-            Marker(
-              markerId:
-                  MarkerId('driver_${doc.id}'), // Unique ID for driver markers
-              icon: carIcon,
-              position: LatLng(
-                  double.parse(driverLatitude), double.parse(driverLongitude)),
-            ),
+          // Calculate the distance between user and driver
+          double distance = _calculateDistance(
+            _currentLocation.latitude,
+            _currentLocation.longitude,
+            double.parse(driverLatitude),
+            double.parse(driverLongitude),
           );
-        }
-      }
 
-      setState(() {
-        driversnearme = nearbyDrivers; // Update the state with nearby drivers
-        // Remove all driver markers first
-        _markers.removeWhere(
-            (marker) => marker.markerId.value.startsWith('driver_'));
-        // Add the updated driver markers
-        _markers.addAll(driverMarkers);
-      });
-
-      if (nearbyDrivers.isNotEmpty) {
-        for (var driver in nearbyDrivers) {
           if (kDebugMode) {
-            print('Driver ID: ${driver['driverId']}');
-            print('Latitude: ${driver['latitude']}');
-            print('Longitude: ${driver['longitude']}');
-            print('Other Details: ${driver['otherDetails']}');
-            print('--------------------------');
+            print('Distance $distance');
+          }
+
+          if (distance <= 15.0 && isDriverAvaliable) {
+            // Within 15 km
+            nearbyDrivers.add({
+              'driverId': doc.id,
+              'latitude': driverLatitude,
+              'longitude': driverLongitude,
+              'otherDetails': data,
+            });
+
+            BitmapDescriptor carIcon;
+            try {
+              carIcon = await _getNetworkCarIcon(
+                  'https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2Fimages-removebg-preview%20(1).png?alt=media&token=80f80ee3-6787-4ddc-8aad-f9ce400461ea');
+            } catch (e) {
+              print('Failed to load custom car icon: $e');
+              carIcon =
+                  BitmapDescriptor.defaultMarker; // Fallback to default marker
+            }
+
+            // Add a marker for this driver
+            driverMarkers.add(
+              Marker(
+                markerId:
+                MarkerId('driver_${doc.id}'), // Unique ID for driver markers
+                icon: carIcon,
+                position: LatLng(
+                    double.parse(driverLatitude), double.parse(driverLongitude)),
+              ),
+            );
           }
         }
-      } else {
+
+        setState(() {
+          driversnearme = nearbyDrivers; // Update the state with nearby drivers
+          // Remove all driver markers first
+          _markers.removeWhere(
+                  (marker) => marker.markerId.value.startsWith('driver_'));
+          // Add the updated driver markers
+          _markers.addAll(driverMarkers);
+        });
+
+        if (nearbyDrivers.isNotEmpty) {
+          for (var driver in nearbyDrivers) {
+            if (kDebugMode) {
+              print('Driver ID: ${driver['driverId']}');
+              print('Latitude: ${driver['latitude']}');
+              print('Longitude: ${driver['longitude']}');
+              print('Other Details: ${driver['otherDetails']}');
+              print('--------------------------');
+            }
+          }
+        } else {
+          if (kDebugMode) {
+            print('No drivers found within 15 km radius.');
+          }
+        }
+      } catch (e) {
         if (kDebugMode) {
-          print('No drivers found within 15 km radius.');
+          print('Error fetching drivers: $e');
         }
       }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error fetching drivers: $e');
-      }
-    }
+    });
   }
+
 
   double _calculateDistance(
       double lat1, double lon1, double lat2, double lon2) {
@@ -224,10 +227,6 @@ class _HomePageState extends State<HomePage> {
     checkPlatform();
     fetchactiveride();
     fetchdrivers();
-    _timertofetch = Timer.periodic(const Duration(seconds: 10), (Timer t) {
-      fetchdrivers();
-
-    });
   }
   bool _addressliked=false;
   bool isandroid=false;
@@ -358,8 +357,9 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     // TODO: implement dispose
-    super.dispose();
     _timertofetch.cancel();
+    super.dispose();
+
   }
 
   // Called when the map is created

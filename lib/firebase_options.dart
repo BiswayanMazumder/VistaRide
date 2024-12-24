@@ -64,7 +64,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1025680611513',
     projectId: 'vistafeedd',
     storageBucket: 'vistafeedd.appspot.com',
-    androidClientId: '1025680611513-ikqfc17p2mfeonm2k7j4bpn09nrimu66.apps.googleusercontent.com',
+    androidClientId: '1025680611513-700mqqp5me1ktsj0jmr7btg2hej9qubk.apps.googleusercontent.com',
     iosClientId: '1025680611513-1arni48h8dofhu096otgl02grkvjqe5f.apps.googleusercontent.com',
     iosBundleId: 'com.example.vistaride',
   );
@@ -75,7 +75,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1025680611513',
     projectId: 'vistafeedd',
     storageBucket: 'vistafeedd.appspot.com',
-    androidClientId: '1025680611513-ikqfc17p2mfeonm2k7j4bpn09nrimu66.apps.googleusercontent.com',
+    androidClientId: '1025680611513-700mqqp5me1ktsj0jmr7btg2hej9qubk.apps.googleusercontent.com',
     iosClientId: '1025680611513-1arni48h8dofhu096otgl02grkvjqe5f.apps.googleusercontent.com',
     iosBundleId: 'com.example.vistaride',
   );
@@ -89,4 +89,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'vistafeedd.appspot.com',
     measurementId: 'G-ZFRR1BZQFV',
   );
+
 }
