@@ -940,7 +940,7 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                                       double distanceValue = double.parse(
                                           DistanceTravel.replaceAll(
                                               RegExp(r'[^0-9.]'), ''));
-                                      double fare = weathercondition == 'Haze'
+                                      double fare = weathercondition == 'Rain'
                                           ? ((distanceValue.floor().toDouble() *
                                                   cabpricesmultiplier[index]) +
                                               cabpriceextended[index])
@@ -1005,7 +1005,7 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                                         ],
                                       ),
                                       const Spacer(),
-                                      weathercondition == 'Haze'
+                                      weathercondition == 'Rain'
                                           ? Text(
                                               '₹${(double.parse(DistanceTravel.replaceAll(RegExp(r'[^0-9.]'), '')).floor() * cabpricesmultiplier[index]) + cabpriceextended[index]}',
                                               style: GoogleFonts.poppins(

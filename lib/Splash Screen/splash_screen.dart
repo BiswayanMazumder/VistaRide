@@ -20,10 +20,17 @@ class _SplashScreenState extends State<SplashScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   bool isactiveride = false;
-
+  int vistamiles=0;
   Future<void> fetchactiveride() async {
     List bookingid = [];
     final prefs = await SharedPreferences.getInstance();
+    final vistamilesnap=await _firestore.collection('VistaRide User Details').doc(_auth.currentUser!.uid).get();
+    if(vistamilesnap.exists){
+      prefs.setInt('Vistamiles', vistamilesnap.data()?['Vistamiles']??0);
+      if (kDebugMode) {
+        print('VistaMiles: ${vistamilesnap.data()?['Vistamiles']??0}');
+      }
+    }
     final docsnap = await _firestore
         .collection('Booking IDs')
         .doc(_auth.currentUser!.uid)

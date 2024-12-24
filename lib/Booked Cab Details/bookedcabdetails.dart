@@ -251,8 +251,8 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
     _fetchRoute();
     playwarningaudio();
     fetchridedetails();
+    // calculatevistamiles();
     fetchWiFiPassword();
-    // _requestPermissions();
     fetchpaymentid();
     _positionStream = Geolocator.getPositionStream(
       desiredAccuracy: LocationAccuracy.high,
@@ -462,6 +462,37 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
 
     return minDistance > threshold;
   }
+  int rewardMiles = 0;  // Changed variable name
+
+  Future<void> calculatevistamiles() async {  // Changed method name
+    try {
+      await fetchridedetails();  // If needed, adjust the function name to match your actual function
+      final prefs = await SharedPreferences.getInstance();
+
+      // Calculate the new reward miles
+      rewardMiles = prefs.getInt('Vistamiles')! + (0.001 * price).floor();  // Updated name
+
+      // Only call setState if the widget is still mounted
+      if (mounted) {
+        setState(() {
+          rewardMiles = rewardMiles;
+        });
+      }
+
+      await _firestore.collection('VistaRide User Details').doc(_auth.currentUser!.uid).update({
+        'Vistamiles': rewardMiles  // Updated name in Firestore as well
+      });
+
+      if (kDebugMode) {
+        print('Fetched RewardMiles: $rewardMiles');  // Updated name in debug print
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('RewardMiles error $e');  // Updated name in error log
+      }
+    }
+  }
+
 
 // Helper method to calculate distance between two lat/lng points
   double _calculateDistance(
@@ -786,6 +817,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
             MaterialPageRoute(
               builder: (context) => HomePage(),
             ));
+        await calculatevistamiles();
       }
     } catch (e) {
       print('Error in fetching ride $e');
@@ -1038,7 +1070,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                     ),
                   ),
                 ),
-           rideverified?Positioned(
+           rideverified && !istripdone?Positioned(
             bottom: 350,
             right: 80,
             child: InkWell(
@@ -1058,7 +1090,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
               ),
                         ),
             ),):Container(),
-          rideverified
+          rideverified && !istripdone
               ? Positioned(
                   bottom: 350,
                   right: 20,
@@ -1684,6 +1716,42 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: 1,
                                     )),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(
+                                left: 20, right: 20, top: 10, bottom: 20),
+                            child: InkWell(
+                              child: Container(
+                                width: MediaQuery.sizeOf(context).width,
+                                decoration: BoxDecoration(
+                                    border: Border.all(
+                                        color: Colors.grey, width: 0.5)),
+                                height: 40,
+                                child: Row(
+                                  children: [
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                    const Icon(
+                                      Icons.wallet,
+                                      color: Colors.green,
+                                    ),
+                                    const SizedBox(
+                                      width: 20,
+                                    ),
+                                    Expanded(
+                                        child: Text(
+                                          '${(0.001*price).floor()} Vistamile credits will be credited after trip ends',
+                                          style: GoogleFonts.poppins(
+                                            // fontWeight: FontWeight.w500,
+                                              color: Colors.black),
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                        )),
                                   ],
                                 ),
                               ),

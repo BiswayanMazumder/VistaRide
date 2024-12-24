@@ -457,34 +457,34 @@ class _HomePageState extends State<HomePage> {
               width: MediaQuery.sizeOf(context).width - 140,
               child: TextField(
                 controller: _locationcontroller,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   // hintText: 'Search for a location',
-                  suffixIcon: InkWell(
-                    onTap: ()async{
-                      setState(() {
-                        islikedlocation = !islikedlocation;
-                      });
-                      if(islikedlocation){
-                        await _firestore.collection('Liked Addresses').doc(_auth.currentUser!.uid).set(
-                            {
-                              'Addresses':FieldValue.arrayUnion([_locationcontroller.text])
-                            },SetOptions(merge: true));
-                      }
-                      if(!islikedlocation){
-                        await _firestore.collection('Liked Addresses').doc(_auth.currentUser!.uid).update(
-                            {
-                              'Addresses':FieldValue.arrayRemove([_locationcontroller.text])
-                            });
-                      }
-                    },
-                    child: Icon(
-                      islikedlocation ? Icons.favorite : Icons.favorite_border,
-                      color: islikedlocation ? Colors.red : Colors.black,
-                    ),
-                  ),
+                  // suffixIcon: InkWell(
+                  //   onTap: ()async{
+                  //     setState(() {
+                  //       islikedlocation = !islikedlocation;
+                  //     });
+                  //     if(islikedlocation){
+                  //       await _firestore.collection('Liked Addresses').doc(_auth.currentUser!.uid).set(
+                  //           {
+                  //             'Addresses':FieldValue.arrayUnion([_locationcontroller.text])
+                  //           },SetOptions(merge: true));
+                  //     }
+                  //     if(!islikedlocation){
+                  //       await _firestore.collection('Liked Addresses').doc(_auth.currentUser!.uid).update(
+                  //           {
+                  //             'Addresses':FieldValue.arrayRemove([_locationcontroller.text])
+                  //           });
+                  //     }
+                  //   },
+                  //   child: Icon(
+                  //     islikedlocation ? Icons.favorite : Icons.favorite_border,
+                  //     color: islikedlocation ? Colors.red : Colors.black,
+                  //   ),
+                  // ),
                   border: InputBorder.none, // Removes the bottom underline
                   contentPadding:
-                      const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+                      EdgeInsets.symmetric(vertical: 15, horizontal: 10),
                 ),
                 onSubmitted: (value) {
                   // Trigger location search when user submits text
