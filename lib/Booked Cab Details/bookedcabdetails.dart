@@ -471,7 +471,12 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
 
       // Calculate the new reward miles
       rewardMiles = prefs.getInt('Vistamiles')! + (0.001 * price).floor();  // Updated name
-
+      if(rewardMiles>6000){
+        await _firestore.collection('VistaRide User Details').doc(_auth.currentUser!.uid).update({
+          'Vistamiles': 0  // Updated name in Firestore as well
+        });
+        prefs.setInt('Vistamiles', 0);
+      }
       // Only call setState if the widget is still mounted
       if (mounted) {
         setState(() {

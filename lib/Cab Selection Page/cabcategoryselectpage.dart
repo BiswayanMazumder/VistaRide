@@ -292,13 +292,26 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
   double _toRadians(double degree) {
     return degree * pi / 180;
   }
-
+  int vistamiles=0;
+  Future<void>fetchvistamiles()async{
+    final prefs = await SharedPreferences.getInstance();
+    final vistamilesnap=await _firestore.collection('VistaRide User Details').doc(_auth.currentUser!.uid).get();
+    if(vistamilesnap.exists){
+      vistamiles=vistamilesnap.data()?['Vistamiles']??0;
+      prefs.setInt('Vistamiles', vistamilesnap.data()?['Vistamiles']??0);
+      if (kDebugMode) {
+        print('VistaMiles: ${vistamilesnap.data()?['Vistamiles']??0}');
+      }
+    }
+  }
   @override
   void initState() {
     super.initState();
     _fetchRoute();
     getfare();
+    fetchvistamiles();
     fetchweatherfromcache();
+    fetchvistamiles();
   }
 
   String Time = '';
@@ -542,6 +555,44 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
   }
 
   bool iscashpayment = true;
+  Future<void>detailsforfreeride()async{
+    final prefs = await SharedPreferences.getInstance();
+    await _firestore.collection('Booking IDs').doc(_auth.currentUser!.uid).set({
+      'IDs': FieldValue.arrayUnion([prefs.getString('Booking ID')])
+    }, SetOptions(merge: true));
+    await _firestore
+        .collection('Ride Details')
+        .doc(prefs.getString('Booking ID'))
+        .set({
+      'Booking ID': prefs.getString('Booking ID'),
+      'Pickup Location': pickup,
+      'Drop Location': dropoffloc,
+      'Fare': prefs.getDouble('Fare'),
+      'Cash Payment': false,
+      'Cab Category': prefs.getString('Cab Category'),
+      'Booking Time': FieldValue.serverTimestamp(),
+      'Ride Accepted': false,
+      'Ride Verified': false,
+      'Ride Completed': false,
+      'Driver ID': '',
+      'Ride Owner':_auth.currentUser!.uid,
+      'Pick Longitude': _pickupLocation.longitude,
+      'Pickup Latitude': _pickupLocation.latitude,
+      'Drop Latitude': _dropoffLocation.latitude,
+      'Drop Longitude': _dropoffLocation.longitude,
+      'Travel Distance': prefs.getString('Travel Distance'),
+      'Travel Time': prefs.getString('Travel Time'),
+      'Ride OTP': randomFourDigitNumber,
+    });
+    if (prefs.getString('Cab Category') != null ||
+        prefs.getString('Fare') != null) {
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CabFinding(),
+          ));
+    }
+  }
   void handlePaymentErrorResponse(PaymentFailureResponse response) {}
 
   void handlePaymentSuccessResponse(PaymentSuccessResponse response) async {
@@ -603,8 +654,8 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
               const SizedBox(
                 height: 10,
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+             vistamiles<6000? Row(
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   InkWell(
                     onTap: () {
@@ -618,6 +669,11 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                           width: 10,
                         ),
                         Text(
+                          'Current mode of payment: ',
+                          style: GoogleFonts.poppins(
+                              color: Colors.black, fontWeight: FontWeight.w500),
+                        ),
+                        Text(
                           iscashpayment ? 'Cash' : 'Online',
                           style: GoogleFonts.poppins(
                               color: Colors.black, fontWeight: FontWeight.w600),
@@ -628,33 +684,33 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                   const SizedBox(
                     width: 10,
                   ),
-                  InkWell(
-                    onTap: () async {
-                      final prefs = await SharedPreferences.getInstance();
-                      // prefs.setBool('Apply Promo', true);
-                      // Navigator.push(
-                      //     context,
-                      //     MaterialPageRoute(
-                      //       builder: (context) => PromoCodes(
-                      //         ridepage: true,
-                      //       ),
-                      //     ));
-                    },
-                    child: Row(
-                      children: [
-                        const SizedBox(
-                          width: 10,
-                        ),
-                        Text(
-                          'Promo codes',
-                          style: GoogleFonts.poppins(
-                              color: Colors.black, fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
-                  ),
+                  // InkWell(
+                  //   onTap: () async {
+                  //     final prefs = await SharedPreferences.getInstance();
+                  //     // prefs.setBool('Apply Promo', true);
+                  //     // Navigator.push(
+                  //     //     context,
+                  //     //     MaterialPageRoute(
+                  //     //       builder: (context) => PromoCodes(
+                  //     //         ridepage: true,
+                  //     //       ),
+                  //     //     ));
+                  //   },
+                  //   child: Row(
+                  //     children: [
+                  //       const SizedBox(
+                  //         width: 10,
+                  //       ),
+                  //       Text(
+                  //         'Promo codes',
+                  //         style: GoogleFonts.poppins(
+                  //             color: Colors.black, fontWeight: FontWeight.w600),
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
                 ],
-              ),
+              ):Container(),
               const SizedBox(
                 height: 15,
               ),
@@ -719,13 +775,13 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                             ));
                       }
                     }
-                    if (!iscashpayment) {
+                    if (!iscashpayment && vistamiles<6000) {
                       Razorpay razorpay = Razorpay();
                       var options = {
                         'key': Environment.razorpaytestapi,
                         'amount': (prefs.getDouble('Fare'))! * 100,
                         'name': 'VistaRide',
-                        'description': 'Trip to ${dropoffloc} from ${pickup}',
+                        'description': 'Trip to $dropoffloc from $pickup',
                         'retry': {'enabled': true, 'max_count': 1},
                         'send_sms_hash': true,
                         'external': {
@@ -739,6 +795,8 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                       razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET,
                           handleExternalWalletSelected);
                       razorpay.open(options);
+                    }else if(iscashpayment && vistamiles>=6000){
+                      detailsforfreeride();
                     }
                   }
                 },
@@ -783,6 +841,7 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
             markers: _markers,
             polylines: _polylines, // Display the polyline here
           ),
+
           Positioned(
               top: 30,
               left: 20,
@@ -1005,7 +1064,11 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                                         ],
                                       ),
                                       const Spacer(),
-                                      weathercondition == 'Rain'
+                                    vistamiles>6000?Text(
+                                      'Free',
+                                      style: GoogleFonts.poppins(
+                                          fontWeight: FontWeight.w600),
+                                    ):  weathercondition == 'Rain'
                                           ? Text(
                                               '₹${(double.parse(DistanceTravel.replaceAll(RegExp(r'[^0-9.]'), '')).floor() * cabpricesmultiplier[index]) + cabpriceextended[index]}',
                                               style: GoogleFonts.poppins(
