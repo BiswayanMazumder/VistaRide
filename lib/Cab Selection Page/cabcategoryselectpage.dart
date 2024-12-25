@@ -593,8 +593,76 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
           ));
     }
   }
-  void handlePaymentErrorResponse(PaymentFailureResponse response) {}
+  bool istranslate=false;
+  String translatedhinditext='';
+  Future<void> translatetext(String originaltext) async {
+    try {
+      final response = await http.post(
+        Uri.parse('https://cloud.olakrutrim.com/api/v1/languagelabs/translation'),
+        headers: {
+          'Authorization': 'Bearer ${Environment.OlaTranslateAPI}',
+          'Content-Type': 'application/json'
+        },
+        body: jsonEncode({
+          "text": originaltext,  // Use the parameter instead of static text
+          "src_language": "eng_Latn",
+          "tgt_language": "hin_Deva",
+          "model": "krutrim-translate-v1.0"
+        }),
+      );
 
+      // Check if the response is successful (HTTP 200)
+      if (response.statusCode == 200) {
+        // Parse the JSON response
+        final responseBody = jsonDecode(response.body);
+
+        if (kDebugMode) {
+          print('Response body: $responseBody');
+        }
+
+        // Extract the translated text from the 'data' field
+        if (responseBody['status'] == 'success') {
+
+
+          // Convert the translated text into readable Hindi characters
+          String decodedText = utf8.decode(response.bodyBytes);
+          String jsonString = decodedText;
+
+          // Step 1: Parse the JSON string into a Dart object
+          Map<String, dynamic> jsonData = jsonDecode(jsonString);
+
+          // Step 2: Access the translated_text value
+          String translatedText = jsonData['data']['translated_text'];
+
+          // Output the result
+          if (kDebugMode) {
+            print('Translated $translatedText');
+          }
+          setState(() {
+            translatedhinditext = translatedText;
+          });
+          if (kDebugMode) {
+            print('Decoded Translated Text: $translatedhinditext');
+          }
+        } else {
+          if (kDebugMode) {
+            print('Translation failed. Status: ${responseBody['status']}');
+          }
+        }
+      } else {
+        // If the request fails, print an error message
+        if (kDebugMode) {
+          print('Failed to fetch translation: ${response.statusCode}');
+          print('Error: ${response.body}');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error during translation request: $e');
+      }
+    }
+  }
+  void handlePaymentErrorResponse(PaymentFailureResponse response) {}
   void handlePaymentSuccessResponse(PaymentSuccessResponse response) async {
     final prefs = await SharedPreferences.getInstance();
     await _firestore.collection('Booking IDs').doc(_auth.currentUser!.uid).set({
@@ -841,7 +909,26 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
             markers: _markers,
             polylines: _polylines, // Display the polyline here
           ),
-
+          Positioned(
+              top: 30,
+              right: 20,
+              child: InkWell(
+                onTap: ()async{
+                  setState(() {
+                    istranslate=!istranslate;
+                  });
+                  if(istranslate){
+                    await translatetext('Estimated Drop off by');
+                  }
+                },
+                child: const CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: Icon(
+                    Icons.translate,
+                    color: Colors.black,
+                  ),
+                ),
+              )),
           Positioned(
               top: 30,
               left: 20,
@@ -944,7 +1031,7 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                       child: Row(
                         children: [
                           Text(
-                            'Estimated Drop off by ${formatTime(DateTime.now().add(parseDuration(Time)))}',
+                      istranslate?'$translatedhinditext ${formatTime(DateTime.now().add(parseDuration(Time)))}':'Estimated Drop off by ${formatTime(DateTime.now().add(parseDuration(Time)))}',
                             style: GoogleFonts.poppins(
                                 color: Colors.black,
                                 fontWeight: FontWeight.w600,
