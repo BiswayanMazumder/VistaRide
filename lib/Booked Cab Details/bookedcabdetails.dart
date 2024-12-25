@@ -497,8 +497,39 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
       }
     }
   }
+  Future<void> calculatevistamileswhenover6000() async {  // Changed method name
+    try {
+      await fetchridedetails();  // If needed, adjust the function name to match your actual function
+      final prefs = await SharedPreferences.getInstance();
 
+      // Calculate the new reward miles
+      rewardMiles =(0.001 * price).floor();  // Updated name
+      if(rewardMiles>6000){
+        await _firestore.collection('VistaRide User Details').doc(_auth.currentUser!.uid).update({
+          'Vistamiles': rewardMiles  // Updated name in Firestore as well
+        });
+        prefs.setInt('Vistamiles', rewardMiles);
+      }
+      // Only call setState if the widget is still mounted
+      if (mounted) {
+        setState(() {
+          rewardMiles = rewardMiles;
+        });
+      }
 
+      await _firestore.collection('VistaRide User Details').doc(_auth.currentUser!.uid).update({
+        'Vistamiles': rewardMiles  // Updated name in Firestore as well
+      });
+
+      if (kDebugMode) {
+        print('Fetched RewardMiles: $rewardMiles');  // Updated name in debug print
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('RewardMiles error $e');  // Updated name in error log
+      }
+    }
+  }
 // Helper method to calculate distance between two lat/lng points
   double _calculateDistance(
       double lat1, double lon1, double lat2, double lon2) {
@@ -822,7 +853,7 @@ class _BookedCabDetailsState extends State<BookedCabDetails> {
             MaterialPageRoute(
               builder: (context) => HomePage(),
             ));
-        await calculatevistamiles();
+       rewardMiles>6000?await calculatevistamileswhenover6000(): await calculatevistamiles();
       }
     } catch (e) {
       print('Error in fetching ride $e');
