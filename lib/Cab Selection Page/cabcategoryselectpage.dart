@@ -1061,6 +1061,16 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                                                 color: Colors.grey,
                                                 fontSize: 11),
                                           ),
+                                          weathercondition=='Rain'?const SizedBox(
+                                            height: 8,
+                                          ):Container(),
+                                          Text(
+                                            weathercondition=='Rain'?'Fare is higher than usual':'',
+                                            style: GoogleFonts.poppins(
+                                                fontWeight: FontWeight.w400,
+                                                color: Colors.grey,
+                                                fontSize: 11),
+                                          ),
                                         ],
                                       ),
                                       const Spacer(),
