@@ -662,6 +662,74 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
       }
     }
   }
+  String translatednodriverstext='';
+  Future<void> translatenodriverstext(String originaltext) async {
+    try {
+      final response = await http.post(
+        Uri.parse('https://cloud.olakrutrim.com/api/v1/languagelabs/translation'),
+        headers: {
+          'Authorization': 'Bearer ${Environment.OlaTranslateAPI}',
+          'Content-Type': 'application/json'
+        },
+        body: jsonEncode({
+          "text": originaltext,  // Use the parameter instead of static text
+          "src_language": "eng_Latn",
+          "tgt_language": "hin_Deva",
+          "model": "krutrim-translate-v1.0"
+        }),
+      );
+
+      // Check if the response is successful (HTTP 200)
+      if (response.statusCode == 200) {
+        // Parse the JSON response
+        final responseBody = jsonDecode(response.body);
+
+        if (kDebugMode) {
+          print('Response body: $responseBody');
+        }
+
+        // Extract the translated text from the 'data' field
+        if (responseBody['status'] == 'success') {
+
+
+          // Convert the translated text into readable Hindi characters
+          String decodedText = utf8.decode(response.bodyBytes);
+          String jsonString = decodedText;
+
+          // Step 1: Parse the JSON string into a Dart object
+          Map<String, dynamic> jsonData = jsonDecode(jsonString);
+
+          // Step 2: Access the translated_text value
+          String translatedText = jsonData['data']['translated_text'];
+
+          // Output the result
+          if (kDebugMode) {
+            print('Translated $translatedText');
+          }
+          setState(() {
+            translatednodriverstext = translatedText;
+          });
+          if (kDebugMode) {
+            print('Decoded Translated Text Driver: $translatednodriverstext');
+          }
+        } else {
+          if (kDebugMode) {
+            print('Translation failed. Status: ${responseBody['status']}');
+          }
+        }
+      } else {
+        // If the request fails, print an error message
+        if (kDebugMode) {
+          print('Failed to fetch translation: ${response.statusCode}');
+          print('Error: ${response.body}');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error during translation request: $e');
+      }
+    }
+  }
   void handlePaymentErrorResponse(PaymentFailureResponse response) {}
   void handlePaymentSuccessResponse(PaymentSuccessResponse response) async {
     final prefs = await SharedPreferences.getInstance();
@@ -706,7 +774,74 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
           ));
     }
   }
+  String translatedpaymenttext='';
+  Future<void> translatepaymenttext(String originaltext) async {
+    try {
+      final response = await http.post(
+        Uri.parse('https://cloud.olakrutrim.com/api/v1/languagelabs/translation'),
+        headers: {
+          'Authorization': 'Bearer ${Environment.OlaTranslateAPI}',
+          'Content-Type': 'application/json'
+        },
+        body: jsonEncode({
+          "text": originaltext,  // Use the parameter instead of static text
+          "src_language": "eng_Latn",
+          "tgt_language": "hin_Deva",
+          "model": "krutrim-translate-v1.0"
+        }),
+      );
 
+      // Check if the response is successful (HTTP 200)
+      if (response.statusCode == 200) {
+        // Parse the JSON response
+        final responseBody = jsonDecode(response.body);
+
+        if (kDebugMode) {
+          print('Response body: $responseBody');
+        }
+
+        // Extract the translated text from the 'data' field
+        if (responseBody['status'] == 'success') {
+
+
+          // Convert the translated text into readable Hindi characters
+          String decodedText = utf8.decode(response.bodyBytes);
+          String jsonString = decodedText;
+
+          // Step 1: Parse the JSON string into a Dart object
+          Map<String, dynamic> jsonData = jsonDecode(jsonString);
+
+          // Step 2: Access the translated_text value
+          String translatedText = jsonData['data']['translated_text'];
+
+          // Output the result
+          if (kDebugMode) {
+            print('Translated $translatedText');
+          }
+          setState(() {
+            translatedpaymenttext = translatedText;
+          });
+          if (kDebugMode) {
+            print('Decoded Translated Text payment: $translatedpaymenttext');
+          }
+        } else {
+          if (kDebugMode) {
+            print('Translation failed. Status: ${responseBody['status']}');
+          }
+        }
+      } else {
+        // If the request fails, print an error message
+        if (kDebugMode) {
+          print('Failed to fetch translation: ${response.statusCode}');
+          print('Error: ${response.body}');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error during translation request: $e');
+      }
+    }
+  }
   void handleExternalWalletSelected(ExternalWalletResponse response) {}
   @override
   Widget build(BuildContext context) {
@@ -737,11 +872,11 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                           width: 10,
                         ),
                         Text(
-                          'Current mode of payment: ',
+                        istranslate?translatedpaymenttext:  'Current mode of payment: ',
                           style: GoogleFonts.poppins(
                               color: Colors.black, fontWeight: FontWeight.w500),
                         ),
-                        Text(
+                       istranslate?Container(): Text(
                           iscashpayment ? 'Cash' : 'Online',
                           style: GoogleFonts.poppins(
                               color: Colors.black, fontWeight: FontWeight.w600),
@@ -881,7 +1016,7 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                       child: Text(
                         isdrivernearby
                             ? 'Book ${cabcategorynames[_selectedindex]}'
-                            : 'No drivers nearby',
+                            :istranslate?translatednodriverstext: 'No drivers nearby',
                         style: GoogleFonts.poppins(
                             color: Colors.white, fontWeight: FontWeight.w600),
                       ),
@@ -919,6 +1054,8 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                   });
                   if(istranslate){
                     await translatetext('Estimated Drop off by');
+                    await translatenodriverstext('No drivers nearby');
+                    await translatepaymenttext(iscashpayment?'Current mode of payment: Cash':'Current mode of payment: Online');
                   }
                 },
                 child: const CircleAvatar(
