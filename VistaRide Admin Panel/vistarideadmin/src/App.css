@@ -39,5 +39,70 @@
 .webbody{
   height: 100vh;
   width: 100vw;
-  background-color: rgb(184, 178, 178);
+  background-color: rgb(204, 198, 198);
+}
+.jffnjvfnv{
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: row;
+  gap: 50px;
+  overflow: hidden;
+}
+.mnvnfv{
+  width: 20vw;
+  height: 100vh;
+  background-color: white;
+  overflow-x: scroll;
+  /* overflow-y: hidden; */
+}
+.mnvnfv::-webkit-scrollbar{
+  display: none;
+}
+.dnjfnjn{
+  width: 80vw;
+  height: 100vh;
+  background-color: transparent;
+}
+.jjdnjvnv{
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  /* justify-content: space-evenly; */
+}
+.enjfndj{
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.nnnvnfnvf{
+  position: relative;
+  margin-top: 20px;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  width: 100%;
+  margin-left: 30px;
+  font-weight: 600;
+  display: flex;
+  justify-content: start;
+}
+.dnjnkfjk{
+  position: relative;
+  margin-top: 30px;
+  /* font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; */
+  width: 80%;
+  margin-left: 30px;
+  font-weight: 400;
+  display: flex;
+  justify-content: start;
+  border-radius: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 10px;
+}
+.dnjnkfjk:hover{
+  background-color: rgb(77, 77, 221);
+  color: white;
+  font-weight: 500;
+  
 }
