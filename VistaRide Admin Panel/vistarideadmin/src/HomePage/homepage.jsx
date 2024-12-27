@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import Dashboard from '../Sidebar Options/dashboard';
 
 export default function Homepage() {
     // State to track the selected option index
@@ -11,7 +12,7 @@ export default function Homepage() {
     };
 
     return (
-        <div className='webbody'>
+        <div className='webbody' style={{overflow:'hidden'}}>
             <div className="jffnjvfnv">
                 <div className="mnvnfv">
                     <div className="jjdnjvnv">
@@ -292,7 +293,9 @@ export default function Homepage() {
                     </Link>
                 </div>
                 <div className="dnjfnjn">
-
+                {
+                    selectedIndex==0?<Dashboard/>:null
+                }
                 </div>
             </div>
         </div>
