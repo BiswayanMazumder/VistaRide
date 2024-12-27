@@ -102,7 +102,73 @@ export default function Dashboard() {
                     ); // Only drivers that are online and available
 
                 setriders(riderlist); // Update the state with driver data
-                console.log('Riders', riderlist)
+                // console.log('Riders', riderlist)
+            },
+            (error) => {
+                console.error('Error fetching drivers: ', error);
+            }
+        );
+
+        // Cleanup listener on unmount
+        return () => unsubscribe();
+    }, []);
+    const [totalrides, settotalrides] = useState([]);
+    useEffect(() => {
+        const unsubscribe = onSnapshot(
+            collection(db, 'Ride Details'),
+            (snapshot) => {
+                const rideslist = snapshot.docs
+                    .map((doc) => doc.data())
+                    .filter(
+                        (rider) => rider['Booking ID'] != null
+                    ); // Only drivers that are online and available
+
+                settotalrides(rideslist); // Update the state with driver data
+                // console.log('Rides', rideslist)
+            },
+            (error) => {
+                console.error('Error fetching drivers: ', error);
+            }
+        );
+
+        // Cleanup listener on unmount
+        return () => unsubscribe();
+    }, []);
+    const [completedrides, setcompletedrides] = useState([]);
+    useEffect(() => {
+        const unsubscribe = onSnapshot(
+            collection(db, 'Ride Details'),
+            (snapshot) => {
+                const rideslist = snapshot.docs
+                    .map((doc) => doc.data())
+                    .filter(
+                        (rider) => rider['Ride Completed']
+                    ); // Only drivers that are online and available
+
+                setcompletedrides(rideslist); // Update the state with driver data
+                // console.log('Rides', rideslist)
+            },
+            (error) => {
+                console.error('Error fetching drivers: ', error);
+            }
+        );
+
+        // Cleanup listener on unmount
+        return () => unsubscribe();
+    }, []);
+    const [cancelledrides, setcancelledrides] = useState([]);
+    useEffect(() => {
+        const unsubscribe = onSnapshot(
+            collection(db, 'Ride Details'),
+            (snapshot) => {
+                const rideslist = snapshot.docs
+                    .map((doc) => doc.data())
+                    .filter(
+                        (rider) => rider['Ride Cancelled']
+                    ); // Only drivers that are online and available
+
+                    setcancelledrides(rideslist); // Update the state with driver data
+                // console.log('Rides', rideslist)
             },
             (error) => {
                 console.error('Error fetching drivers: ', error);
@@ -134,6 +200,7 @@ export default function Dashboard() {
             );
         }
     }, []);
+
     // Handle option click to update the selected index
     const handleOptionClick = (index) => {
         setSelectedIndex(index);
@@ -265,31 +332,64 @@ export default function Dashboard() {
                             </div>
                         </div>
                         <div className="jdjvjf" onClick={() => handleOptionClick(0)}>
-                        <div className="jdjvjf">
-                            <img src='assets/images/driveravaliable.png' alt="" height={"50px"} width={"50px"} />
-                            <div className="hdffbj" style={{ fontSize: '18px', fontWeight: '700',color:'green' }}>
-                                Active<br/>Driver
+                            <div className="jdjvjf">
+                                <img src='assets/images/driveravaliable.png' alt="" height={"50px"} width={"50px"} />
+                                <div className="hdffbj" style={{ fontSize: '18px', fontWeight: '700', color: 'green' }}>
+                                    Active<br />Driver
+                                </div>
+                                <div className="hdffbj" style={{ color: 'green' }}>
+                                    {drivers.length}
+                                </div>
                             </div>
-                            <div className="hdffbj" style={{color:'green'}}>
-                                {drivers.length}
-                            </div>
-                        </div>
                         </div>
                         <div className="jdjvjf" onClick={() => handleOptionClick(1)}>
-                        <div className="jdjvjf">
-                            <img src='assets/images/driveravaliable.png' alt="" height={"50px"} width={"50px"} />
-                            <div className="hdffbj" style={{ fontSize: '18px', fontWeight: '700',color:'orange' }}>
-                                Inactive<br/>Driver
+                            <div className="jdjvjf">
+                                <img src='assets/images/driveravaliable.png' alt="" height={"50px"} width={"50px"} />
+                                <div className="hdffbj" style={{ fontSize: '18px', fontWeight: '700', color: 'orange' }}>
+                                    Inactive<br />Driver
+                                </div>
+                                <div className="hdffbj" style={{ color: 'orange' }}>
+                                    {unavaliabledrivers.length}
+                                </div>
                             </div>
-                            <div className="hdffbj" style={{color:'orange'}}>
-                                {unavaliabledrivers.length}
-                            </div>
-                        </div>
                         </div>
                     </div>
-                    <div className="jjvnjvnfv" style={{height:'500px',marginTop:'20px'}}>
-                    <div className="jndjvnjf">
+                    <div className="jjvnjvnfv" style={{ height: '500px', marginTop: '20px' }}>
+                        <div className="jndjvnjf">
                             Trip Statistics
+                        </div>
+                        <div className="jhdjfhv">
+                            <div className="ddhhdb">
+                                <img src='assets/images/totalrides.png' alt="" height={"50px"} width={"50px"} />
+                                <div className="dnfjjfj" style={{ fontSize: '15px', fontWeight: '400' }}>
+                                    Total Trips
+                                </div>
+                            </div>
+                            <div className="dnfjjfj" style={{ fontSize: '15px', fontWeight: '600', color: 'blue' }}>
+                                {totalrides.length}
+                            </div>
+                        </div>
+                        <div className="jhdjfhv">
+                            <div className="ddhhdb">
+                                <img src='assets/images/totalrides.png' alt="" height={"50px"} width={"50px"} />
+                                <div className="dnfjjfj" style={{ fontSize: '15px', fontWeight: '400' }}>
+                                    Completed Trips
+                                </div>
+                            </div>
+                            <div className="dnfjjfj" style={{ fontSize: '15px', fontWeight: '600', color: 'green' }}>
+                                {completedrides.length}
+                            </div>
+                        </div>
+                        <div className="jhdjfhv">
+                            <div className="ddhhdb">
+                                <img src='assets/images/totalrides.png' alt="" height={"50px"} width={"50px"} />
+                                <div className="dnfjjfj" style={{ fontSize: '15px', fontWeight: '400' }}>
+                                    Cancelled Trips
+                                </div>
+                            </div>
+                            <div className="dnfjjfj" style={{ fontSize: '15px', fontWeight: '600', color: 'red' }}>
+                                {cancelledrides.length}
+                            </div>
                         </div>
                     </div>
                 </div>

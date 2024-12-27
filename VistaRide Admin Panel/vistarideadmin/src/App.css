@@ -248,3 +248,23 @@ body{
   color:blue;
   font-weight: bold;
 }
+.jhdjfhv{
+  position: relative;
+  /* width: 100%; */
+  /* height: 0px; */
+  /* background-color: red; */
+  margin-top: 60px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  left: 30px;
+  margin-right: 60px;
+}
+.ddhhdb{
+  display: flex;
+  flex-direction: row;
+  gap: 30px;
+  justify-content: center;
+  align-items: center;
+}
