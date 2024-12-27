@@ -38,7 +38,7 @@ export default function Dashboard() {
                     ); // Only drivers that are online and available
 
                 setDrivers(driverList); // Update the state with driver data
-                console.log('Drivers Avaliable', driverList)
+                // console.log('Drivers Avaliable', driverList)
             },
             (error) => {
                 console.error('Error fetching drivers: ', error);
@@ -80,7 +80,7 @@ export default function Dashboard() {
                     ); // Only drivers that are online and available
 
                 setridedoingDrivers(driverList); // Update the state with driver data
-                console.log('Drivers Ride Doing', driverList)
+                // console.log('Drivers Ride Doing', driverList)
             },
             (error) => {
                 console.error('Error fetching drivers: ', error);
