@@ -408,7 +408,7 @@ export default function Dashboard() {
                                                 <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}>{ride['Pickup Location']}</td>
                                                 <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}>{ride['Drop Location']}</td>
                                                 <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}><Link style={{textDecoration:'none'}}> {drivernames[index]}</Link></td>
-                                                <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}><Link style={{textDecoration:'none'}}> {ridernames[index]}</Link></td>
+                                                <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}><Link style={{textDecoration:'none',color:'black'}}> {ridernames[index]}</Link></td>
                                                 {/* <td style={{ padding: '10px 20px', wordWrap: 'break-word' }}>{ride['Booking Time']}</td> */}
                                                 {/* <td style={{ padding: '10px 20px', wordWrap: 'break-word' }}>{ride['Audio Recording']}</td> */}
                                                 <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}>₹{ride['Fare']}</td>
