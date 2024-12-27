@@ -55,7 +55,7 @@ export default function Dashboard() {
                 const driverList = snapshot.docs
                     .map((doc) => doc.data())
                     .filter(
-                        (driver) => driver['Driver Online']==false || driver['Driver Avaliable']==false
+                        (driver) => driver['Driver Online'] == false || driver['Driver Avaliable'] == false
                     ); // Only drivers that are online and available
 
                 setunavaliableDrivers(driverList); // Update the state with driver data
@@ -81,6 +81,28 @@ export default function Dashboard() {
 
                 setridedoingDrivers(driverList); // Update the state with driver data
                 // console.log('Drivers Ride Doing', driverList)
+            },
+            (error) => {
+                console.error('Error fetching drivers: ', error);
+            }
+        );
+
+        // Cleanup listener on unmount
+        return () => unsubscribe();
+    }, []);
+    const [riders, setriders] = useState([]);
+    useEffect(() => {
+        const unsubscribe = onSnapshot(
+            collection(db, 'VistaRide User Details'),
+            (snapshot) => {
+                const riderlist = snapshot.docs
+                    .map((doc) => doc.data())
+                    .filter(
+                        (rider) => rider['User Name'] != null
+                    ); // Only drivers that are online and available
+
+                setriders(riderlist); // Update the state with driver data
+                console.log('Riders', riderlist)
             },
             (error) => {
                 console.error('Error fetching drivers: ', error);
@@ -232,7 +254,44 @@ export default function Dashboard() {
                     </div>
                 </div>
                 <div className="njdnvv">
-
+                    <div className="jnjnjvnf">
+                        <div className="jdjvjf">
+                            <img src='assets/images/activeusers.png' alt="" height={"50px"} width={"50px"} />
+                            <div className="hdffbj" style={{ fontSize: '18px', fontWeight: '700' }}>
+                                User
+                            </div>
+                            <div className="hdffbj">
+                                {riders.length}
+                            </div>
+                        </div>
+                        <div className="jdjvjf" onClick={() => handleOptionClick(0)}>
+                        <div className="jdjvjf">
+                            <img src='assets/images/driveravaliable.png' alt="" height={"50px"} width={"50px"} />
+                            <div className="hdffbj" style={{ fontSize: '18px', fontWeight: '700',color:'green' }}>
+                                Active<br/>Driver
+                            </div>
+                            <div className="hdffbj" style={{color:'green'}}>
+                                {drivers.length}
+                            </div>
+                        </div>
+                        </div>
+                        <div className="jdjvjf" onClick={() => handleOptionClick(1)}>
+                        <div className="jdjvjf">
+                            <img src='assets/images/driveravaliable.png' alt="" height={"50px"} width={"50px"} />
+                            <div className="hdffbj" style={{ fontSize: '18px', fontWeight: '700',color:'orange' }}>
+                                Inactive<br/>Driver
+                            </div>
+                            <div className="hdffbj" style={{color:'orange'}}>
+                                {unavaliabledrivers.length}
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    <div className="jjvnjvnfv" style={{height:'500px',marginTop:'20px'}}>
+                    <div className="jndjvnjf">
+                            Trip Statistics
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
