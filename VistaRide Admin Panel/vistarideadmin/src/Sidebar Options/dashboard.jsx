@@ -127,7 +127,7 @@ export default function Dashboard() {
                     ); // Only drivers that are online and available
 
                 settotalrides(rideslist); // Update the state with ride data
-                console.log('Rides', rideslist);
+                // console.log('Rides', rideslist);
 
                 // Fetch the driver's name for each ride in the rideslist
                 const driverNamesArray = []; // Initialize an empty array for storing driver names
@@ -285,7 +285,7 @@ export default function Dashboard() {
                         </div>
                         <div className="jdjnjf">
                             <div className="jfhjhjvh" onClick={() => handleOptionClick(0)} style={{ boxShadow: selectedIndex == 0 ? '0 4px 6px rgba(0, 0, 0, 0.2)' : null, color: selectedIndex == 0 ? 'black' : 'grey', border: selectedIndex == 0 ? '1px solid black' : null }}>
-                                <img src='assets/images/driver_avaliable.png' alt="" height={"80px"} width={"80px"} />
+                                <img src='https://g1uudlawy6t63z36.public.blob.vercel-storage.com/driver_avaliable.png' alt="" height={"80px"} width={"80px"} />
                                 <div className="jdjvnj" >
                                     Avaliable
                                     <br /><br />
@@ -296,7 +296,7 @@ export default function Dashboard() {
                                 </div>
                             </div>
                             <div className="jfhjhjvh" onClick={() => handleOptionClick(1)} style={{ boxShadow: selectedIndex == 1 ? '0 4px 6px rgba(0, 0, 0, 0.2)' : null, color: selectedIndex == 1 ? 'black' : 'grey', border: selectedIndex == 1 ? '1px solid black' : null }}>
-                                <img src='assets/images/car_not_avaliable.png' alt="" height={"80px"} width={"80px"} />
+                                <img src='https://g1uudlawy6t63z36.public.blob.vercel-storage.com/car_not_avaliable.png' alt="" height={"80px"} width={"80px"} />
                                 <div className="jdjvnj" >
                                     Not Avaliable
                                     <br /><br />
@@ -306,7 +306,7 @@ export default function Dashboard() {
                                 </div>
                             </div>
                             <div className="jfhjhjvh" onClick={() => handleOptionClick(2)} style={{ boxShadow: selectedIndex == 2 ? '0 4px 6px rgba(0, 0, 0, 0.2)' : null, color: selectedIndex == 2 ? 'black' : 'grey', border: selectedIndex == 2 ? '1px solid black' : null }}>
-                                <img src='assets/images/waytopickup.png' alt="" height={"80px"} width={"80px"} />
+                                <img src='https://g1uudlawy6t63z36.public.blob.vercel-storage.com/waytopickup.png' alt="" height={"80px"} width={"80px"} />
                                 <div className="jdjvnj" >
                                     Ride Doing
                                     <br /><br />
@@ -379,7 +379,7 @@ export default function Dashboard() {
                             </LoadScript>
 
                         </div>
-                        <div className="jjvnjvnfv" style={{ marginTop: '30px', width: '78vw', height: 'fit-content' }}>
+                        <div className="jjvnjvnfv" style={{ marginTop: '30px', width: '78vw', height: 'fit-content',marginBottom:'20px' }}>
                             <div className="jndjvnjf">
                                 Trip Overview
                             </div>
@@ -427,7 +427,7 @@ export default function Dashboard() {
                 <div className="njdnvv">
                     <div className="jnjnjvnf" >
                         <div className="jdjvjf">
-                            <img src='assets/images/activeusers.png' alt="" height={"50px"} width={"50px"} />
+                            <img src='https://g1uudlawy6t63z36.public.blob.vercel-storage.com/activeusers.png' alt="" height={"50px"} width={"50px"} />
                             <div className="hdffbj" style={{ fontSize: '18px', fontWeight: '700' }}>
                                 User
                             </div>
@@ -437,7 +437,7 @@ export default function Dashboard() {
                         </div>
                         <div className="jdjvjf" onClick={() => handleOptionClick(0)}>
                             <div className="jdjvjf">
-                                <img src='assets/images/driveravaliable.png' alt="" height={"50px"} width={"50px"} />
+                                <img src='https://g1uudlawy6t63z36.public.blob.vercel-storage.com/driveravaliable.png' alt="" height={"50px"} width={"50px"} />
                                 <div className="hdffbj" style={{ fontSize: '18px', fontWeight: '700', color: 'green' }}>
                                     Active<br />Driver
                                 </div>
@@ -448,7 +448,7 @@ export default function Dashboard() {
                         </div>
                         <div className="jdjvjf" onClick={() => handleOptionClick(1)}>
                             <div className="jdjvjf">
-                                <img src='assets/images/driveravaliable.png' alt="" height={"50px"} width={"50px"} />
+                                <img src='https://g1uudlawy6t63z36.public.blob.vercel-storage.com/driveravaliable.png' alt="" height={"50px"} width={"50px"} />
                                 <div className="hdffbj" style={{ fontSize: '18px', fontWeight: '700', color: 'orange' }}>
                                     Inactive<br />Driver
                                 </div>
@@ -464,7 +464,7 @@ export default function Dashboard() {
                         </div>
                         <div className="jhdjfhv">
                             <div className="ddhhdb">
-                                <img src='assets/images/totalrides.png' alt="" height={"50px"} width={"50px"} />
+                                <img src='https://g1uudlawy6t63z36.public.blob.vercel-storage.com/totalrides.png' alt="" height={"50px"} width={"50px"} />
                                 <div className="dnfjjfj" style={{ fontSize: '15px', fontWeight: '400' }}>
                                     Total Trips
                                 </div>
@@ -475,7 +475,7 @@ export default function Dashboard() {
                         </div>
                         <div className="jhdjfhv">
                             <div className="ddhhdb">
-                                <img src='assets/images/totalrides.png' alt="" height={"50px"} width={"50px"} />
+                                <img src='https://g1uudlawy6t63z36.public.blob.vercel-storage.com/totalrides.png' alt="" height={"50px"} width={"50px"} />
                                 <div className="dnfjjfj" style={{ fontSize: '15px', fontWeight: '400' }}>
                                     Completed Trips
                                 </div>
@@ -486,7 +486,7 @@ export default function Dashboard() {
                         </div>
                         <div className="jhdjfhv">
                             <div className="ddhhdb">
-                                <img src='assets/images/totalrides.png' alt="" height={"50px"} width={"50px"} />
+                                <img src='https://g1uudlawy6t63z36.public.blob.vercel-storage.com/totalrides.png' alt="" height={"50px"} width={"50px"} />
                                 <div className="dnfjjfj" style={{ fontSize: '15px', fontWeight: '400' }}>
                                     Cancelled Trips
                                 </div>
