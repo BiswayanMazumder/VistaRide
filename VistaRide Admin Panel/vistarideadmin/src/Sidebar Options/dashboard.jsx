@@ -55,7 +55,7 @@ export default function Dashboard() {
                 const driverList = snapshot.docs
                     .map((doc) => doc.data())
                     .filter(
-                        (driver) => driver['Driver Online']
+                        (driver) => driver['Driver Online']==false || driver['Driver Avaliable']==false
                     ); // Only drivers that are online and available
 
                 setunavaliableDrivers(driverList); // Update the state with driver data
