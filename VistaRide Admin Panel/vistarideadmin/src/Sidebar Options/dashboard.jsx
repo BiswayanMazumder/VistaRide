@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, onSnapshot } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, getDoc, doc } from 'firebase/firestore';
+import { Link } from 'react-router-dom';
 
 // Firebase config
 const firebaseConfig = {
@@ -113,6 +114,8 @@ export default function Dashboard() {
         return () => unsubscribe();
     }, []);
     const [totalrides, settotalrides] = useState([]);
+    const [drivernames, setDrivernames] = useState([]); // Store driver details in an array
+    const [ridernames, setridernames] = useState([]); 
     useEffect(() => {
         const unsubscribe = onSnapshot(
             collection(db, 'Ride Details'),
@@ -120,14 +123,72 @@ export default function Dashboard() {
                 const rideslist = snapshot.docs
                     .map((doc) => doc.data())
                     .filter(
-                        (rider) => rider['Booking ID'] != null
+                        (rider) => rider['Driver ID'] != null && rider['Ride Owner'] != null && rider['Driver ID'] != '' && rider['Ride Owner'] != ''
                     ); // Only drivers that are online and available
 
-                settotalrides(rideslist); // Update the state with driver data
-                // console.log('Rides', rideslist)
+                settotalrides(rideslist); // Update the state with ride data
+                console.log('Rides', rideslist);
+
+                // Fetch the driver's name for each ride in the rideslist
+                const driverNamesArray = []; // Initialize an empty array for storing driver names
+                const driverMap = {}; // Object to map driverId to driverName
+                const riderNamesArray = []; // Initialize an empty array for storing driver names
+                const riderMap = {}; // Object to map driverId to driverName
+                rideslist.forEach(async (ride) => {
+                    const driverId = ride['Driver ID'];
+                    if (driverId) {
+                        // Fetch the driver's name from VistaRide Driver Details collection
+                        try {
+                            const driverDocRef = doc(db, 'VistaRide Driver Details', driverId);
+                            const driverDocSnap = await getDoc(driverDocRef);
+
+                            if (driverDocSnap.exists()) {
+                                const driverData = driverDocSnap.data();
+                                
+                                const driverName = driverData['Name']; // Assuming the driver's name is stored in the 'Name' field
+                                driverNamesArray.push(driverName);
+                                // Store driver name in the map
+                                driverMap[driverId] = driverName;
+                                // console.log('Driver Data', driverNamesArray);
+                                // Once all names are fetched, update the state
+                               setDrivernames(driverNamesArray);
+                            } else {
+                                console.log('No such driver found for ID:', driverId);
+                            }
+                        } catch (error) {
+                            console.error('Error fetching driver name: ', error);
+                        }
+                    }
+                });
+                rideslist.forEach(async (ride) => {
+                    const riderID = ride['Ride Owner'];
+                    if (riderID) {
+                        // Fetch the driver's name from VistaRide Driver Details collection
+                        try {
+                            const driverDocRef = doc(db, 'VistaRide User Details', riderID);
+                            const driverDocSnap = await getDoc(driverDocRef);
+
+                            if (driverDocSnap.exists()) {
+                                const driverData = driverDocSnap.data();
+                                
+                                const riderName = driverData['User Name']; // Assuming the driver's name is stored in the 'Name' field
+                                riderNamesArray.push(riderName);
+                                // Store driver name in the map
+                                riderMap[riderID] = riderName;
+                                // console.log('Driver Data', driverNamesArray);
+                                // Once all names are fetched, update the state
+                               setridernames(riderNamesArray);
+                            } else {
+                                console.log('No such driver found for ID:', riderID);
+                            }
+                        } catch (error) {
+                            console.error('Error fetching driver name: ', error);
+                        }
+                    }
+                });
             },
             (error) => {
-                console.error('Error fetching drivers: ', error);
+                console.error('Error fetching rides: ', error);
             }
         );
 
@@ -142,7 +203,7 @@ export default function Dashboard() {
                 const rideslist = snapshot.docs
                     .map((doc) => doc.data())
                     .filter(
-                        (rider) => rider['Ride Completed']
+                        (rider) => rider['Driver ID'] != null && rider['Ride Owner'] != null && rider['Ride Completed']
                     ); // Only drivers that are online and available
 
                 setcompletedrides(rideslist); // Update the state with driver data
@@ -164,10 +225,10 @@ export default function Dashboard() {
                 const rideslist = snapshot.docs
                     .map((doc) => doc.data())
                     .filter(
-                        (rider) => rider['Ride Cancelled']
+                        (rider) => rider['Driver ID'] != null && rider['Ride Owner'] != null && rider['Ride Cancelled']
                     ); // Only drivers that are online and available
 
-                    setcancelledrides(rideslist); // Update the state with driver data
+                setcancelledrides(rideslist); // Update the state with driver data
                 // console.log('Rides', rideslist)
             },
             (error) => {
@@ -318,10 +379,53 @@ export default function Dashboard() {
                             </LoadScript>
 
                         </div>
+                        <div className="jjvnjvnfv" style={{ marginTop: '30px', width: '78vw', height: 'fit-content' }}>
+                            <div className="jndjvnjf">
+                                Trip Overview
+                            </div>
+                            <br />
+                            <div className="kdjvfj">
+                                <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse' }}>
+                                    <thead style={{ fontWeight: '300' }}>
+                                        <tr>
+                                            <th style={{ fontWeight: '400', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left' }}>Cab Category</th>
+                                            <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left' }}>Booking Number</th>
+                                            <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left' }}>Pickup Point</th>
+                                            <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left' }}>Drop Location</th>
+                                            <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left' }}>Driver Name</th>
+                                            <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left' }}>Rider Name</th>
+                                            {/* <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left' }}>Booking Time</th> */}
+                                            {/* <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left' }}>Audio Recording</th> */}
+                                            <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left' }}>Fare</th>
+                                            <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left' }}>View Invoice</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {totalrides.map((ride, index) => (
+                                            <tr key={index}>
+                                                <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}>{ride['Cab Category']}</td>
+                                                <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}>{ride['Booking ID']}</td>
+                                                <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}>{ride['Pickup Location']}</td>
+                                                <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}>{ride['Drop Location']}</td>
+                                                <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}><Link style={{textDecoration:'none'}}> {drivernames[index]}</Link></td>
+                                                <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}><Link style={{textDecoration:'none'}}> {ridernames[index]}</Link></td>
+                                                {/* <td style={{ padding: '10px 20px', wordWrap: 'break-word' }}>{ride['Booking Time']}</td> */}
+                                                {/* <td style={{ padding: '10px 20px', wordWrap: 'break-word' }}>{ride['Audio Recording']}</td> */}
+                                                <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}>₹{ride['Fare']}</td>
+                                                <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}>
+                                                    <a href="#">View</a>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
                 <div className="njdnvv">
-                    <div className="jnjnjvnf">
+                    <div className="jnjnjvnf" >
                         <div className="jdjvjf">
                             <img src='assets/images/activeusers.png' alt="" height={"50px"} width={"50px"} />
                             <div className="hdffbj" style={{ fontSize: '18px', fontWeight: '700' }}>
@@ -354,7 +458,7 @@ export default function Dashboard() {
                             </div>
                         </div>
                     </div>
-                    <div className="jjvnjvnfv" style={{ height: '500px', marginTop: '20px' }}>
+                    <div className="jjvnjvnfv" style={{ height: '400px', marginTop: '20px' }}>
                         <div className="jndjvnjf">
                             Trip Statistics
                         </div>
@@ -392,6 +496,7 @@ export default function Dashboard() {
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>

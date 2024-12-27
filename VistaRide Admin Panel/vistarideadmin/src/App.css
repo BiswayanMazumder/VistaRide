@@ -275,3 +275,16 @@ body{
   justify-content: center;
   align-items: center;
 }
+.kdjvfj{
+  position: relative;
+  width: 75vw;
+  /* width: 100%; */
+  height: fit-content;
+  /* background-color: red; */
+  margin-top: 50px;
+  left: 30px;
+  font-weight: 300;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;  
+}
