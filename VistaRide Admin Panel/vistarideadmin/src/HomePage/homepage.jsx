@@ -57,45 +57,83 @@ export default function Homepage() {
                     </div>
                     <Link style={{ textDecoration: 'none', color: "black" }} to="/dashboard">
                         <div className="dnjnkfjk">
-                            Admin
+                            Manage Service Category
                         </div>
                     </Link>
                     <Link style={{ textDecoration: 'none', color: "black" }} to="/dashboard">
                         <div className="dnjnkfjk" style={{marginTop:'5px'}}>
-                            Rider
+                            Vehicle Type
                         </div>
                     </Link>
                     <Link style={{ textDecoration: 'none', color: "black" }} to="/dashboard">
                         <div className="dnjnkfjk" style={{marginTop:'5px'}}>
-                            Drivers
+                            Rental Packages
                         </div>
                     </Link>
                     <Link style={{ textDecoration: 'none', color: "black" }} to="/dashboard">
                         <div className="dnjnkfjk" style={{marginTop:'5px'}}>
-                            Organization
+                            Driver Approval
                         </div>
                     </Link>
                     <div className="nnnvnfnvf">
-                        SERVICES
+                        BOOKINGS AND REPORTS
                     </div>
                     <Link style={{ textDecoration: 'none', color: "black" }} to="/dashboard">
                         <div className="dnjnkfjk">
-                            Admin
+                            Bookings
                         </div>
                     </Link>
                     <Link style={{ textDecoration: 'none', color: "black" }} to="/dashboard">
                         <div className="dnjnkfjk" style={{marginTop:'5px'}}>
-                            Rider
+                            Manage Locations
                         </div>
                     </Link>
                     <Link style={{ textDecoration: 'none', color: "black" }} to="/dashboard">
                         <div className="dnjnkfjk" style={{marginTop:'5px'}}>
-                            Drivers
+                            God's View
+                        </div>
+                    </Link>
+                    <Link style={{ textDecoration: 'none', color: "black" }} to="/dashboard">
+                        <div className="dnjnkfjk" style={{marginTop:'5px',marginBottom:'10px'}}>
+                            Heat View
+                        </div>
+                    </Link>
+                    <Link style={{ textDecoration: 'none', color: "black" }} to="/dashboard">
+                        <div className="dnjnkfjk" style={{marginTop:'5px',marginBottom:'10px'}}>
+                            Reports
+                        </div>
+                    </Link>
+                    <div className="nnnvnfnvf">
+                        SETTINGS AND UTILITIES
+                    </div>
+                    <Link style={{ textDecoration: 'none', color: "black" }} to="/dashboard">
+                        <div className="dnjnkfjk">
+                            General
                         </div>
                     </Link>
                     <Link style={{ textDecoration: 'none', color: "black" }} to="/dashboard">
                         <div className="dnjnkfjk" style={{marginTop:'5px'}}>
-                            Organization
+                            Currency
+                        </div>
+                    </Link>
+                    <Link style={{ textDecoration: 'none', color: "black" }} to="/dashboard">
+                        <div className="dnjnkfjk" style={{marginTop:'5px'}}>
+                            Send Push Notification
+                        </div>
+                    </Link>
+                    <Link style={{ textDecoration: 'none', color: "black" }} to="/dashboard">
+                        <div className="dnjnkfjk" style={{marginTop:'5px',marginBottom:'10px'}}>
+                            Documents
+                        </div>
+                    </Link>
+                    <Link style={{ textDecoration: 'none', color: "black" }} to="/dashboard">
+                        <div className="dnjnkfjk" style={{marginTop:'5px',marginBottom:'10px'}}>
+                            Vehicle Make
+                        </div>
+                    </Link>
+                    <Link style={{ textDecoration: 'none', color: "black" }} to="/dashboard">
+                        <div className="dnjnkfjk" style={{marginTop:'5px',marginBottom:'10px'}}>
+                            Vehicle Model
                         </div>
                     </Link>
                 </div>

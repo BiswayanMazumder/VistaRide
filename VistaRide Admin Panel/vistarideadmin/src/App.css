@@ -68,6 +68,7 @@
   width: 100%;
   display: flex;
   flex-direction: row;
+  cursor: pointer;
   /* justify-content: space-evenly; */
 }
 .enjfndj{
