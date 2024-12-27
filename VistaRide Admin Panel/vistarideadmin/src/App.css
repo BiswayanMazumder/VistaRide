@@ -254,12 +254,19 @@ body{
   /* height: 0px; */
   /* background-color: red; */
   margin-top: 60px;
+  border-radius: 10px;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
   left: 30px;
-  margin-right: 60px;
+  margin-right: 65px;
+  padding-right: 10px;
+  cursor: pointer;
+  /* padding-left: 10px; */
+}
+.jhdjfhv:hover{
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2) !important;
 }
 .ddhhdb{
   display: flex;
