@@ -115,7 +115,7 @@ export default function Dashboard() {
     }, []);
     const [totalrides, settotalrides] = useState([]);
     const [drivernames, setDrivernames] = useState([]); // Store driver details in an array
-    const [ridernames, setridernames] = useState([]); 
+    const [ridernames, setridernames] = useState([]);
     useEffect(() => {
         const unsubscribe = onSnapshot(
             collection(db, 'Ride Details'),
@@ -144,14 +144,14 @@ export default function Dashboard() {
 
                             if (driverDocSnap.exists()) {
                                 const driverData = driverDocSnap.data();
-                                
+
                                 const driverName = driverData['Name']; // Assuming the driver's name is stored in the 'Name' field
                                 driverNamesArray.push(driverName);
                                 // Store driver name in the map
                                 driverMap[driverId] = driverName;
                                 // console.log('Driver Data', driverNamesArray);
                                 // Once all names are fetched, update the state
-                               setDrivernames(driverNamesArray);
+                                setDrivernames(driverNamesArray);
                             } else {
                                 console.log('No such driver found for ID:', driverId);
                             }
@@ -170,14 +170,14 @@ export default function Dashboard() {
 
                             if (driverDocSnap.exists()) {
                                 const driverData = driverDocSnap.data();
-                                
+
                                 const riderName = driverData['User Name']; // Assuming the driver's name is stored in the 'Name' field
                                 riderNamesArray.push(riderName);
                                 // Store driver name in the map
                                 riderMap[riderID] = riderName;
                                 // console.log('Driver Data', driverNamesArray);
                                 // Once all names are fetched, update the state
-                               setridernames(riderNamesArray);
+                                setridernames(riderNamesArray);
                             } else {
                                 console.log('No such driver found for ID:', riderID);
                             }
@@ -379,7 +379,7 @@ export default function Dashboard() {
                             </LoadScript>
 
                         </div>
-                        <div className="jjvnjvnfv" style={{ marginTop: '30px', width: '78vw', height: 'fit-content',marginBottom:'20px' }}>
+                        <div className="jjvnjvnfv" style={{ marginTop: '30px', width: '78vw', height: 'fit-content', marginBottom: '20px' }}>
                             <div className="jndjvnjf">
                                 Trip Overview
                             </div>
@@ -407,8 +407,8 @@ export default function Dashboard() {
                                                 <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}>{ride['Booking ID']}</td>
                                                 <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}>{ride['Pickup Location']}</td>
                                                 <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}>{ride['Drop Location']}</td>
-                                                <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}><Link style={{textDecoration:'none'}}> {drivernames[index]}</Link></td>
-                                                <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}><Link style={{textDecoration:'none',color:'black'}}> {ridernames[index]}</Link></td>
+                                                <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}><Link style={{ textDecoration: 'none' }}> {drivernames[index]}</Link></td>
+                                                <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}><Link style={{ textDecoration: 'none', color: 'black' }}> {ridernames[index]}</Link></td>
                                                 {/* <td style={{ padding: '10px 20px', wordWrap: 'break-word' }}>{ride['Booking Time']}</td> */}
                                                 {/* <td style={{ padding: '10px 20px', wordWrap: 'break-word' }}>{ride['Audio Recording']}</td> */}
                                                 <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}>₹{ride['Fare']}</td>
@@ -458,7 +458,7 @@ export default function Dashboard() {
                             </div>
                         </div>
                     </div>
-                    <div className="jjvnjvnfv" style={{ height: '400px', marginTop: '20px' }}>
+                    <div className="jjvnjvnfv" style={{ height: '500px', marginTop: '20px' }}>
                         <div className="jndjvnjf">
                             Trip Statistics
                         </div>
@@ -493,6 +493,17 @@ export default function Dashboard() {
                             </div>
                             <div className="dnfjjfj" style={{ fontSize: '15px', fontWeight: '600', color: 'red' }}>
                                 {cancelledrides.length}
+                            </div>
+                        </div>
+                        <div className="jhdjfhv">
+                            <div className="ddhhdb">
+                                <img src='https://g1uudlawy6t63z36.public.blob.vercel-storage.com/7630510-removebg-preview.png' alt="" height={"50px"} width={"50px"} />
+                                <div className="dnfjjfj" style={{ fontSize: '15px', fontWeight: '400' }}>
+                                    Money Earned
+                                </div>
+                            </div>
+                            <div className="dnfjjfj" style={{ fontSize: '15px', fontWeight: '600', color: 'orange' }}>
+                                ₹30L
                             </div>
                         </div>
                     </div>
