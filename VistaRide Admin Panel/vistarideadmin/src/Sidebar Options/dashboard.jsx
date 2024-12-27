@@ -397,7 +397,7 @@ export default function Dashboard() {
                                             {/* <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left' }}>Booking Time</th> */}
                                             {/* <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left' }}>Audio Recording</th> */}
                                             <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left' }}>Fare</th>
-                                            <th style={{ fontWeight: '300', padding: '10px -30px', wordWrap: 'break-word', textAlign: 'left' }}>View Invoice</th>
+                                            <th style={{ fontWeight: '300', padding: '10px -10px', wordWrap: 'break-word', textAlign: 'left' }}>View Invoice</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -411,7 +411,7 @@ export default function Dashboard() {
                                                 <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}><Link style={{ textDecoration: 'none', color: 'black' }}> {ridernames[index]}</Link></td>
                                                 {/* <td style={{ padding: '10px 20px', wordWrap: 'break-word' }}>{ride['Booking Time']}</td> */}
                                                 {/* <td style={{ padding: '10px 20px', wordWrap: 'break-word' }}>{ride['Audio Recording']}</td> */}
-                                                <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px',fontWeight:'600' }}>₹{ride['Fare']}</td>
+                                                <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', fontWeight: '600' }}>₹{ride['Fare']}</td>
                                                 <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}>
                                                     <a href="#">View</a>
                                                 </td>
