@@ -102,8 +102,8 @@
   padding-left: 10px;
 }
 .dnjnkfjk:hover{
-  background-color: rgb(77, 77, 221);
-  color: white;
+  background-color: rgb(175, 175, 101) !important;
+  color: black !important;
   font-weight: 500;
   
 }
