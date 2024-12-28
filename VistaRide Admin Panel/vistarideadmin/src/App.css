@@ -288,3 +288,40 @@ body{
   flex-direction: row;
   justify-content: space-evenly;  
 }
+.jnvjfnjf{
+  position: relative;
+  width: 97%;
+  height: 93%;
+  background-color: white;
+  margin-top: 30px;
+  overflow-y: scroll;
+}
+.jnvjfnjf::-webkit-scrollbar{
+  display: none;
+}
+.jffbvfjv{
+  position: relative;
+  margin-top: 30px;
+  left: 30px;
+  font-size: 30px;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  /* font-weight: 600; */
+}
+.divider{
+  height: 1px;
+  position: relative;
+  width: 90%;
+  margin-left: 30px;
+  background-color: rgb(180, 171, 171);
+  margin-top: 15px;
+}
+.jnjvnfjb{
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+  gap: 10px;
+  align-items: center;
+  margin-top: 20px;
+  margin-left: 30px;
+}
