@@ -21,34 +21,101 @@ const db = getFirestore(app);
 
 export default function Drivers() {
     const [drivers, setDrivers] = useState([]);
-        useEffect(() => {
-            const unsubscribe = onSnapshot(
-                collection(db, 'VistaRide Driver Details'),
-                (snapshot) => {
-                    const driverList = snapshot.docs
-                        .map((doc) => doc.data())    
-                    setDrivers(driverList); // Update the state with driver data
-                    console.log('Drivers Avaliable', driverList)
-                },
-                (error) => {
-                    console.error('Error fetching drivers: ', error);
-                }
-            );
-    
-            // Cleanup listener on unmount
-            return () => unsubscribe();
-        }, []);
-  return (
-    <div className='webbody' style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', overflowY: 'scroll', overflowX: 'hidden' }}>
-      <div className="jnvjfnjf">
-        <div className="jffbvfjv">
-            Drivers
+    useEffect(() => {
+        const unsubscribe = onSnapshot(
+            collection(db, 'VistaRide Driver Details'),
+            (snapshot) => {
+                const driverList = snapshot.docs
+                    .map((doc) => doc.data())
+                setDrivers(driverList); // Update the state with driver data
+                console.log('Drivers Avaliable', driverList)
+            },
+            (error) => {
+                console.error('Error fetching drivers: ', error);
+            }
+        );
+
+        // Cleanup listener on unmount
+        return () => unsubscribe();
+    }, []);
+    const [searchedText, setSearchedText] = useState('');
+    const handleInputChange = (event) => {
+        setSearchedText(event.target.textContent); // update the state with typed content
+    };
+    return (
+        <div className='webbody' style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', overflowY: 'scroll', overflowX: 'hidden' }}>
+            <div className="jnvjfnjf">
+                <div className="jffbvfjv">
+                    Drivers
+                </div>
+                <div className="divider"></div>
+                <div className="jnjvnfjb">
+                    <h4>Search:</h4>
+                    <input type="text" placeholder="Search for drivers" className='searchinput' contentEditable
+                        onInput={handleInputChange}
+                        suppressContentEditableWarning={true} />
+                    <Link style={{ textDecoration: 'none', color: 'black' }}>
+                        <div className="jfnvjnfb">
+                            SEARCH
+                        </div>
+
+                    </Link>
+                    <Link style={{ textDecoration: 'none', color: 'black' }}>
+                        <div className="jfnvjnfb" onClick={() => {
+                            setSearchedText('');
+                        }}>
+                            RESET
+                        </div>
+                    </Link>
+
+                </div>
+                <div className="knjfnbnf">
+                    <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', border: '1px solid #e0e0e0' }}>
+                        <thead style={{ fontWeight: '300' }}>
+                            <tr>
+                                
+                                <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Driver Name</th>
+                                <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Email</th>
+                                <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Vehicle Category-Name</th>
+                                <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Contact Number</th>
+                                <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>View/Edit Documents</th>
+                                <th style={{ fontWeight: '300', padding: '10px -10px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Driver Status</th>
+                                <th style={{ fontWeight: '400', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Driver Location</th>
+                                <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse' }}>
+                            {drivers.map((ride, index) => (
+                                <tr key={index}>
+                                    
+                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{ride['Name']}</td>
+                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{ride['Email Address']}</td>
+                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{ride['Car Category']}</td>
+                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}><a href={`tel:${ride['Contact Number']}`}>{ride['Contact Number']}</a></td>
+                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}><a href='#'>View Documents</a></td>
+                                    <td style={{
+                                        padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0', color: ride['Driver Online'] && ride['Driver Avaliable'] ? 'green' : ride['Driver Online'] && ride['Driver Avaliable'] === false ? 'grey' : 'red',
+                                        fontWeight: ride['Driver Online'] && ride['Driver Avaliable'] ? '600' : ride['Driver Online'] && ride['Driver Avaliable'] === false ? '600' : 'normal'
+                                    }}>
+                                        {ride['Driver Online'] && ride['Driver Avaliable'] ? 'Online' : ride['Driver Online'] && ride['Driver Avaliable'] === false ? 'In a ride' : 'Offline'}
+                                    </td>
+                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}><a href={`https://www.google.com/maps?q=${ride['Current Latitude']},${ride['Current Longitude']}`} target="_blank">Locate Driver</a></td>
+                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0', }}>
+                                        {!ride['Approved'] ? <img src='   https://cdn-icons-png.flaticon.com/512/190/190411.png '
+                                            height={20} width={20}
+                                        ></img> : <img src='      https://cdn-icons-png.flaticon.com/512/1828/1828843.png  '
+                                            height={20} width={20}
+                                        ></img>}
+
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+
+
+                </div>
+            </div>
         </div>
-        <div className="divider"></div>
-        <div className="jnjvnfjb">
-            
-        </div>
-      </div>
-    </div>
-  )
+    )
 }
