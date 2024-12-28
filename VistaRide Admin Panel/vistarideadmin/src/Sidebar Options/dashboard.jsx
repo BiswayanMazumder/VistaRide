@@ -3,7 +3,7 @@ import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, onSnapshot, getDoc, doc } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
-
+import { jsPDF } from 'jspdf';
 // Firebase config
 const firebaseConfig = {
     apiKey: "AIzaSyA5h_ElqdgLrs6lXLgwHOfH9Il5W7ARGiI",
@@ -127,7 +127,7 @@ export default function Dashboard() {
                     ); // Only drivers that are online and available
 
                 settotalrides(rideslist); // Update the state with ride data
-                // console.log('Rides', rideslist);
+                console.log('Rides', rideslist);
 
                 // Fetch the driver's name for each ride in the rideslist
                 const driverNamesArray = []; // Initialize an empty array for storing driver names
@@ -266,6 +266,76 @@ export default function Dashboard() {
     const handleOptionClick = (index) => {
         setSelectedIndex(index);
     };
+    function createReceipt(
+        cabCategory,
+        bookingId,
+        pickupLocation,
+        dropLocation,
+        fare,
+        driverName,
+        riderName,
+        travelDistance,
+        travelTime
+      ) {
+        // Create a new jsPDF instance
+        const doc = new jsPDF();
+      
+        // Receipt header
+        doc.setFontSize(16);
+        doc.text('VistaRide Receipt', 10, 10);
+      
+        // Receipt body
+        doc.setFontSize(14);
+        doc.text(`Thanks for riding, ${riderName}`, 10, 30);
+        doc.setFontSize(12);
+        doc.text("We're glad to have you as a VistaRide Rewards Gold Member.", 10, 40);
+      
+        // Utility function for text wrapping
+        function splitTextToFit(text, width) {
+          return doc.splitTextToSize(text, width);
+        }
+      
+        // Ride Details
+        doc.setFontSize(12);
+        doc.text('Cab Category:', 10, 60);
+        doc.text(cabCategory, 80, 60);
+        
+        doc.text('Booking ID:', 10, 70);
+        doc.text(bookingId, 80, 70);
+      
+        doc.text('Pickup Location:', 10, 80);
+        const pickupLocationLines = splitTextToFit(pickupLocation, 180); // 180 is the max width
+        doc.text(pickupLocationLines, 80, 80);
+      
+        doc.text('Drop Location:', 10, 100);
+        const dropLocationLines = splitTextToFit(dropLocation, 180); // 180 is the max width
+        doc.text(dropLocationLines, 80, 100);
+      
+        doc.text('Driver Name:', 10, 120);
+        doc.text(driverName, 80, 120);
+      
+        doc.text('Rider Name:', 10, 130);
+        doc.text(riderName, 80, 130);
+      
+        doc.text('Travel Distance:', 10, 140);
+        doc.text(travelDistance, 80, 140);
+      
+        doc.text('Travel Time:', 10, 150);
+        doc.text(travelTime, 80, 150);
+      
+        // Fare
+        doc.setFontSize(12);
+        doc.text('Total Fare:', 10, 160);
+        doc.text(`₹${fare}`, 80, 160);
+      
+        // Separate rides with a line
+        doc.setLineWidth(0.5);
+        doc.line(10, 170, 200, 170); // Draw a line after the details
+      
+        // Save the PDF with booking ID as filename
+        doc.save(`${bookingId}_receipt.pdf`);
+      }
+      
     const mapCenter = currentLocation;
     return (
         <div className='webbody' style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', overflowY: 'scroll', overflowX: 'hidden' }}>
@@ -413,7 +483,7 @@ export default function Dashboard() {
                                                 {/* <td style={{ padding: '10px 20px', wordWrap: 'break-word' }}>{ride['Audio Recording']}</td> */}
                                                 <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', fontWeight: '600' }}>₹{ride['Fare']}</td>
                                                 <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}>
-                                                    <a href="#">View</a>
+                                                    <div onClick={() => createReceipt(ride['Cab Category'],ride['Booking ID'],ride['Pickup Location'],ride['Drop Location'],ride['Fare'],drivernames[index],ridernames[index],ride['Travel Distance'],ride['Travel Time'])}>View</div>
                                                 </td>
                                             </tr>
                                         ))}
