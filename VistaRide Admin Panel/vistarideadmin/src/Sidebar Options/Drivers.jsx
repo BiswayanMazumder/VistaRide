@@ -88,6 +88,7 @@ export default function Drivers() {
                     <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', border: '1px solid #e0e0e0' }}>
                         <thead style={{ fontWeight: '300' }}>
                             <tr>
+                            <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Profile Picture</th>
                                 <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Driver Name</th>
                                 <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Email</th>
                                 <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Vehicle Category-Name</th>
@@ -96,11 +97,13 @@ export default function Drivers() {
                                 <th style={{ fontWeight: '300', padding: '10px -10px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Driver Status</th>
                                 <th style={{ fontWeight: '400', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Driver Location</th>
                                 <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Actions</th>
+                                
                             </tr>
                         </thead>
                         <tbody style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse' }}>
                             {filteredDrivers.map((ride, index) => (
                                 <tr key={index}>
+                                <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}><img src={ride['Profile Picture']==null || ride['Profile Picture']==''?'https://cdn-icons-png.flaticon.com/512/149/149071.png':ride['Profile Picture']} height={'50px'} width={'50px'} style={{ borderRadius: '50%' }}></img></td>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{ride['Name']}</td>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{ride['Email Address']}</td>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>
