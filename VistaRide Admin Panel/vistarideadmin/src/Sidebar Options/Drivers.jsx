@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, onSnapshot, getDoc, doc } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, getDoc, doc, updateDoc } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 // Firebase config
@@ -21,6 +21,17 @@ const db = getFirestore(app);
 
 export default function Drivers() {
     const [drivers, setDrivers] = useState([]);
+    const [driverID,setDriverID] = useState([]);
+    const updatedriverapproval=async(isapproved,driverID)=>{
+        if(isapproved){
+            const docRef = doc(db, 'VistaRide Driver Details', driverID);
+            await updateDoc(docRef, { Approved: false },);
+        }
+        if(!isapproved){
+            const docRef = doc(db, 'VistaRide Driver Details', driverID);
+            await updateDoc(docRef, { Approved: true },);
+        }
+    }
     useEffect(() => {
         const unsubscribe = onSnapshot(
             collection(db, 'VistaRide Driver Details'),
@@ -101,11 +112,19 @@ export default function Drivers() {
                                     </td>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}><a href={`https://www.google.com/maps?q=${ride['Current Latitude']},${ride['Current Longitude']}`} target="_blank">Locate Driver</a></td>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0', }}>
-                                        {!ride['Approved'] ? <img src='   https://cdn-icons-png.flaticon.com/512/190/190411.png '
+                                        {!ride['Approved'] ?<div onClick={()=>updatedriverapproval(false,ride['Driver ID'])} style={{cursor:'pointer'}}>
+                                            <img src='   https://cdn-icons-png.flaticon.com/512/190/190411.png ' //driver not approved
                                             height={20} width={20}
-                                        ></img> : <img src='      https://cdn-icons-png.flaticon.com/512/1828/1828843.png  '
-                                            height={20} width={20}
-                                        ></img>}
+                                        ></img>
+                                        {/* <img src='      https://cdn-icons-png.flaticon.com/512/1828/1828843.png  '
+                                            height={20} width={20} style={{marginLeft:'20px'}}
+                                        ></img> */}
+                                        </div> : <div onClick={()=>updatedriverapproval(true,ride['Driver ID'])} style={{cursor:'pointer'}}>
+                                            
+                                        <img src='   https://cdn-icons-png.flaticon.com/512/1828/1828843.png ' //approved driver
+                                            height={20} width={20} 
+                                        ></img>
+                                        </div>}
 
                                     </td>
                                 </tr>
