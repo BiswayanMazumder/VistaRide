@@ -76,7 +76,7 @@ export default function Homepage() {
                             }}
                             onClick={() => handleOptionClick(3)}
                         >
-                            Rider
+                            Rides
                         </div>
                     </Link>
                     <Link style={{ textDecoration: 'none', color: "black" }}  >
