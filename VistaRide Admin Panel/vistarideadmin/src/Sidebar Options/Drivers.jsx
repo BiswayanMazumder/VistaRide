@@ -97,7 +97,7 @@ export default function Drivers() {
                                 <th style={{ fontWeight: '300', padding: '10px -10px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Driver Status</th>
                                 <th style={{ fontWeight: '400', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Driver Location</th>
                                 <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Actions</th>
-                                
+                                <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Ratings</th>
                             </tr>
                         </thead>
                         <tbody style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse' }}>
@@ -127,10 +127,14 @@ export default function Drivers() {
                                             {ride['Approved'] ? 'Approved' : 'Not Approved'}
                                         </div>
                                     </td>
+                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0',fontWeight:ride['Rating']>3?'600':'500',color:ride['Rating']<3?'red':'green' }}>
+                                        {ride['Rating']==null?NaN:ride['Rating']}
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
+                    <br /><br />
                 </div>
             </div>
         </div>
