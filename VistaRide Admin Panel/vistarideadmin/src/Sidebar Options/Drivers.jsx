@@ -110,7 +110,7 @@ export default function Drivers() {
                                         <a href={`tel:${ride['Contact Number']}`}>{ride['Contact Number']}</a>
                                     </td>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}><a href='#'>View Documents</a></td>
-                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>
+                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0',color: ride['Driver Online'] && ride['Driver Avaliable'] ? 'green' : ride['Driver Online'] && ride['Driver Avaliable'] === false ? 'grey' : 'red',fontWeight: ride['Driver Online'] && ride['Driver Avaliable'] ? '600' : ride['Driver Online'] && ride['Driver Avaliable'] === false ? '600' : 'normal' }}>
                                         {ride['Driver Online'] && ride['Driver Avaliable'] ? 'Online' : ride['Driver Online'] && ride['Driver Avaliable'] === false ? 'In a ride' : 'Offline'}
                                     </td>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>
