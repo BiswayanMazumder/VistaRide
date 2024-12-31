@@ -27,18 +27,41 @@ export default function Trackactiveride() {
     const [loading, setLoading] = useState(true); // To manage loading state
     const [error, setError] = useState(null); // To handle errors
     const [directions, setDirections] = useState(null); // Store directions result
-
+    const [driverDetails, setDriverDetails] = useState(null);
     // Setup the Firestore real-time listener
     useEffect(() => {
-        console.log('Ride ID', rideID);
+        // console.log('Ride ID', rideID);
+
         // Create a reference to the ride document
         const rideRef = doc(db, 'Ride Details', rideID);
 
         // Real-time listener for the ride document
-        const unsubscribe = onSnapshot(rideRef, (docSnap) => {
+        const unsubscribeRide = onSnapshot(rideRef, (docSnap) => {
             if (docSnap.exists()) {
-                setRideDetails(docSnap.data()); // Update state with the new ride data
-                setLoading(false); // Set loading to false when data is fetched
+                const rideData = docSnap.data();
+                setRideDetails(rideData);
+                setLoading(false);
+
+                // Now, check if a driver ID exists and fetch the driver details
+                if (rideData['Driver ID']) {
+                    // Only setup the driver listener if it's not already set
+                    const driverRef = doc(db, 'VistaRide Driver Details', rideData['Driver ID']);
+                    const unsubscribeDriver = onSnapshot(driverRef, (driverSnap) => {
+                        if (driverSnap.exists()) {
+                            // console.log('Driver Details', driverSnap.data());
+                            setDriverDetails(driverSnap.data());
+                        } else {
+                            setError('Driver not found');
+                        }
+                    }, (err) => {
+                        setError('Error fetching driver details');
+                    });
+
+                    // Cleanup driver listener
+                    return () => {
+                        unsubscribeDriver();
+                    };
+                }
             } else {
                 setError('Ride not found');
                 setLoading(false);
@@ -48,15 +71,15 @@ export default function Trackactiveride() {
             setLoading(false);
         });
 
-        // Cleanup listener on unmount or rideID change
-        return () => unsubscribe();
-    }, [rideID]);
-
+        // Cleanup ride listener on unmount or rideID change
+        return () => unsubscribeRide();
+    }, [rideID]); // Dependency on rideID
     // Extract pickup and drop-off coordinates
-    const pickupLatitude = rideDetails?.["Pickup Latitude"];
-    const pickupLongitude = rideDetails?.["Pick Longitude"];
-    const dropLatitude = rideDetails?.["Drop Latitude"];
-    const dropLongitude = rideDetails?.["Drop Longitude"];
+    const pickupLatitude = parseFloat(driverDetails?.["Current Latitude"]);
+const pickupLongitude = parseFloat(driverDetails?.["Current Longitude"]);
+const dropLatitude = parseFloat(rideDetails?.["Drop Latitude"]);
+const dropLongitude = parseFloat(rideDetails?.["Drop Longitude"]);
+
 
     // Default center of the map (if no location is found)
     const defaultCenter = {
@@ -92,22 +115,14 @@ export default function Trackactiveride() {
             );
         }
     }, [pickupLatitude, pickupLongitude, dropLatitude, dropLongitude]);
-
-    // Custom icon URLs (use your custom images here)
-    const pickupIcon = {
-        url: "https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2Fpngtree-red-car-top-view-icon-png-image_3745904-removebg-preview.png?alt=media&token=ec094a1a-9864-4a06-9b44-529d04ed2a29", // Replace with actual image URL
-        scaledSize: new window.google.maps.Size(50, 50), // Set custom size to 50x50
-    };
-    const dropIcon = {
-        url: "https://firebasestorage.googleapis.com/v0/b/vistafeedd.appspot.com/o/Assets%2Fpngimg.com%20-%20pin_PNG27.png?alt=media&token=a7926167-44dd-4938-b74f-030f0487e5b4", // Replace with actual image URL
-        scaledSize: new window.google.maps.Size(50, 50), // Set custom size to 50x50
-    };
     const mapOptions = {
         zoomControl: true,
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false,
     };
+    // Custom icon URLs (use your custom images here)
+
     return (
         <div className="webbody">
             <LoadScript
@@ -117,20 +132,20 @@ export default function Trackactiveride() {
                 <GoogleMap
                     mapContainerStyle={mapContainerStyle}
                     center={{ lat: pickupLatitude || defaultCenter.lat, lng: pickupLongitude || defaultCenter.lng }}
-                    zoom={13}
+                    zoom={20}
                     options={mapOptions}
                 >
                     {/* Markers for pickup and drop-off locations with custom icons */}
                     {pickupLatitude && pickupLongitude && (
                         <Marker
                             position={{ lat: pickupLatitude, lng: pickupLongitude }}
-                            icon={pickupIcon} // Use custom pickup icon
+                            // icon={pickupIcon} // Use custom pickup icon
                         />
                     )}
                     {dropLatitude && dropLongitude && (
                         <Marker
                             position={{ lat: dropLatitude, lng: dropLongitude }}
-                            icon={dropIcon} // Use custom drop icon
+                            // icon={dropIcon} // Use custom drop icon
                         />
                     )}
 
