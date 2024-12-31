@@ -4,6 +4,7 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, onSnapshot, getDoc, doc } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
+
 // Firebase config
 const firebaseConfig = {
     apiKey: "AIzaSyA5h_ElqdgLrs6lXLgwHOfH9Il5W7ARGiI",
@@ -18,16 +19,19 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
 export default function Ridepage() {
     const [searchedText, setSearchedText] = React.useState('');
+    const [totalrides, setTotalRides] = useState([]);
+    const [drivernames, setDrivernames] = useState([]);
+    const [ridernames, setRiderNames] = useState([]);
+    const [ridercontact, setRiderContact] = useState([]);
+    const [drivercontact, setDriverContact] = useState([]);
+
     const handleInputChange = (event) => {
-        setSearchedText(event.target.value); // update the state with typed content
+        setSearchedText(event.target.value);
     };
-    const [totalrides, settotalrides] = useState([]);
-    const [drivernames, setDrivernames] = useState([]); // Store driver details in an array
-    const [ridernames, setridernames] = useState([]);
-    const [ridercontact, setridercontact] = useState([]);
-    const [drivercontact, setdrivercontact] = useState([]);
+
     useEffect(() => {
         const unsubscribe = onSnapshot(
             collection(db, 'Ride Details'),
@@ -36,92 +40,79 @@ export default function Ridepage() {
                     .map((doc) => doc.data())
                     .filter(
                         (rider) => rider['Driver ID'] != null && rider['Ride Owner'] != null && rider['Driver ID'] != '' && rider['Ride Owner'] != ''
-                    ); // Only drivers that are online and available
+                    );
+                setTotalRides(rideslist);
 
-                settotalrides(rideslist); // Update the state with ride data
-                console.log('Rides', rideslist);
-
-                // Fetch the driver's name for each ride in the rideslist
                 const drivercontactArray = [];
-                const driverNamesArray = []; // Initialize an empty array for storing driver names
-                const driverMap = {}; // Object to map driverId to driverName
-                const riderNamesArray = []; // Initialize an empty array for storing driver names
+                const driverNamesArray = [];
+                const riderNamesArray = [];
                 const riderContactArray = [];
-                const riderMap = {}; // Object to map driverId to driverName
+
                 rideslist.forEach(async (ride) => {
                     const driverId = ride['Driver ID'];
+                    const riderId = ride['Ride Owner'];
+
                     if (driverId) {
-                        // Fetch the driver's name from VistaRide Driver Details collection
                         try {
                             const driverDocRef = doc(db, 'VistaRide Driver Details', driverId);
                             const driverDocSnap = await getDoc(driverDocRef);
 
                             if (driverDocSnap.exists()) {
                                 const driverData = driverDocSnap.data();
-
-                                const driverName = driverData['Name']; // Assuming the driver's name is stored in the 'Name' field
-                                const driverContact = driverData['Contact Number'];
-                                drivercontactArray.push(driverContact);
-                                driverNamesArray.push(driverName);
-                                // Store driver name in the map
-                                driverMap[driverId] = driverName;
-
-                                // console.log('Driver Data', drivercontactArray);
-                                // Once all names are fetched, update the state
-                                setDrivernames(driverNamesArray);
-                                setdrivercontact(drivercontactArray);
-                            } else {
-                                console.log('No such driver found for ID:', driverId);
+                                drivercontactArray.push(driverData['Contact Number']);
+                                driverNamesArray.push(driverData['Name']);
                             }
                         } catch (error) {
-                            console.error('Error fetching driver name: ', error);
+                            console.error('Error fetching driver data:', error);
                         }
                     }
-                });
-                rideslist.forEach(async (ride) => {
-                    const riderID = ride['Ride Owner'];
-                    if (riderID) {
-                        // Fetch the driver's name from VistaRide Driver Details collection
+
+                    if (riderId) {
                         try {
-                            const driverDocRef = doc(db, 'VistaRide User Details', riderID);
-                            const driverDocSnap = await getDoc(driverDocRef);
+                            const riderDocRef = doc(db, 'VistaRide User Details', riderId);
+                            const riderDocSnap = await getDoc(riderDocRef);
 
-                            if (driverDocSnap.exists()) {
-                                const driverData = driverDocSnap.data();
-
-                                const riderName = driverData['User Name']; // Assuming the driver's name is stored in the 'Name' field
-                                const riderContact = driverData['Email Address'];
-                                riderNamesArray.push(riderName);
-                                riderContactArray.push(riderContact);
-                                // Store driver name in the map
-                                riderMap[riderID] = riderName;
-                                // console.log('Driver Data', driverNamesArray);
-                                // Once all names are fetched, update the state
-                                setridernames(riderNamesArray);
-                                setridercontact(riderContactArray);
-                            } else {
-                                console.log('No such driver found for ID:', riderID);
+                            if (riderDocSnap.exists()) {
+                                const riderData = riderDocSnap.data();
+                                riderContactArray.push(riderData['Email Address']);
+                                riderNamesArray.push(riderData['User Name']);
                             }
                         } catch (error) {
-                            console.error('Error fetching driver name: ', error);
+                            console.error('Error fetching rider data:', error);
                         }
                     }
                 });
+
+                setDrivernames(driverNamesArray);
+                setDriverContact(drivercontactArray);
+                setRiderNames(riderNamesArray);
+                setRiderContact(riderContactArray);
             },
             (error) => {
-                console.error('Error fetching rides: ', error);
+                console.error('Error fetching rides:', error);
             }
         );
 
-        // Cleanup listener on unmount
         return () => unsubscribe();
     }, []);
+
+    // Filter rides based on searchedText
+    const filteredRides = totalrides.filter((ride, index) => {
+        const searchText = searchedText.toLowerCase();
+        const rideId = ride['Booking ID'] ? ride['Booking ID'].toLowerCase() : '';
+        const riderName = ridernames[index] ? ridernames[index].toLowerCase() : '';
+        const driverName = drivernames[index] ? drivernames[index].toLowerCase() : '';
+        return (
+            rideId.includes(searchText) ||
+            riderName.includes(searchText) ||
+            driverName.includes(searchText)
+        );
+    });
+
     return (
         <div className='webbody' style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', overflowY: 'scroll', overflowX: 'hidden' }}>
             <div className="jnvjfnjf">
-                <div className="jffbvfjv">
-                    Ride Details
-                </div>
+                <div className="jffbvfjv">Ride Details</div>
                 <div className="divider"></div>
                 <div className="jnjvnfjb">
                     <h4>Search:</h4>
@@ -156,14 +147,14 @@ export default function Ridepage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {totalrides.map((ride, index) => (
+                            {filteredRides.map((ride, index) => (
                                 <tr key={index} style={{ borderBottom: '1px solid #e0e0e0' }}>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{ride['Booking ID']}</td>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{ridernames[index]} - ({ride['Ride Owner']})</td>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{drivernames[index]} - ({ride['Driver ID']})</td>
-                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}><Link style={{ textDecoration: 'none' }}> {ride['Cab Category']}</Link></td>
-                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}><Link style={{ textDecoration: 'none', color: 'black' }}> {ridercontact[index]}</Link></td>
-                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}><Link style={{ textDecoration: 'none', color: 'black' }}> {drivercontact[index]}</Link></td>
+                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{ride['Cab Category']}</td>
+                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{ridercontact[index]}</td>
+                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{drivercontact[index]}</td>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{ride['Pickup Location']}</td>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{ride['Drop Location']}</td>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', color: ride['Ride Accepted'] ? 'green' : !ride['Ride Accepted'] && ride['Ride Completed'] ? 'green' : 'red', border: '1px solid #e0e0e0' }}>
@@ -175,9 +166,8 @@ export default function Ridepage() {
                             ))}
                         </tbody>
                     </table>
-
                 </div>
             </div>
         </div>
-    )
+    );
 }
