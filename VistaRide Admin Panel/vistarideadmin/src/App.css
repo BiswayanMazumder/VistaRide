@@ -47,7 +47,7 @@
 }
 
 /* Show the page only on large screens (laptop/desktop) */
-@media (min-width: 1024px) {
+@media (min-width: 700px) {
   .webbody {
     display: block;
   }
