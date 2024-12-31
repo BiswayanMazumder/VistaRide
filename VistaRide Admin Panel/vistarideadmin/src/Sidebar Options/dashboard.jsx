@@ -482,7 +482,7 @@ export default function Dashboard() {
                                                 {/* <td style={{ padding: '10px 20px', wordWrap: 'break-word' }}>{ride['Booking Time']}</td> */}
                                                 {/* <td style={{ padding: '10px 20px', wordWrap: 'break-word' }}>{ride['Audio Recording']}</td> */}
                                                 <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', fontWeight: '600' }}>₹{ride['Fare']}</td>
-                                                <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px' }}>
+                                                <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px',cursor:'pointer' }}>
                                                     <div onClick={() => createReceipt(ride['Cab Category'],ride['Booking ID'],ride['Pickup Location'],ride['Drop Location'],ride['Fare'],drivernames[index],ridernames[index],ride['Travel Distance'],ride['Travel Time'])}>View</div>
                                                 </td>
                                             </tr>
