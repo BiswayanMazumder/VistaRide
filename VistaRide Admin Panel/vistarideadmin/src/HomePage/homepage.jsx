@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Dashboard from '../Sidebar Options/dashboard';
 import Drivers from '../Sidebar Options/Drivers';
+import Ridepage from '../Rides Page/ridepage';
 
 export default function Homepage() {
     // State to track the selected option index
@@ -295,7 +296,7 @@ export default function Homepage() {
                 </div>
                 <div className="dnjfnjn">
                 {
-                    selectedIndex==0?<Dashboard/>:selectedIndex==4?<Drivers/>:null
+                    selectedIndex==0?<Dashboard/>:selectedIndex==4?<Drivers/>:selectedIndex==3?<Ridepage/>:null
                 }
                 </div>
             </div>
