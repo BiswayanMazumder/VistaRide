@@ -3,7 +3,7 @@
 VistaRide is an innovative ride-hailing app designed to provide a seamless, efficient, and user-friendly experience for both passengers and drivers. Built using Firebase and Flutter, the app offers an efficient solution to the growing demand for transportation services in urban areas. Firebase provides the backend infrastructure, while Flutter is used to create a visually appealing and responsive frontend, ensuring the app is easy to use and scalable.
 
 ### **Key Features of VistaRide**  
-
+ 
 VistaRide’s design and functionality revolve around simplicity, speed, and security. It offers several core features, including real-time ride booking, location tracking, secure payments, and easy driver-passenger interaction. These features ensure that both passengers and drivers have a smooth and hassle-free experience.
 
 1. **Real-Time Booking and Location Tracking**
