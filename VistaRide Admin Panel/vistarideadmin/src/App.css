@@ -348,3 +348,23 @@ body{
   display: flex;
   margin-top: 20px;
 }
+.jnjnkf{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  flex-wrap: wrap;
+  height: fit-content;
+  width: fit-content;
+}
+.nefnnvjfvn{
+  position:relative;
+  margin: 30px;
+  height: 150px;
+  width: 300px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+.nefnnvjfvn:hover{
+  cursor: pointer;
+  box-shadow: 0 8px 10px rgba(0, 0, 0, 0.2) !important;
+}
