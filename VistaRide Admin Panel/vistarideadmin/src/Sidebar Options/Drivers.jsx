@@ -124,7 +124,7 @@ export default function Drivers() {
                                             {ride['Approved']?(<img src='https://cdn-icons-png.flaticon.com/512/190/190411.png' height={20} width={20} />):(<img src='   https://cdn-icons-png.flaticon.com/512/1828/1828843.png ' //approved driver
                                             height={20} width={20} 
                                         ></img>)}
-                                            {ride['Approved'] ? 'Approved' : 'Not Approved'}
+                                            {ride['Approved'] ? 'Unblock Driver' : 'Block Driver'}
                                         </div>
                                     </td>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0',fontWeight:ride['Rating']>3?'600':'500',color:ride['Rating']<3?'red':'green' }}>
