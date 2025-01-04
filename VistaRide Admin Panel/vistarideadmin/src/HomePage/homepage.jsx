@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Dashboard from '../Sidebar Options/dashboard';
 import Drivers from '../Sidebar Options/Drivers';
 import Ridepage from '../Rides Page/ridepage';
+import Cab_category_page from '../Cab Category/cab_category_page';
 
 export default function Homepage() {
     // State to track the selected option index
@@ -101,7 +102,7 @@ export default function Homepage() {
                             }}
                             onClick={() => handleOptionClick(5)}
                         >
-                            Organization
+                            Cab Category
                         </div>
                     </Link>
                     <div className="nnnvnfnvf">
@@ -296,7 +297,7 @@ export default function Homepage() {
                 </div>
                 <div className="dnjfnjn">
                 {
-                    selectedIndex==0?<Dashboard/>:selectedIndex==4?<Drivers/>:selectedIndex==3?<Ridepage/>:null
+                    selectedIndex==0?<Dashboard/>:selectedIndex==4?<Drivers/>:selectedIndex==3?<Ridepage/>:selectedIndex==5?<Cab_category_page/>:null
                 }
                 </div>
             </div>
