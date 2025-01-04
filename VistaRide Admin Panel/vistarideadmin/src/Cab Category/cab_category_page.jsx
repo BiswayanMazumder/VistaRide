@@ -59,11 +59,11 @@ export default function Cab_category_page() {
         const updatedStatus = [...cabcategorystatus];
         updatedStatus[0][index] = checked; // Toggle the status at the specific index
         setcancategorystatus(updatedStatus); // Update state with new status
-        console.log(updatedStatus);
+        // console.log(updatedStatus[0]);
         try {
             const categorydocref=doc(db, 'Cab Categories', 'Category Details');
             await updateDoc(categorydocref, {
-                'Cab Category Status': updatedStatus
+                'Cab Category Status': updatedStatus[0]
             });
         } catch (error) {
             console.error('Error updating cab category status', error);
