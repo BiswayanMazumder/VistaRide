@@ -121,7 +121,7 @@ export default function Drivers() {
                                     </td>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>
                                         <div onClick={() => updateDriverApproval(ride['Approved'], ride['Driver ID'])} style={{ cursor: 'pointer', display: 'flex', flexDirection: 'row', gap: '10px', fontSize: '10px' }}>
-                                            {ride['Approved']?(<img src='https://cdn-icons-png.flaticon.com/512/190/190411.png' height={20} width={20} />):(<img src='   https://cdn-icons-png.flaticon.com/512/1828/1828843.png ' //approved driver
+                                            {!ride['Approved']?(<img src='https://cdn-icons-png.flaticon.com/512/190/190411.png' height={20} width={20} />):(<img src='   https://cdn-icons-png.flaticon.com/512/1828/1828843.png ' //approved driver
                                             height={20} width={20} 
                                         ></img>)}
                                             {ride['Approved'] ? 'Block Driver' : 'Unblock Driver'}
