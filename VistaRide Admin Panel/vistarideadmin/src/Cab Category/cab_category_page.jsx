@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { GoogleMap, LoadScript, Marker, DirectionsRenderer } from '@react-google-maps/api';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, onSnapshot, collection, updateDoc } from 'firebase/firestore';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import Switch from "react-switch";
 
 // Firebase config
@@ -24,9 +24,39 @@ export default function Cab_category_page() {
     const [cabcategoryname, setcancategoryname] = useState([]);
     const [cabcategoryimg, setcancategoryimg] = useState([]);
     const [cabcategorydesc, setcancategorydesc] = useState([]);
+    const [newcategory, setnewcategory] = useState(false);
     const [cabcategorystatus, setcancategorystatus] = useState([]);
     const [loading, setLoading] = useState(true); // Add loading state
+    const [previewImage, setPreviewImage] = useState(null);
+    const [categoryname,setcatergoryname] = useState('');
+    const [categorydesc,setcategorydesc] = useState('');
+    const handleImageChange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                setPreviewImage(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
+    const handleImageUpload = async (index) => {
+        try {
+            const updatedImages = [...cabcategoryimg];
+            updatedImages[0][index] = previewImage; // Replace the image at the specified index
+            setcancategoryimg(updatedImages);
+
+            const categorydocref = doc(db, 'Cab Categories', 'Category Details');
+            await updateDoc(categorydocref, {
+                'Cab Category Images': updatedImages[0]
+            });
+
+            setPreviewImage(null); // Reset preview image
+        } catch (error) {
+            console.error('Error updating cab category image', error);
+        }
+    };
     useEffect(() => {
         const unsubscribe = onSnapshot(
             collection(db, 'Cab Categories'),
@@ -41,7 +71,13 @@ export default function Cab_category_page() {
 
         return () => unsubscribe();
     }, []);
-
+    const handleCategoryNameChange = (event) => {
+        setcatergoryname(event.target.value); // Update category name state
+    };
+    
+    const handleCategoryDescChange = (event) => {
+        setcategorydesc(event.target.value); // Update category description state
+    };
     // Circular loading spinner component
     const LoadingSpinner = () => (
         <div className="loading-spinner">
@@ -55,28 +91,116 @@ export default function Cab_category_page() {
     }
 
     // Handle the toggle switch change
-    const handleToggleChange = async(checked, index) => {
+    const handleToggleChange = async (checked, index) => {
         const updatedStatus = [...cabcategorystatus];
         updatedStatus[0][index] = checked; // Toggle the status at the specific index
         setcancategorystatus(updatedStatus); // Update state with new status
         // console.log(updatedStatus[0]);
         try {
-            const categorydocref=doc(db, 'Cab Categories', 'Category Details');
+            const categorydocref = doc(db, 'Cab Categories', 'Category Details');
             await updateDoc(categorydocref, {
                 'Cab Category Status': updatedStatus[0]
             });
         } catch (error) {
             console.error('Error updating cab category status', error);
-            
+
         }
     };
 
     return (
         <div className="webbody" style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', overflowY: 'scroll', overflowX: 'hidden' }}>
             <div className="jnvjfnjf">
-                <div className="jffbvfjv">Cab Categories</div>
+                <div className="jffbvfjv" style={{ width: '90%', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', position: 'relative' }}>{newcategory ? 'Add Cab Category' : 'Cab Categories'}
+                    <Link style={{ textDecoration: 'none', color: 'black' }}>
+                        <div className="jikd" style={{ fontSize: '15px', marginTop: '15px', display: 'flex', flexDirection: 'row', alignItems: 'center' }} onClick={() => setnewcategory(!newcategory)}>
+                            {newcategory ? (<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="4" y1="4" x2="16" y2="16" />
+                                <line x1="16" y1="4" x2="4" y2="16" />
+                            </svg>
+                            ) : (<svg width="10" height="10" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="22" y="0" width="6" height="50" fill="black" />
+                                <rect x="0" y="22" width="50" height="6" fill="black" />
+                            </svg>)}
+                            <div style={{ marginLeft: '10px' }}>{newcategory?'Close':'Add'}</div>
+                        </div>
+                    </Link>
+                </div>
                 <div className="divider"></div>
-                <div className="jnjnkf">
+                {newcategory?<div className="jnjnkf" style={{display:'flex',flexDirection:'column'}}>
+                    <div className="jdhvjhdv" style={{width:'50vw'}}>
+                        Cab Category Image
+                    </div>
+                    <div className="jnjvnfjb">
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(event) => {
+                                    const file = event.target.files[0];
+                                    if (file) {
+                                        const reader = new FileReader();
+                                        reader.onload = () => {
+                                            setPreviewImage(reader.result); // Set the preview image
+                                        };
+                                        reader.readAsDataURL(file);
+                                    }
+                                }}
+                            />
+                            {previewImage && (
+                                <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <img
+                                        src={previewImage}
+                                        alt="Preview"
+                                        height={50}
+                                        width={50}
+                                        style={{ border: '1px solid #ccc', borderRadius: '5px', marginBottom: '10px' }}
+                                    />
+                                    {/* <button
+                                        onClick={() => console.log('Image upload logic here')}
+                                        style={{
+                                            backgroundColor: '#4CAF50',
+                                            color: 'white',
+                                            padding: '8px 16px',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer',
+                                        }}
+                                    >
+                                        Upload Image
+                                    </button> */}
+                                </div>
+                            )}
+                        </div>
+                    <div className="jdhvjhdv">
+                        Cab Category Name
+                    </div>
+                    
+                    <div className="jnjvnfjb">
+                    <input
+                        type="text"
+                        placeholder="Cab Category Name"
+                        className='searchinput'
+                        style={{marginTop:'-10px',width:'100%',height:'50px'}}
+                        value={categoryname}
+                        onChange={handleCategoryNameChange}
+                    /></div>
+                    <div className="jdhvjhdv">
+                        Cab Category Description
+                    </div>
+                    <div className="jnjvnfjb">
+                    <input
+                        type="text"
+                        placeholder="Cab Category Description"
+                        className='searchinput'
+                        style={{marginTop:'-10px',width:'100%',height:'100px'}}
+                        value={categorydesc}
+                        onChange={handleCategoryDescChange}
+                    /></div>
+                    <div className="jnjvnfjb">
+                        <div className="jnfkvkfv" style={{backgroundColor:previewImage!=null && categoryname!='' && categorydesc!=''?'rgb(120, 120, 217)':'grey',color:'white',cursor:previewImage!=null && categoryname!='' && categorydesc!=''?'pointer':'not-allowed'}}>
+
+                        </div>
+                    </div>
+                </div>:(<div className="jnjnkf">
                     {cabcategorydesc[0].map((name, index) => (
                         <div className="nefnnvjfvn" key={index}>
                             <div className="jdnvjnf" style={{ display: 'flex', flexDirection: 'row' }}>
@@ -84,12 +208,12 @@ export default function Cab_category_page() {
                                 <div className="jenjnfv" style={{ marginTop: '40px', color: 'grey', fontWeight: '500', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginRight: '10px' }}>
                                     {cabcategoryname[0][index]}
                                     {/* Create a togglebar here */}
-                                    <Switch  
-                                        checked={cabcategorystatus[0][index]} 
-                                        height={20} 
-                                        width={40} 
-                                        onHandleColor='#FFFFFF' 
-                                        onChange={(checked) => handleToggleChange(checked, index)} 
+                                    <Switch
+                                        checked={cabcategorystatus[0][index]}
+                                        height={20}
+                                        width={40}
+                                        onHandleColor='#FFFFFF'
+                                        onChange={(checked) => handleToggleChange(checked, index)}
                                     />
                                 </div>
                             </div>
@@ -98,7 +222,7 @@ export default function Cab_category_page() {
                             </div>
                         </div>
                     ))}
-                </div>
+                </div>)}
             </div>
         </div>
     );
