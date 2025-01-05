@@ -74,6 +74,7 @@ export default function Ridepage() {
 
                             if (riderDocSnap.exists()) {
                                 const riderData = riderDocSnap.data();
+                                // console.log('Rider Data:', riderData);
                                 riderContactArray.push(riderData['Email Address']);
                                 riderNamesArray.push(riderData['User Name']);
                             }

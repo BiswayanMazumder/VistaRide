@@ -4,6 +4,7 @@ import Dashboard from '../Sidebar Options/dashboard';
 import Drivers from '../Sidebar Options/Drivers';
 import Ridepage from '../Rides Page/ridepage';
 import Cab_category_page from '../Cab Category/cab_category_page';
+import Riders from '../Cab Category/Rider Details/riders';
 
 export default function Homepage() {
     // State to track the selected option index
@@ -102,7 +103,7 @@ export default function Homepage() {
                             }}
                             onClick={() => handleOptionClick(5)}
                         >
-                            Cab Category
+                            Riders
                         </div>
                     </Link>
                     <div className="nnnvnfnvf">
@@ -297,7 +298,7 @@ export default function Homepage() {
                 </div>
                 <div className="dnjfnjn">
                 {
-                    selectedIndex==0?<Dashboard/>:selectedIndex==4?<Drivers/>:selectedIndex==3?<Ridepage/>:selectedIndex==5?<Cab_category_page/>:null
+                    selectedIndex==0?<Dashboard/>:selectedIndex==4?<Drivers/>:selectedIndex==3?<Ridepage/>:selectedIndex==7?<Cab_category_page/>:selectedIndex==5?<Riders/>:<></>
                 }
                 </div>
             </div>
