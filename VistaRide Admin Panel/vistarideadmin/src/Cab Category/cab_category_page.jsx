@@ -291,8 +291,7 @@ export default function Cab_category_page() {
                             </div>
                             <div className="jjvnjfnvfn" style={{ marginLeft: '10px', fontSize: '12px', color: 'black', marginTop: index == 5 ? '15px' : '0px' }}>
                                 {index == 3 ? 'No description' : cabcategorydesc[0][index]}
-                                <br /><br />
-                                Price Multiplier Android - {cabmultiplierandroid[0][index]} and Apple - {cabmultiplierios[0][index]}
+                                
                             </div>
                         </div>
                     ))}
