@@ -59,7 +59,8 @@ export default function Cab_category_page() {
             // Print the download URL in the console
             setimageURL(imageUrl);
 
-            console.log('Image uploaded successfully. Download URL:', imageUrl);
+            // console.log('Image uploaded successfully. Download URL:', imageUrl);
+
             // Mark image as confirmed
         } catch (error) {
             console.error('Error uploading image to Firebase Storage', error);
@@ -71,7 +72,7 @@ export default function Cab_category_page() {
             cabcategorydesc[0].push(categorydesc);
             cabcategoryname[0].push(categoryname);
             cabcategorystatus[0].push(false);
-            console.log(cabcategorydesc[0], cabcategoryimg, cabcategoryname, cabcategorystatus);
+            // console.log(cabcategorydesc[0], cabcategoryimg, cabcategoryname, cabcategorystatus);
             const categorydocref = doc(db, 'Cab Categories', 'Category Details');
             await updateDoc(categorydocref, {
                 'Cab Category Name': cabcategoryname[0],
