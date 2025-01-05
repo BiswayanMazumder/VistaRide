@@ -4,7 +4,7 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, onSnapshot, collection, updateDoc } from 'firebase/firestore';
 import { Link, useParams } from 'react-router-dom';
 import Switch from "react-switch";
-
+import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage';
 // Firebase config
 const firebaseConfig = {
     apiKey: "AIzaSyA5h_ElqdgLrs6lXLgwHOfH9Il5W7ARGiI",
@@ -28,8 +28,9 @@ export default function Cab_category_page() {
     const [cabcategorystatus, setcancategorystatus] = useState([]);
     const [loading, setLoading] = useState(true); // Add loading state
     const [previewImage, setPreviewImage] = useState(null);
-    const [categoryname,setcatergoryname] = useState('');
-    const [categorydesc,setcategorydesc] = useState('');
+    const [categoryname, setcatergoryname] = useState('');
+    const [categorydesc, setcategorydesc] = useState('');
+    const [imageconfirmed, setimageconfirmed] = useState(false);
     const handleImageChange = (event) => {
         const file = event.target.files[0];
         if (file) {
@@ -40,23 +41,49 @@ export default function Cab_category_page() {
             reader.readAsDataURL(file);
         }
     };
+    const [imageURL, setimageURL] = useState('');
+    const handleImageUpload = async () => {
+        if (!previewImage) return;
 
-    const handleImageUpload = async (index) => {
         try {
-            const updatedImages = [...cabcategoryimg];
-            updatedImages[0][index] = previewImage; // Replace the image at the specified index
-            setcancategoryimg(updatedImages);
+            // Create a storage reference
+            const storage = getStorage();
+            const imageRef = ref(storage, `cab-category-images/${categoryname}-${Date.now()}`);
 
-            const categorydocref = doc(db, 'Cab Categories', 'Category Details');
-            await updateDoc(categorydocref, {
-                'Cab Category Images': updatedImages[0]
-            });
+            // Upload the image as a base64 string
+            await uploadString(imageRef, previewImage, 'data_url');
 
-            setPreviewImage(null); // Reset preview image
+            // Get the download URL of the uploaded image
+            const imageUrl = await getDownloadURL(imageRef);
+
+            // Print the download URL in the console
+            setimageURL(imageUrl);
+
+            console.log('Image uploaded successfully. Download URL:', imageUrl);
+            // Mark image as confirmed
         } catch (error) {
-            console.error('Error updating cab category image', error);
+            console.error('Error uploading image to Firebase Storage', error);
         }
     };
+    const handlenewcategory = async () => {
+        try {
+            cabcategoryimg[0].push(imageURL);
+            cabcategorydesc[0].push(categorydesc);
+            cabcategoryname[0].push(categoryname);
+            cabcategorystatus[0].push(false);
+            console.log(cabcategorydesc[0], cabcategoryimg, cabcategoryname, cabcategorystatus);
+            const categorydocref = doc(db, 'Cab Categories', 'Category Details');
+            await updateDoc(categorydocref, {
+                'Cab Category Name': cabcategoryname[0],
+                'Cab Category Description': cabcategorydesc[0],
+                'Cab Category Images': cabcategoryimg[0],
+                'Cab Category Status': cabcategorystatus[0]
+            });
+            setnewcategory(false);
+        } catch (error) {
+
+        }
+    }
     useEffect(() => {
         const unsubscribe = onSnapshot(
             collection(db, 'Cab Categories'),
@@ -71,10 +98,11 @@ export default function Cab_category_page() {
 
         return () => unsubscribe();
     }, []);
+
     const handleCategoryNameChange = (event) => {
         setcatergoryname(event.target.value); // Update category name state
     };
-    
+
     const handleCategoryDescChange = (event) => {
         setcategorydesc(event.target.value); // Update category description state
     };
@@ -121,86 +149,89 @@ export default function Cab_category_page() {
                                 <rect x="22" y="0" width="6" height="50" fill="black" />
                                 <rect x="0" y="22" width="50" height="6" fill="black" />
                             </svg>)}
-                            <div style={{ marginLeft: '10px' }}>{newcategory?'Close':'Add'}</div>
+                            <div style={{ marginLeft: '10px' }}>{newcategory ? 'Close' : 'Add'}</div>
                         </div>
                     </Link>
                 </div>
                 <div className="divider"></div>
-                {newcategory?<div className="jnjnkf" style={{display:'flex',flexDirection:'column'}}>
-                    <div className="jdhvjhdv" style={{width:'50vw'}}>
+                {newcategory ? <div className="jnjnkf" style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div className="jdhvjhdv" style={{ width: '50vw' }}>
                         Cab Category Image
                     </div>
                     <div className="jnjvnfjb">
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(event) => {
-                                    const file = event.target.files[0];
-                                    if (file) {
-                                        const reader = new FileReader();
-                                        reader.onload = () => {
-                                            setPreviewImage(reader.result); // Set the preview image
-                                        };
-                                        reader.readAsDataURL(file);
-                                    }
-                                }}
-                            />
-                            {previewImage && (
-                                <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                    <img
-                                        src={previewImage}
-                                        alt="Preview"
-                                        height={50}
-                                        width={50}
-                                        style={{ border: '1px solid #ccc', borderRadius: '5px', marginBottom: '10px' }}
-                                    />
-                                    {/* <button
-                                        onClick={() => console.log('Image upload logic here')}
-                                        style={{
-                                            backgroundColor: '#4CAF50',
-                                            color: 'white',
-                                            padding: '8px 16px',
-                                            border: 'none',
-                                            borderRadius: '4px',
-                                            cursor: 'pointer',
-                                        }}
-                                    >
-                                        Upload Image
-                                    </button> */}
-                                </div>
-                            )}
-                        </div>
+                        {imageconfirmed ? <></> : (<input
+                            type="file"
+                            accept="image/*"
+                            onChange={(event) => {
+                                const file = event.target.files[0];
+                                if (file) {
+                                    const reader = new FileReader();
+                                    reader.onload = () => {
+                                        setPreviewImage(reader.result); // Set the preview image
+                                    };
+                                    reader.readAsDataURL(file);
+                                }
+                            }}
+                        />)}
+                        {previewImage && (
+                            <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', display: 'flex', flexDirection: 'row', gap: '20px' }}>
+                                <img
+                                    src={previewImage}
+                                    alt="Preview"
+                                    height={imageconfirmed ? 80 : 50}
+                                    width={imageconfirmed ? 80 : 50}
+                                    style={{ border: '1px solid #ccc', borderRadius: '5px', marginBottom: '10px' }}
+                                />
+                                {imageconfirmed ? <></> : (<button
+                                    onClick={() => {
+                                        handleImageUpload();
+                                        setimageconfirmed(true)
+                                    }}
+                                    style={{
+                                        backgroundColor: '#4CAF50',
+                                        color: 'white',
+                                        padding: '8px 16px',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                    }}
+                                >
+                                    Confirm Image
+                                </button>)}
+                            </div>
+                        )}
+                    </div>
                     <div className="jdhvjhdv">
                         Cab Category Name
                     </div>
-                    
+
                     <div className="jnjvnfjb">
-                    <input
-                        type="text"
-                        placeholder="Cab Category Name"
-                        className='searchinput'
-                        style={{marginTop:'-10px',width:'100%',height:'50px'}}
-                        value={categoryname}
-                        onChange={handleCategoryNameChange}
-                    /></div>
+                        <input
+                            type="text"
+                            placeholder="Cab Category Name"
+                            className='searchinput'
+                            style={{ marginTop: '-10px', width: '100%', height: '50px' }}
+                            value={categoryname}
+                            onChange={handleCategoryNameChange}
+                        /></div>
                     <div className="jdhvjhdv">
                         Cab Category Description
                     </div>
                     <div className="jnjvnfjb">
-                    <input
-                        type="text"
-                        placeholder="Cab Category Description"
-                        className='searchinput'
-                        style={{marginTop:'-10px',width:'100%',height:'100px'}}
-                        value={categorydesc}
-                        onChange={handleCategoryDescChange}
-                    /></div>
+                        <input
+                            type="text"
+                            placeholder="Cab Category Description"
+                            className='searchinput'
+                            style={{ marginTop: '-10px', width: '100%', height: '50px' }}
+                            value={categorydesc}
+                            onChange={handleCategoryDescChange}
+                        /></div>
                     <div className="jnjvnfjb">
-                        <div className="jnfkvkfv" style={{backgroundColor:previewImage!=null && categoryname!='' && categorydesc!=''?'rgb(120, 120, 217)':'grey',color:'white',cursor:previewImage!=null && categoryname!='' && categorydesc!=''?'pointer':'not-allowed'}}>
-
+                        <div className="jnfkvkfv" style={{ backgroundColor: imageconfirmed != false && categoryname != '' && categorydesc != '' ? 'rgb(120, 120, 217)' : 'grey', color: 'white', cursor: imageconfirmed != false && categoryname != '' && categorydesc != '' ? 'pointer' : 'not-allowed', justifyContent: 'center', display: 'flex', alignItems: 'center', width: '100%', height: '50px' }} onClick={handlenewcategory}>
+                            Add new Category
                         </div>
                     </div>
-                </div>:(<div className="jnjnkf">
+                </div> : (<div className="jnjnkf">
                     {cabcategorydesc[0].map((name, index) => (
                         <div className="nefnnvjfvn" key={index}>
                             <div className="jdnvjnf" style={{ display: 'flex', flexDirection: 'row' }}>
