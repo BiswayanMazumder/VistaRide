@@ -30,7 +30,11 @@ export default function Cab_category_page() {
     const [previewImage, setPreviewImage] = useState(null);
     const [categoryname, setcatergoryname] = useState('');
     const [categorydesc, setcategorydesc] = useState('');
+    const [pricemultand, setpricemultand] = useState(0);
+    const [pricemultapple, setpricemultapple] = useState(0);
     const [imageconfirmed, setimageconfirmed] = useState(false);
+    const [cabmultiplierandroid, setcabmultiplierandroid] = useState([]);
+    const [cabmultiplierios, setcabmultiplierios] = useState([]);
     const handleImageChange = (event) => {
         const file = event.target.files[0];
         if (file) {
@@ -72,13 +76,17 @@ export default function Cab_category_page() {
             cabcategorydesc[0].push(categorydesc);
             cabcategoryname[0].push(categoryname);
             cabcategorystatus[0].push(false);
+            cabmultiplierandroid[0].push(parseInt(cabmultiplierandroid[0]));
+            cabmultiplierios[0].push(parseInt(cabmultiplierios[0]));
             // console.log(cabcategorydesc[0], cabcategoryimg, cabcategoryname, cabcategorystatus);
             const categorydocref = doc(db, 'Cab Categories', 'Category Details');
             await updateDoc(categorydocref, {
                 'Cab Category Name': cabcategoryname[0],
                 'Cab Category Description': cabcategorydesc[0],
                 'Cab Category Images': cabcategoryimg[0],
-                'Cab Category Status': cabcategorystatus[0]
+                'Cab Category Status': cabcategorystatus[0],
+                'Cab Multipliers Android': cabmultiplierandroid[0],
+                'Cab Multipliers Apple': cabmultiplierios[0],
             });
             setnewcategory(false);
         } catch (error) {
@@ -94,6 +102,8 @@ export default function Cab_category_page() {
                 setcancategoryimg(snapshot.docs.map(doc => doc.data()['Cab Category Images']));
                 setcancategorydesc(snapshot.docs.map(doc => doc.data()['Cab Category Description']));
                 setcancategorystatus(snapshot.docs.map(doc => doc.data()['Cab Category Status']));
+                setcabmultiplierandroid(snapshot.docs.map(doc => doc.data()['Cab Multipliers Android']));
+                setcabmultiplierios(snapshot.docs.map(doc => doc.data()['Cab Multipliers Apple']));
                 setLoading(false); // Data is fetched, stop loading
             });
 
@@ -106,6 +116,12 @@ export default function Cab_category_page() {
 
     const handleCategoryDescChange = (event) => {
         setcategorydesc(event.target.value); // Update category description state
+    };
+    const handlePriceMultandroidChange = (event) => {
+        setpricemultand(event.target.value); // Update category description state
+    };
+    const handlePriceMultappleChange = (event) => {
+        setpricemultapple(event.target.value); // Update category description state
     };
     // Circular loading spinner component
     const LoadingSpinner = () => (
@@ -227,8 +243,32 @@ export default function Cab_category_page() {
                             value={categorydesc}
                             onChange={handleCategoryDescChange}
                         /></div>
+                    <div className="jdhvjhdv">
+                        Price Multiplier Android
+                    </div>
                     <div className="jnjvnfjb">
-                        <div className="jnfkvkfv" style={{ backgroundColor: imageconfirmed != false && categoryname != '' && categorydesc != '' ? 'rgb(120, 120, 217)' : 'grey', color: 'white', cursor: imageconfirmed != false && categoryname != '' && categorydesc != '' ? 'pointer' : 'not-allowed', justifyContent: 'center', display: 'flex', alignItems: 'center', width: '100%', height: '50px' }} onClick={imageconfirmed != false && categoryname != '' && categorydesc != ''?handlenewcategory:null}>
+                        <input
+                            type="text"
+                            placeholder="Price Multiplier Android"
+                            className='searchinput'
+                            style={{ marginTop: '-10px', width: '100%', height: '50px' }}
+                            value={pricemultand}
+                            onChange={handlePriceMultandroidChange}
+                        /></div>
+                    <div className="jdhvjhdv">
+                        Price Multiplier Apple
+                    </div>
+                    <div className="jnjvnfjb">
+                        <input
+                            type="text"
+                            placeholder="Price Multiplier Apple"
+                            className='searchinput'
+                            style={{ marginTop: '-10px', width: '100%', height: '50px' }}
+                            value={pricemultapple}
+                            onChange={handlePriceMultappleChange}
+                        /></div>
+                    <div className="jnjvnfjb" style={{ marginBottom: '20px' }}>
+                        <div className="jnfkvkfv" style={{ backgroundColor: imageconfirmed != false && categoryname != '' && categorydesc != '' && pricemultapple != 0 && pricemultand != 0 ? 'rgb(120, 120, 217)' : 'grey', color: 'white', cursor: imageconfirmed != false && categoryname != '' && categorydesc != '' && pricemultapple != 0 && pricemultand != 0 ? 'pointer' : 'not-allowed', justifyContent: 'center', display: 'flex', alignItems: 'center', width: '100%', height: '50px' }} onClick={imageconfirmed != false && categoryname != '' && categorydesc != '' && pricemultapple != 0 && pricemultand != 0 ? handlenewcategory : null}>
                             Add new Category
                         </div>
                     </div>
@@ -251,6 +291,8 @@ export default function Cab_category_page() {
                             </div>
                             <div className="jjvnjfnvfn" style={{ marginLeft: '10px', fontSize: '12px', color: 'black', marginTop: index == 5 ? '15px' : '0px' }}>
                                 {index == 3 ? 'No description' : cabcategorydesc[0][index]}
+                                <br /><br />
+                                Price Multiplier Android - {cabmultiplierandroid[0][index]} and Apple - {cabmultiplierios[0][index]}
                             </div>
                         </div>
                     ))}
