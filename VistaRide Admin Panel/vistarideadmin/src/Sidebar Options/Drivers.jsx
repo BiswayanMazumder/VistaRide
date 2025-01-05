@@ -25,7 +25,7 @@ export default function Drivers() {
     
     const updateDriverApproval = async (isApproved, driverID) => {
         const docRef = doc(db, 'VistaRide Driver Details', driverID);
-        await updateDoc(docRef, { Approved: !isApproved });
+        await updateDoc(docRef, { Blocked: !isApproved });
     };
 
     useEffect(() => {
@@ -120,11 +120,11 @@ export default function Drivers() {
                                         <a href={`https://www.google.com/maps?q=${ride['Current Latitude']},${ride['Current Longitude']}`} target="_blank">Locate Driver</a>
                                     </td>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>
-                                        <div onClick={() => updateDriverApproval(ride['Approved'], ride['Driver ID'])} style={{ cursor: 'pointer', display: 'flex', flexDirection: 'row', gap: '10px', fontSize: '10px' }}>
-                                            {!ride['Approved']?(<img src='https://cdn-icons-png.flaticon.com/512/190/190411.png' height={20} width={20} />):(<img src='   https://cdn-icons-png.flaticon.com/512/1828/1828843.png ' //approved driver
+                                        <div onClick={() => updateDriverApproval(ride['Blocked'], ride['Driver ID'])} style={{ cursor: 'pointer', display: 'flex', flexDirection: 'row', gap: '10px', fontSize: '10px' }}>
+                                            {ride['Blocked']?(<img src='https://cdn-icons-png.flaticon.com/512/190/190411.png' height={20} width={20} />):(<img src='   https://cdn-icons-png.flaticon.com/512/1828/1828843.png ' //approved driver
                                             height={20} width={20} 
                                         ></img>)}
-                                            {ride['Approved'] ? 'Block Driver' : 'Unblock Driver'}
+                                            {!ride['Blocked'] ? 'Block Driver' : 'Unblock Driver'}
                                         </div>
                                     </td>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0',fontWeight:ride['Rating']>3?'600':'500',color:ride['Rating']<3?'red':'green' }}>
