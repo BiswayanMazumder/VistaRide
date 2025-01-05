@@ -127,7 +127,7 @@ export default function Dashboard() {
                     ); // Only drivers that are online and available
 
                 settotalrides(rideslist); // Update the state with ride data
-                console.log('Rides', rideslist);
+                // console.log('Rides', rideslist);
 
                 // Fetch the driver's name for each ride in the rideslist
                 const driverNamesArray = []; // Initialize an empty array for storing driver names
