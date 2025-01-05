@@ -228,7 +228,7 @@ export default function Cab_category_page() {
                             onChange={handleCategoryDescChange}
                         /></div>
                     <div className="jnjvnfjb">
-                        <div className="jnfkvkfv" style={{ backgroundColor: imageconfirmed != false && categoryname != '' && categorydesc != '' ? 'rgb(120, 120, 217)' : 'grey', color: 'white', cursor: imageconfirmed != false && categoryname != '' && categorydesc != '' ? 'pointer' : 'not-allowed', justifyContent: 'center', display: 'flex', alignItems: 'center', width: '100%', height: '50px' }} onClick={handlenewcategory}>
+                        <div className="jnfkvkfv" style={{ backgroundColor: imageconfirmed != false && categoryname != '' && categorydesc != '' ? 'rgb(120, 120, 217)' : 'grey', color: 'white', cursor: imageconfirmed != false && categoryname != '' && categorydesc != '' ? 'pointer' : 'not-allowed', justifyContent: 'center', display: 'flex', alignItems: 'center', width: '100%', height: '50px' }} onClick={imageconfirmed != false && categoryname != '' && categorydesc != ''?handlenewcategory:null}>
                             Add new Category
                         </div>
                     </div>
