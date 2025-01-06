@@ -46,8 +46,6 @@ export default function Addlocations() {
                 const lat = location.lat();
                 const lng = location.lng();
 
-                // console.log(`Selected City: ${place.name}, Latitude: ${lat}, Longitude: ${lng}`);
-
                 setCity(place.name); // Set the city name
                 setCoordinates(null); // Clear previous circle first
                 setTimeout(() => {
@@ -67,6 +65,27 @@ export default function Addlocations() {
     const [code, setCode] = useState("");
     const [pointslong, setpointslong] = useState([]);
     const [pointslat, setpointslat] = useState([]);
+    const [location, setLocation] = useState([]);
+    const [cityavaliable, setcityavaliable] = useState([]);
+    useEffect(() => {
+        const cityNames=[];
+        const unsubscribe = onSnapshot(
+            collection(db, 'Servicable Locations'),
+            (snapshot) => {
+                const locationlist = snapshot.docs.map((doc) => doc.data());
+                for(let i=0;i<locationlist.length;i++) {
+                    cityNames.push(locationlist[i].citySelected);
+                }
+                setcityavaliable(cityNames);
+                setLocation(locationlist); // Update the state with driver data
+            },
+            (error) => {
+                console.error('Error fetching drivers: ', error);
+            }
+        );
+
+        return () => unsubscribe();
+    }, []);
     const generateCode = async () => {
         const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         let result = "";
@@ -76,6 +95,7 @@ export default function Addlocations() {
         }
         setCode(result);
     };
+    const [error, seterror] = useState('');
     // Function to calculate and log points inside the circle
     const logPointsInsideCircle = async (center, radiusInMeters) => {
         const points = [];
@@ -93,13 +113,19 @@ export default function Addlocations() {
                 if (distance <= radiusInMeters) {
                     pointslat.push(lat);
                     pointslong.push(lng);
-                    // points.push({ lat, lng });
                 }
             }
         }
-        setpointslat(pointslat);
-        setpointslong(pointslong);
-        setunfilled(false);
+        for(let i=0;i<cityavaliable.length;i++) {
+            if(cityavaliable[i]===city) {
+                seterror('City Already Avaliable');
+                return;
+            }else{
+                setpointslat(pointslat);
+                setpointslong(pointslong);
+                setunfilled(false);
+            }
+        }
     };
 
     // Haversine formula to calculate distance between two points
@@ -118,18 +144,16 @@ export default function Addlocations() {
 
         return R * c; // Distance in meters
     };
+
     const [locationadded, setlocationadded] = useState(false);
     const [unfilled, setunfilled] = useState(true);
-    const addlocation = async () => {
-        // const data = {
-        //     id: `loc_${code}`,
-        //     Longitude_Range: pointslong,
-        //     Latitude_Range: pointslat,
-        //     citySelected: city,
-        //     dateCreated: new Date().toISOString(), // ISO format for better readability and standardization
-        // };
 
-        // console.log(JSON.stringify(data, null, 2));
+    // Function to check if the city is already available in the database
+    const isCityAlreadyAvailable = () => {
+        return cityavaliable.includes(city);
+    };
+
+    const addlocation = async () => {
         try {
             const docRef = doc(db, 'Servicable Locations', `loc_${code}`);
             await setDoc(docRef, {
@@ -137,7 +161,7 @@ export default function Addlocations() {
                 Longitude_Range: pointslong,
                 Latitude_Range: pointslat,
                 citySelected: city,
-                Country:selectedCountry,
+                Country: selectedCountry,
                 dateCreated: new Date().toISOString(), // ISO format for better readability and standardization
             })
             setlocationadded(true);
@@ -145,21 +169,7 @@ export default function Addlocations() {
             setlocationadded(false);
         }
     };
-    const [location,setLocation]=useState([]);
-        useEffect(() => {
-            const unsubscribe = onSnapshot(
-                collection(db, 'Servicable Locations'),
-                (snapshot) => {
-                    const locationlist = snapshot.docs.map((doc) => doc.data());
-                    setLocation(locationlist); // Update the state with driver data
-                },
-                (error) => {
-                    console.error('Error fetching drivers: ', error);
-                }
-            );
-    
-            return () => unsubscribe();
-        }, []);
+
     return (
         <div className='webbody' style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', overflowY: 'scroll', overflowX: 'hidden' }}>
             <div className="jnvjfnjf">
@@ -233,13 +243,15 @@ export default function Addlocations() {
                             <option value="Pickup">Pickup</option>
                             <option value="Drop">Drop</option>
                         </select>
-                        {unfilled ? <></> : (
+                        {isCityAlreadyAvailable() ? (
+                            <></> // City already available, don't show the button
+                        ) : (
                             <Link style={{ textDecoration: 'none', color: 'black' }}>
                                 <div className="jfnvjnfb" style={{ textDecoration: 'none', color: 'black', width: '30%', borderRadius: '10px', marginTop: '30px', height: '40px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }} onClick={locationadded ? null : addlocation}>
-                                    <span style={{display:'flex',flexDirection:'row',fontSize:'13px',fontWeight:'500'}}>
-                                        {locationadded?(<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" >
+                                    <span style={{ display: 'flex', flexDirection: 'row', fontSize: '13px', fontWeight: '500' }}>
+                                        {locationadded ? (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" >
                                             <path d="M7 10l3 3 7-7" stroke="green" stroke-width="2" fill="none" />
-                                        </svg>):<></>}
+                                        </svg>) : <></>}
                                         {locationadded ? 'Location Added' : 'Add Location'}
                                     </span>
 
