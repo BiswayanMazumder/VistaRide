@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import React, { useState } from 'react';
+import { LoadScript, Autocomplete } from '@react-google-maps/api';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
-import { Link } from 'react-router-dom';
+import { getFirestore } from 'firebase/firestore';
 
 // Firebase config
 const firebaseConfig = {
@@ -20,6 +19,26 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 export default function Addlocations() {
+    const [selectedCountry, setSelectedCountry] = useState('in'); // Default country is India ('in' is the ISO code)
+    const [city, setCity] = useState('');
+    const [autocomplete, setAutocomplete] = useState(null);
+
+    const handleCountryChange = (event) => {
+        setSelectedCountry(event.target.value);
+        setCity(''); // Reset city when country changes
+    };
+
+    const handleCitySelect = () => {
+        if (autocomplete) {
+            const place = autocomplete.getPlace();
+            setCity(place.name); // Extracts the city name
+        }
+    };
+
+    const handleLoad = (autocompleteInstance) => {
+        setAutocomplete(autocompleteInstance);
+    };
+
     return (
         <div className='webbody' style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', overflowY: 'scroll', overflowX: 'hidden' }}>
             <div className="jnvjfnjf">
@@ -35,64 +54,74 @@ export default function Addlocations() {
                                 *
                             </div>
                         </div>
-                        <input type="text" className='jjdhfhgfj' placeholder='Search Any Location' />
+                        <LoadScript
+                            googleMapsApiKey="AIzaSyApzKC2nq9OCuaVQV2Jbm9cJoOHPy9kzvM"
+                            libraries={['places']}
+                        >
+                            <Autocomplete
+                                onLoad={handleLoad}
+                                onPlaceChanged={handleCitySelect}
+                                options={{
+                                    types: ['(cities)'], // Restrict to city types
+                                    componentRestrictions: { country: selectedCountry }, // Restrict to the selected country
+                                }}
+                            >
+                                <input
+                                    type="text"
+                                    className='jjdhfhgfj'
+                                    placeholder='Search Any Location'
+                                    value={city}
+                                    onChange={(e) => setCity(e.target.value)}
+
+                                />
+                            </Autocomplete>
+                        </LoadScript>
                         <div className="nnfnjnfg" style={{ display: 'flex', flexDirection: 'row', marginTop: '30px' }}>
                             Country
                             <div style={{ color: 'red', fontWeight: '600' }}>
                                 *
                             </div>
                         </div>
-                        <select className="jjdhfhgfj" placeholder="Select Country">
-                            <option value="" disabled selected>
+                        <select
+                            className="jjdhfhgfj"
+                            placeholder="Select Country"
+                            value={selectedCountry}
+                            onChange={handleCountryChange}
+                        >
+                            {/* <option value="" disabled>
                                 Select a Country
-                            </option>
+                            </option> */}
                             {[
-                                "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda",
-                                "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas",
-                                "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize",
-                                "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil",
-                                "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia",
-                                "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China",
-                                "Colombia", "Comoros", "Congo (Congo-Brazzaville)", "Costa Rica", "Croatia",
-                                "Cuba", "Cyprus", "Czechia (Czech Republic)", "Denmark", "Djibouti",
-                                "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador",
-                                "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini (fmr. Swaziland)",
-                                "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia",
-                                "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea",
-                                "Guinea-Bissau", "Guyana", "Haiti", "Holy See", "Honduras", "Hungary",
-                                "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy",
-                                "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Korea (North)",
-                                "Korea (South)", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon",
-                                "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg",
-                                "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands",
-                                "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco",
-                                "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar (Burma)",
-                                "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua",
-                                "Niger", "Nigeria", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau",
-                                "Palestine State", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines",
-                                "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis",
-                                "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino",
-                                "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles",
-                                "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands",
-                                "Somalia", "South Africa", "South Sudan", "Spain", "Sri Lanka", "Sudan",
-                                "Suriname", "Sweden", "Switzerland", "Syria", "Tajikistan", "Tanzania", "Thailand",
-                                "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey",
-                                "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates",
-                                "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu",
-                                "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
+                                { name: "Afghanistan", code: "af" },
+                                { name: "Albania", code: "al" },
+                                { name: "India", code: "in" },
+                                { name: "United States", code: "us" },
+                                { name: "United Kingdom", code: "gb" },
+                                // Add other countries as needed
                             ].map((country, index) => (
-                                <option key={index} value={country}>
-                                    {country}
+                                <option key={index} value={country.code}>
+                                    {country.name}
                                 </option>
                             ))}
                         </select>
+                        <div className="nnfnjnfg" style={{ display: 'flex', flexDirection: 'row', marginTop: '30px' }}>
+                            Location Type
+                            <div style={{ color: 'red', fontWeight: '600' }}>
+                                *
+                            </div>
+                        </div>
+                        <select
+                            className="jjdhfhgfj"
+                            placeholder="Select Option"
+                        >
+                            <option value="Pickup">Pickup</option>
+                            <option value="Drop">Drop</option>
+                        </select>
 
                     </div>
-                    <div className="ndvmnfmnf" style={{ position: 'relative', width: '40%', height: '100%' }}>
-
-                    </div>
+                    <div className="ndvmnfmnf" style={{ position: 'relative', width: '40%', height: '100%' }}></div>
                 </div>
             </div>
         </div>
-    )
+    );
 }
