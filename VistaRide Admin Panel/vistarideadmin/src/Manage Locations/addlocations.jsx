@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { LoadScript, Autocomplete, GoogleMap, Circle } from '@react-google-maps/api';
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { doc, getFirestore, setDoc } from 'firebase/firestore';
+import { Link } from 'react-router-dom';
 
 // Firebase config
 const firebaseConfig = {
@@ -22,13 +23,14 @@ export default function Addlocations() {
     const [selectedCountry, setSelectedCountry] = useState('in'); // Default country is India ('in' is the ISO code)
     const [city, setCity] = useState('');
     const mapOptions = {
-        zoomControl: true,
+        zoomControl: false,
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false,
     };
     const [coordinates, setCoordinates] = useState(null); // Store city coordinates
     const [autocomplete, setAutocomplete] = useState(null);
+    const radius = 5000; // Radius in meters
 
     const handleCountryChange = (event) => {
         setSelectedCountry(event.target.value);
@@ -44,11 +46,15 @@ export default function Addlocations() {
                 const lat = location.lat();
                 const lng = location.lng();
 
-                // Log the latitude and longitude
-                console.log(`Selected City: ${place.name}, Latitude: ${lat}, Longitude: ${lng}`);
+                // console.log(`Selected City: ${place.name}, Latitude: ${lat}, Longitude: ${lng}`);
 
                 setCity(place.name); // Set the city name
-                setCoordinates({ lat, lng }); // Set the city coordinates
+                setCoordinates(null); // Clear previous circle first
+                setTimeout(() => {
+                    const newCoordinates = { lat, lng };
+                    setCoordinates(newCoordinates); // Set the new city coordinates after clearing the old one
+                    logPointsInsideCircle(newCoordinates, radius); // Log points inside the circle
+                }, 0);
             } else {
                 console.error('No geometry information available for the selected place.');
             }
@@ -58,11 +64,90 @@ export default function Addlocations() {
     const handleLoad = (autocompleteInstance) => {
         setAutocomplete(autocompleteInstance);
     };
+    const [code, setCode] = useState("");
+    const [pointslong, setpointslong] = useState([]);
+    const [pointslat, setpointslat] = useState([]);
+    const generateCode = async () => {
+        const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        let result = "";
+        for (let i = 0; i < 4; i++) {
+            const randomIndex = Math.floor(Math.random() * characters.length);
+            result += characters[randomIndex];
+        }
+        setCode(result);
+    };
+    // Function to calculate and log points inside the circle
+    const logPointsInsideCircle = async (center, radiusInMeters) => {
+        const points = [];
+        const pointslong = [];
+        const pointslat = [];
+        const step = 0.01; // Step size in degrees (~1.11 km per 0.01 degree latitude)
+        await generateCode();
+        // Convert radius to degrees (approximately)
+        const radiusInDegrees = radiusInMeters / 111320; // 1 degree latitude ~ 111.32 km
 
+        for (let lat = center.lat - radiusInDegrees; lat <= center.lat + radiusInDegrees; lat += step) {
+            for (let lng = center.lng - radiusInDegrees; lng <= center.lng + radiusInDegrees; lng += step) {
+                // Calculate the distance to the center
+                const distance = haversineDistance(center, { lat, lng });
+                if (distance <= radiusInMeters) {
+                    pointslat.push(lat);
+                    pointslong.push(lng);
+                    // points.push({ lat, lng });
+                }
+            }
+        }
+        setpointslat(pointslat);
+        setpointslong(pointslong);
+        setunfilled(false);
+    };
+
+    // Haversine formula to calculate distance between two points
+    const haversineDistance = (point1, point2) => {
+        const toRadians = (deg) => (deg * Math.PI) / 180;
+        const R = 6371000; // Radius of Earth in meters
+        const dLat = toRadians(point2.lat - point1.lat);
+        const dLng = toRadians(point2.lng - point1.lng);
+        const lat1 = toRadians(point1.lat);
+        const lat2 = toRadians(point2.lat);
+
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.sin(dLng / 2) * Math.sin(dLng / 2) * Math.cos(lat1) * Math.cos(lat2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c; // Distance in meters
+    };
+    const [locationadded, setlocationadded] = useState(false);
+    const [unfilled, setunfilled] = useState(true);
+    const addlocation = async () => {
+        // const data = {
+        //     id: `loc_${code}`,
+        //     Longitude_Range: pointslong,
+        //     Latitude_Range: pointslat,
+        //     citySelected: city,
+        //     dateCreated: new Date().toISOString(), // ISO format for better readability and standardization
+        // };
+
+        // console.log(JSON.stringify(data, null, 2));
+        try {
+            const docRef = doc(db, 'Servicable Locations', `loc_${code}`);
+            await setDoc(docRef, {
+                id: `loc_${code}`,
+                Longitude_Range: pointslong,
+                Latitude_Range: pointslat,
+                citySelected: city,
+                dateCreated: new Date().toISOString(), // ISO format for better readability and standardization
+            })
+            setlocationadded(true);
+        } catch (error) {
+            setlocationadded(false);
+        }
+    };
     return (
         <div className='webbody' style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', overflowY: 'scroll', overflowX: 'hidden' }}>
             <div className="jnvjfnjf">
-                <div className="jffbvfjv">
+                <div className="jffbvfjv" >
                     Add Locations
                 </div>
                 <div className="divider"></div>
@@ -107,12 +192,11 @@ export default function Addlocations() {
                             value={selectedCountry}
                             onChange={handleCountryChange}
                         >
-                            {[
-                                { name: "Afghanistan", code: "af" },
-                                { name: "Albania", code: "al" },
-                                { name: "India", code: "in" },
-                                { name: "United States", code: "us" },
-                                { name: "United Kingdom", code: "gb" },
+                            {[{ name: "Afghanistan", code: "af" },
+                            { name: "Albania", code: "al" },
+                            { name: "India", code: "in" },
+                            { name: "United States", code: "us" },
+                            { name: "United Kingdom", code: "gb" },
                                 // Add other countries as needed
                             ].map((country, index) => (
                                 <option key={index} value={country.code}>
@@ -133,9 +217,22 @@ export default function Addlocations() {
                             <option value="Pickup">Pickup</option>
                             <option value="Drop">Drop</option>
                         </select>
+                        {unfilled ? <></> : (
+                            <Link style={{ textDecoration: 'none', color: 'black' }}>
+                                <div className="jfnvjnfb" style={{ textDecoration: 'none', color: 'black', width: '30%', borderRadius: '10px', marginTop: '30px', height: '40px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }} onClick={locationadded ? null : addlocation}>
+                                    <span style={{display:'flex',flexDirection:'row',fontSize:'13px',fontWeight:'500'}}>
+                                        {locationadded?(<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" >
+                                            <path d="M7 10l3 3 7-7" stroke="green" stroke-width="2" fill="none" />
+                                        </svg>):<></>}
+                                        {locationadded ? 'Location Added' : 'Add Location'}
+                                    </span>
+
+                                </div>
+                            </Link>
+                        )}
                     </div>
                     <div className="ndvmnfmnf" style={{ position: 'relative', width: '60%', height: '95%' }}>
-                        <LoadScript googleMapsApiKey="AIzaSyApzKC2nq9OCuaVQV2Jbm9cJoOHPy9kzvM" libraries={['places']}>
+                        <LoadScript googleMapsApiKey="AIzaSyApzKC2nq9OCuaVQV2Jbm9cJoOHPy9kzvM" libraries={['places']} >
                             <GoogleMap
                                 center={coordinates || { lat: 20.5937, lng: 78.9629 }} // Default to India if no city is selected
                                 zoom={coordinates ? 12 : 4} // Zoom in if coordinates are available, else zoom out for country view
@@ -145,7 +242,7 @@ export default function Addlocations() {
                                 {coordinates && (
                                     <Circle
                                         center={coordinates}
-                                        radius={5000} // Radius in meters
+                                        radius={radius} // Radius in meters
                                         options={{
                                             fillColor: '#3498db',
                                             fillOpacity: 0.2,
