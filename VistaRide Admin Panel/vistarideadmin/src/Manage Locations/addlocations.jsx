@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { LoadScript, Autocomplete, GoogleMap, Circle } from '@react-google-maps/api';
 import { initializeApp } from 'firebase/app';
-import { doc, getFirestore, setDoc } from 'firebase/firestore';
+import { collection, doc, getFirestore, onSnapshot, setDoc } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
 
 // Firebase config
@@ -145,6 +145,21 @@ export default function Addlocations() {
             setlocationadded(false);
         }
     };
+    const [location,setLocation]=useState([]);
+        useEffect(() => {
+            const unsubscribe = onSnapshot(
+                collection(db, 'Servicable Locations'),
+                (snapshot) => {
+                    const locationlist = snapshot.docs.map((doc) => doc.data());
+                    setLocation(locationlist); // Update the state with driver data
+                },
+                (error) => {
+                    console.error('Error fetching drivers: ', error);
+                }
+            );
+    
+            return () => unsubscribe();
+        }, []);
     return (
         <div className='webbody' style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', overflowY: 'scroll', overflowX: 'hidden' }}>
             <div className="jnvjfnjf">

@@ -183,7 +183,7 @@ export default function Homepage() {
                             }}
                             onClick={() => handleOptionClick(11)}
                         >
-                            Manage Locations
+                            Add New Locations
                         </div>
                     </Link>
                     <Link style={{ textDecoration: 'none', color: "black" }}  >
