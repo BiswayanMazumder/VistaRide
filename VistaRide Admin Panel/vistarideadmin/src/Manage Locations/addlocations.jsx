@@ -68,12 +68,12 @@ export default function Addlocations() {
     const [location, setLocation] = useState([]);
     const [cityavaliable, setcityavaliable] = useState([]);
     useEffect(() => {
-        const cityNames=[];
+        const cityNames = [];
         const unsubscribe = onSnapshot(
             collection(db, 'Servicable Locations'),
             (snapshot) => {
                 const locationlist = snapshot.docs.map((doc) => doc.data());
-                for(let i=0;i<locationlist.length;i++) {
+                for (let i = 0; i < locationlist.length; i++) {
                     cityNames.push(locationlist[i].citySelected);
                 }
                 setcityavaliable(cityNames);
@@ -116,14 +116,15 @@ export default function Addlocations() {
                 }
             }
         }
-        for(let i=0;i<cityavaliable.length;i++) {
-            if(cityavaliable[i]===city) {
+        for (let i = 0; i < cityavaliable.length; i++) {
+            if (cityavaliable[i] === city) {
                 seterror('City Already Avaliable');
                 return;
-            }else{
+            } else {
                 setpointslat(pointslat);
                 setpointslong(pointslong);
                 setunfilled(false);
+                seterror('');
             }
         }
     };
@@ -258,6 +259,7 @@ export default function Addlocations() {
                                 </div>
                             </Link>
                         )}
+                        {error!=''?(<div style={{ color: 'red', fontWeight: '500', marginTop: '30px' }}>{error}</div>):<></>}
                     </div>
                     <div className="ndvmnfmnf" style={{ position: 'relative', width: '60%', height: '95%' }}>
                         <LoadScript googleMapsApiKey="AIzaSyApzKC2nq9OCuaVQV2Jbm9cJoOHPy9kzvM" libraries={['places']} >
