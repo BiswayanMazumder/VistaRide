@@ -144,14 +144,18 @@ export default function Addlocations() {
             setlocationadded(false);
         }
     };
+    const [locationadd,setaddlocation]=useState(false);
     return (
         <div className='webbody' style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', overflowY: 'scroll', overflowX: 'hidden' }}>
             <div className="jnvjfnjf">
-                <div className="jffbvfjv" >
-                    Add Locations
+                <div className="jffbvfjv" style={{width:'90%',display:'flex',flexDirection:'row',justifyContent:'space-between'}}>
+                    {locationadd?'Add Locations':'Locations Added'}
+                    <div className="djdbjf" style={{width:'120px',height:"40px",display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',background:'rgb(120, 120, 217)',borderRadius:'10px',color:'black',fontWeight:'500',fontSize:'15px'}} onClick={()=>setaddlocation(!locationadd)}>
+                        {!locationadd?'Add Location':'Go Back'}
+                    </div>
                 </div>
                 <div className="divider"></div>
-                <div className="knjfnbnf" style={{ display: 'flex', flexDirection: 'row', position: 'relative', width: '90%', height: '80%' }}>
+                {locationadd?(<div className="knjfnbnf" style={{ display: 'flex', flexDirection: 'row', position: 'relative', width: '90%', height: '80%' }}>
                     <div className="ndvmnfmnf" style={{ position: 'relative', width: '40%', height: '100%', display: 'flex', flexDirection: 'column' }}>
                         <div className="nnfnjnfg" style={{ display: 'flex', flexDirection: 'row' }}>
                             Location Name
@@ -255,7 +259,7 @@ export default function Addlocations() {
                             </GoogleMap>
                         </LoadScript>
                     </div>
-                </div>
+                </div>):<></>}
             </div>
         </div>
     );
