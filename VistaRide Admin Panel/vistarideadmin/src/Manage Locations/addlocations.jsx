@@ -66,7 +66,7 @@ export default function Addlocations() {
                     Add Locations
                 </div>
                 <div className="divider"></div>
-                <div className="knjfnbnf" style={{ display: 'flex', flexDirection: 'row', position: 'relative', width: '90%', height: '100%' }}>
+                <div className="knjfnbnf" style={{ display: 'flex', flexDirection: 'row', position: 'relative', width: '90%', height: '80%' }}>
                     <div className="ndvmnfmnf" style={{ position: 'relative', width: '40%', height: '100%', display: 'flex', flexDirection: 'column' }}>
                         <div className="nnfnjnfg" style={{ display: 'flex', flexDirection: 'row' }}>
                             Location Name
@@ -134,7 +134,7 @@ export default function Addlocations() {
                             <option value="Drop">Drop</option>
                         </select>
                     </div>
-                    <div className="ndvmnfmnf" style={{ position: 'relative', width: '60%', height: '100%' }}>
+                    <div className="ndvmnfmnf" style={{ position: 'relative', width: '60%', height: '95%' }}>
                         <LoadScript googleMapsApiKey="AIzaSyApzKC2nq9OCuaVQV2Jbm9cJoOHPy9kzvM" libraries={['places']}>
                             <GoogleMap
                                 center={coordinates || { lat: 20.5937, lng: 78.9629 }} // Default to India if no city is selected
