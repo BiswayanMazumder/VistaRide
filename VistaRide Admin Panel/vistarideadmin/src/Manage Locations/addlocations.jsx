@@ -224,6 +224,7 @@ export default function Addlocations() {
                             { name: "India", code: "in" },
                             { name: "United States", code: "us" },
                             { name: "United Kingdom", code: "gb" },
+                            { name: "United Arab Emirates", code: "ae" },
                                 // Add other countries as needed
                             ].map((country, index) => (
                                 <option key={index} value={country.code}>

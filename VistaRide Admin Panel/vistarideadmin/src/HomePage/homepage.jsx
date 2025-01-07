@@ -8,6 +8,7 @@ import Riders from '../Cab Category/Rider Details/riders';
 import Driverapproval from '../Driver Approval/driverapproval';
 import Addlocations from '../Manage Locations/addlocations';
 import Servicable_Locations from '../Manage Locations/Servicable_Locations';
+import Heatview from '../Aerial Views(Heat or god)/heatview';
 
 export default function Homepage() {
     // State to track the selected option index
@@ -301,7 +302,7 @@ export default function Homepage() {
                 </div>
                 <div className="dnjfnjn">
                 {
-                    selectedIndex==0?<Dashboard/>:selectedIndex==4?<Drivers/>:selectedIndex==3?<Ridepage/>:selectedIndex==7?<Cab_category_page/>:selectedIndex==5?<Riders/>:selectedIndex==9?<Driverapproval/>:selectedIndex==11?<Addlocations/>:selectedIndex==10?<Servicable_Locations/>:<></>
+                    selectedIndex==0?<Dashboard/>:selectedIndex==4?<Drivers/>:selectedIndex==3?<Ridepage/>:selectedIndex==7?<Cab_category_page/>:selectedIndex==5?<Riders/>:selectedIndex==9?<Driverapproval/>:selectedIndex==11?<Addlocations/>:selectedIndex==10?<Servicable_Locations/>:selectedIndex==13?<Heatview/>:<></>
                 }
                 </div>
             </div>
