@@ -119,37 +119,37 @@ export default function Godview() {
                 </div>
                 <div className="divider"></div>
                 <div className="jnjgnjg">
-                <div className="jfhjhjvh" onClick={() => handleOptionClick(0)} style={{ boxShadow: selectedIndex == 0 ? '0 4px 6px rgba(0, 0, 0, 0.2)' : null, color: selectedIndex == 0 ? 'black' : 'grey', border: selectedIndex == 0 ? '1px solid black' : null }}>
-                    <img src='https://g1uudlawy6t63z36.public.blob.vercel-storage.com/driver_avaliable.png' alt="" height={"80px"} width={"80px"} />
-                    <div className="jdjvnj" >
-                        Avaliable
-                        <br /><br />
-                        <center>
-                            ({drivers.length})
-                        </center>
+                    <div className="jfhjhjvh" onClick={() => handleOptionClick(0)} style={{ boxShadow: selectedIndex == 0 ? '0 4px 6px rgba(0, 0, 0, 0.2)' : null, color: selectedIndex == 0 ? 'black' : 'grey', border: selectedIndex == 0 ? '1px solid black' : null }}>
+                        <img src='https://g1uudlawy6t63z36.public.blob.vercel-storage.com/driver_avaliable.png' alt="" height={"80px"} width={"80px"} />
+                        <div className="jdjvnj" >
+                            Avaliable
+                            <br /><br />
+                            <center>
+                                ({drivers.length})
+                            </center>
 
+                        </div>
                     </div>
-                </div>
-                <div className="jfhjhjvh" onClick={() => handleOptionClick(1)} style={{ boxShadow: selectedIndex == 1 ? '0 4px 6px rgba(0, 0, 0, 0.2)' : null, color: selectedIndex == 1 ? 'black' : 'grey', border: selectedIndex == 1 ? '1px solid black' : null }}>
-                    <img src='https://g1uudlawy6t63z36.public.blob.vercel-storage.com/car_not_avaliable.png' alt="" height={"80px"} width={"80px"} />
-                    <div className="jdjvnj" >
-                        Not Avaliable
-                        <br /><br />
-                        <center>
-                            ({unavaliabledrivers.length})
-                        </center>
+                    <div className="jfhjhjvh" onClick={() => handleOptionClick(1)} style={{ boxShadow: selectedIndex == 1 ? '0 4px 6px rgba(0, 0, 0, 0.2)' : null, color: selectedIndex == 1 ? 'black' : 'grey', border: selectedIndex == 1 ? '1px solid black' : null }}>
+                        <img src='https://g1uudlawy6t63z36.public.blob.vercel-storage.com/car_not_avaliable.png' alt="" height={"80px"} width={"80px"} />
+                        <div className="jdjvnj" >
+                            Not Avaliable
+                            <br /><br />
+                            <center>
+                                ({unavaliabledrivers.length})
+                            </center>
+                        </div>
                     </div>
-                </div>
-                <div className="jfhjhjvh" onClick={() => handleOptionClick(2)} style={{ boxShadow: selectedIndex == 2 ? '0 4px 6px rgba(0, 0, 0, 0.2)' : null, color: selectedIndex == 2 ? 'black' : 'grey', border: selectedIndex == 2 ? '1px solid black' : null }}>
-                    <img src='https://g1uudlawy6t63z36.public.blob.vercel-storage.com/waytopickup.png' alt="" height={"80px"} width={"80px"} />
-                    <div className="jdjvnj" >
-                        Ride Doing
-                        <br /><br />
-                        <center>
-                            ({ridedoingdrivers.length})
-                        </center>
+                    <div className="jfhjhjvh" onClick={() => handleOptionClick(2)} style={{ boxShadow: selectedIndex == 2 ? '0 4px 6px rgba(0, 0, 0, 0.2)' : null, color: selectedIndex == 2 ? 'black' : 'grey', border: selectedIndex == 2 ? '1px solid black' : null }}>
+                        <img src='https://g1uudlawy6t63z36.public.blob.vercel-storage.com/waytopickup.png' alt="" height={"80px"} width={"80px"} />
+                        <div className="jdjvnj" >
+                            Ride Doing
+                            <br /><br />
+                            <center>
+                                ({ridedoingdrivers.length})
+                            </center>
+                        </div>
                     </div>
-                </div>
                 </div>
             </div>
         </div>
