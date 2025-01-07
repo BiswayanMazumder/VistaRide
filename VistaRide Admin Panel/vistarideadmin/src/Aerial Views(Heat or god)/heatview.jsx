@@ -59,6 +59,7 @@ export default function Heatview() {
 
                 // Update map center based on the first ride's data
                 if (heatmapPoints.length > 0) {
+                    // console.log(heatmapPoints[0]);
                     setMapCenter(heatmapPoints[0]);
                 }
 
