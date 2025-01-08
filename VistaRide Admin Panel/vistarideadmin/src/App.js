@@ -8,6 +8,7 @@ import {
 import Homepage from './HomePage/homepage';
 import Trackactiveride from './Track Ride/trackactiveride';
 import Loginpage from './Login or Signup/Loginpage';
+import Signup from './Login or Signup/signup';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
       <Route path="/" element={<Loginpage />} />
         <Route path="/home" element={<Homepage />} />
         <Route path="/track/:rideID" element={<Trackactiveride />} />
+        <Route path="/signup" element={<Signup />} />
       </Routes>
     </BrowserRouter>
   );

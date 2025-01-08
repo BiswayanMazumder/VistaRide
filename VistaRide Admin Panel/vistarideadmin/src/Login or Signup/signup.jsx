@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import { initializeApp, getApps } from 'firebase/app';
-import { doc, getDoc, getFirestore } from 'firebase/firestore';
-import { getAuth, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { getAuth, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 
 // Firebase config
 const firebaseConfig = {
@@ -25,9 +25,13 @@ if (!getApps().length) {
 
 const db = getFirestore(app);
 const auth = getAuth(app);
-export default function Loginpage() {
+
+export default function Signup() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [firstname, setFirstname] = useState('');
+    const [lastname, setLastname] = useState('');
+    // const history = useHistory();
 
     useEffect(() => {
         document.title = 'VistaRide Corporate';
@@ -40,47 +44,40 @@ export default function Loginpage() {
     const handlePasswordChange = (e) => {
         setPassword(e.target.value);
     };
-    const [error,seterror]=useState('');
+
+    const handleFirstnameChange = (e) => {
+        setFirstname(e.target.value);
+    };
+
+    const handleLastnameChange = (e) => {
+        setLastname(e.target.value);
+    };
+
     const handleSubmit = async (e) => {
-        // e.preventDefault();
-    
+        e.preventDefault();
+
         try {
             // Create user with Firebase Authentication
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
-    
-            // Get Firestore instance
-            const db = getFirestore();
-    
-            // Fetch the document for the logged-in user from the Admin Details collection
-            const userDocRef = doc(db, "Admin Details", user.uid);
-            const userDocSnapshot = await getDoc(userDocRef);
-    
-            if (userDocSnapshot.exists()) {
-                const adminStatus = userDocSnapshot.data().admin;
-    
-                if (adminStatus) {
-                    // Admin status is true, proceed with the login
-                    console.log("Login successful, user is admin.");
-                    window.location.replace('/home')
-                    // You can now navigate to the next page or store the user information in your state
-                } else {
-                    // Admin status is false, deny the login
-                    console.error("User is not an admin, login denied.");
-                    await signOut(auth);
-                    // alert("Access denied: You are not an admin.");
-                    seterror('Sorry your are not an admin.Please contact the administrator.');
-                }
-            } else {
-                console.error("Admin details not found for the user.");
-                // alert("Error: Admin details not found.");
-            }
-    
+
+            // Save user info to Firestore
+            await setDoc(doc(db, 'Admin Details', user.uid), {
+                firstName: firstname,
+                lastName: lastname,
+                email: email,
+                uid: user.uid,
+                emailVerified: user.emailVerified,
+                admin: false,
+            });
+            await signOut(auth);
+           window.location.replace('/');
         } catch (error) {
             console.error("Error signing up:", error.message);
-            alert('Error signing in: ' + error.message);
+            alert('Error signing up: ' + error.message);
         }
     };
+
     return (
         <div className='webbody' style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', overflowY: 'hidden', overflowX: 'hidden', backgroundColor: 'white' }}>
             <div className="hddhbfvhfv">
@@ -95,8 +92,8 @@ export default function Loginpage() {
                 </div>
                 <div className="dvgfvv" style={{ height: '100%', width: 'fit-content', justifyContent: 'start', alignItems: 'center', display: 'flex', flexDirection: 'row', gap: '10px' }}>
                     <ul className='bhbdbdv'>
-                        <Link to={'/signup'} style={{ textDecoration: 'none', color: 'grey' }}>
-                            <li className='dvcbvvdv'>SIGN UP</li>
+                        <Link to={'/'} style={{ textDecoration: 'none', color: 'grey' }}>
+                            <li className='dvcbvvdv'>LOG IN</li>
                         </Link>
                         <li className='dvcbvvdv'>HOW IT WORKS</li>
                         <li className='dvcbvvdv'>RESOURCES</li>
@@ -134,8 +131,26 @@ export default function Loginpage() {
                     </div>
                     <div className="nfvfb">
                         <div className="jjfjvnfnv">
-                            Log in to your VistaRide account
+                            Sign Up for your VistaRide account
                             <br />
+                            <div className="jdbvbfv" style={{ marginTop: '20px' }}>
+                                <input
+                                    type="text"
+                                    className='hdbvhbvhb'
+                                    placeholder='Enter First Name'
+                                    value={firstname}
+                                    onChange={handleFirstnameChange}
+                                />
+                            </div>
+                            <div className="jdbvbfv" style={{ marginTop: '20px' }}>
+                                <input
+                                    type="text"
+                                    className='hdbvhbvhb'
+                                    placeholder='Enter Last Name'
+                                    value={lastname}
+                                    onChange={handleLastnameChange}
+                                />
+                            </div>
                             <div className="jdbvbfv" style={{ marginTop: '20px' }}>
                                 <input
                                     type="text"
@@ -154,26 +169,17 @@ export default function Loginpage() {
                                     onChange={handlePasswordChange}
                                 />
                             </div>
-                            <Link  style={{ textDecoration: 'none', color: 'white' }}>
-                                <div className="hdvjfnb" onClick={() => {
-                                    handleSubmit();
-                                    // window.location.replace('/home'); // Navigates without allowing back navigation
-                                }}
-                                >
-                                    Submit
-                                </div>
-                               <div style={{color:'red',fontSize:'12px',marginTop:'10px'}}>
-                               {error!=''?error:''}
-                               </div>
-                            </Link>
+                            <div className="hdvjfnb" onClick={handleSubmit}>
+                                Sign Up
+                            </div>
                         </div>
                         <div className="jdjn">
                             <div className='dnjnjnj'>
-                                New user?
+                                Existing User?
                             </div>
-                            <Link style={{ textDecoration: 'none' }} to={'/signup'}>
+                            <Link style={{ textDecoration: 'none' }} to={'/'}>
                                 <div className='mdnjvnjv'>
-                                    Sign Up Now
+                                    Log In Now
                                 </div>
                             </Link>
                         </div>
