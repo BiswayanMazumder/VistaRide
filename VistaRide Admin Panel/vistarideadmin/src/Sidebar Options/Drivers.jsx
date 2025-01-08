@@ -3,7 +3,7 @@ import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
-
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 // Firebase config
 const firebaseConfig = {
     apiKey: "AIzaSyA5h_ElqdgLrs6lXLgwHOfH9Il5W7ARGiI",

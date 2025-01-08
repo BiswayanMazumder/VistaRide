@@ -94,37 +94,48 @@ export default function Loginpage() {
                             Its Easy, Safe and Efficient
                         </div>
                     </div>
-                    <div className="jjfjvnfnv">
-                        Log in to your VistaRide account
-                        <br />
-                        <div className="jdbvbfv" style={{ marginTop: '20px' }}>
-                            <input
-                                type="text"
-                                className='hdbvhbvhb'
-                                placeholder='Enter Email Address'
-                                value={email}
-                                onChange={handleEmailChange}
-                            />
-                        </div>
-                        <div className="jdbvbfv">
-                            <input
-                                type="password"
-                                className='hdbvhbvhb'
-                                placeholder='Enter Password'
-                                value={password}
-                                onChange={handlePasswordChange}
-                            />
-                        </div>
-                        <Link to={'/home'} style={{ textDecoration: 'none', color: 'white' }}>
-                            <div className="hdvjfnb" onClick={() => {
-                                handleSubmit();
-                                window.location.replace('/home'); // Navigates without allowing back navigation
-                            }}
-                            >
-                                Submit
+                    <div className="nfvfb">
+                        <div className="jjfjvnfnv">
+                            Log in to your VistaRide account
+                            <br />
+                            <div className="jdbvbfv" style={{ marginTop: '20px' }}>
+                                <input
+                                    type="text"
+                                    className='hdbvhbvhb'
+                                    placeholder='Enter Email Address'
+                                    value={email}
+                                    onChange={handleEmailChange}
+                                />
                             </div>
-                        </Link>
+                            <div className="jdbvbfv">
+                                <input
+                                    type="password"
+                                    className='hdbvhbvhb'
+                                    placeholder='Enter Password'
+                                    value={password}
+                                    onChange={handlePasswordChange}
+                                />
+                            </div>
+                            <Link to={'/home'} style={{ textDecoration: 'none', color: 'white' }}>
+                                <div className="hdvjfnb" onClick={() => {
+                                    handleSubmit();
+                                    window.location.replace('/home'); // Navigates without allowing back navigation
+                                }}
+                                >
+                                    Submit
+                                </div>
+                            </Link>
+                        </div>
+                        <div className="jdjn">
+                            <div className='dnjnjnj'>
+                            New user?
+                            </div>
+                            <div className='mdnjvnjv'>
+                            Sign Up Now
+                            </div>
+                        </div>
                     </div>
+
                 </div>
             </div>
         </div>

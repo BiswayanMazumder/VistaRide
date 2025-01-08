@@ -507,6 +507,13 @@ body{
   width: 100%; /* Ensure the input takes up 100% width of its parent */
   border: 1px solid grey; /* Corrected border style */
 }
+.nfvfb{
+  height: fit-content;
+  width: fit-content;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 .hdvjfnb{
   margin-top: 20px;
   width: 150px;
@@ -524,4 +531,19 @@ body{
 .hdvjfnb:hover{
   cursor: pointer;
   background-color: rgb(100, 100, 180);
+}
+.jdjn{
+  margin-left: 160px;
+  font-size: 15px;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  font-weight: 500;
+}
+.mdnjvnjv{
+  color: yellow;
+}
+.mdnjvnjv:hover{
+  cursor: pointer;
+  color: rgb(176, 176, 15);
 }
