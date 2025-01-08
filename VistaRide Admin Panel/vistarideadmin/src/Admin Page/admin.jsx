@@ -105,12 +105,55 @@ export default function AdminPage() {
                                     </div>
                                     </td>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{admins['emailVerified'] ? 'Yes' : 'No'}</td>
-                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}><div style={{ cursor: 'pointer', display: 'flex', flexDirection: 'row', gap: '10px', fontSize: '10px' }} onClick={() => updateAdminApproval(admins['admin'], admins['uid'])}>
-                                        {!admins['admin'] ? (<img src='https://cdn-icons-png.flaticon.com/512/190/190411.png' height={20} width={20} />) : (<img src='   https://cdn-icons-png.flaticon.com/512/1828/1828843.png '
-                                            height={20} width={20}
-                                        ></img>)}
-                                        {admins['admin'] ? 'Disapprove admin' : 'Approve Admin'}
-                                    </div></td>
+                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{admins['uid'] !== auth.currentUser.uid && (
+                                        <div
+                                            style={{
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                flexDirection: 'row',
+                                                gap: '10px',
+                                                fontSize: '10px',
+                                            }}
+                                            onClick={() => updateAdminApproval(admins['admin'], admins['uid'])}
+                                        >
+                                            {!admins['admin'] ? (
+                                                <img
+                                                    src="https://cdn-icons-png.flaticon.com/512/190/190411.png"
+                                                    height={20}
+                                                    width={20}
+                                                    alt="Approve Admin"
+                                                />
+                                            ) : (
+                                                <img
+                                                    src="https://cdn-icons-png.flaticon.com/512/1828/1828843.png"
+                                                    height={20}
+                                                    width={20}
+                                                    alt="Disapprove Admin"
+                                                />
+                                            )}
+                                            {admins['admin'] ? 'Disapprove Admin' : 'Approve Admin'}
+                                        </div>
+                                    )}
+                                    </td>
+                                    <td
+                                        style={{
+                                            padding: '10px 20px',
+                                            wordWrap: 'break-word',
+                                            fontSize: '12px',
+                                            border: '1px solid #e0e0e0',
+                                        }}
+                                    >
+                                        {new Date(admins['DoJ'].seconds * 1000).toLocaleString('en-IN', {
+                                            weekday: 'long',
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                            second: '2-digit',
+                                        })}
+                                    </td>
+
                                 </tr>
                             ))}
                         </tbody>
