@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Dashboard from '../Sidebar Options/dashboard';
 import Drivers from '../Sidebar Options/Drivers';
@@ -10,7 +10,23 @@ import Addlocations from '../Manage Locations/addlocations';
 import Servicable_Locations from '../Manage Locations/Servicable_Locations';
 import Heatview from '../Aerial Views(Heat or god)/heatview';
 import Godview from '../Aerial Views(Heat or god)/godview';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { initializeApp } from 'firebase/app';
+import { doc, getDoc, getFirestore } from '@firebase/firestore';
+const firebaseConfig = {
+    apiKey: "AIzaSyA5h_ElqdgLrs6lXLgwHOfH9Il5W7ARGiI",
+    authDomain: "vistafeedd.firebaseapp.com",
+    projectId: "vistafeedd",
+    storageBucket: "vistafeedd.appspot.com",
+    messagingSenderId: "1025680611513",
+    appId: "1:1025680611513:web:40aeb5d0434d67ca1ea368",
+    measurementId: "G-9V0M9VQDGM"
+};
 
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 export default function Homepage() {
     // State to track the selected option index
     const [selectedIndex, setSelectedIndex] = useState(0);
@@ -20,6 +36,7 @@ export default function Homepage() {
         setSelectedIndex(index);
     };
 
+      
     return (
         <div className='webbody' style={{overflow:'hidden'}}>
             <div className="jffnjvfnv">

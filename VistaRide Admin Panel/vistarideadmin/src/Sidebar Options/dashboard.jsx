@@ -4,6 +4,7 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, onSnapshot, getDoc, doc } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 // Firebase config
 const firebaseConfig = {
     apiKey: "AIzaSyA5h_ElqdgLrs6lXLgwHOfH9Il5W7ARGiI",
@@ -18,9 +19,50 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 export default function Dashboard() {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [currentLocation, setCurrentLocation] = useState(null);
+        const [firstname,setFirstname]=useState('');
+        const [lastname,setLastname]=useState('');
+        useEffect(() => {
+            // Create an async function inside the useEffect
+            const checkUserAuthState = async () => {
+              onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                  // User is signed in
+                  const uid = user.uid;
+                  const userDocRef = doc(db, "Admin Details", uid);
+                  try {
+                    const userDocSnapshot = await getDoc(userDocRef);
+                    if (userDocSnapshot.exists()) {
+                      // Handle the user document snapshot
+                      const userData = userDocSnapshot.data();
+                    //   console.log('User Data:', userData);
+                    setFirstname(userData.firstName);
+                    setLastname(userData.lastName);
+                    
+                    } else {
+                      console.log('No such document!');
+                    }
+                  } catch (error) {
+                    console.error("Error fetching document:", error);
+                  }
+                } else {
+                  // User is signed out
+                  window.location.replace('/');
+                }
+              });
+            };
+          
+            // Call the async function
+            checkUserAuthState();
+          
+            // Optionally, you can clean up if needed
+            return () => {
+              // Cleanup if needed
+            };
+          }, []);
     const [mapContainerStyle, setMapContainerStyle] = useState({
         width: '100%',
         height: '100%',
@@ -341,10 +383,10 @@ export default function Dashboard() {
         <div className='webbody' style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', overflowY: 'scroll', overflowX: 'hidden' }}>
             <div className="fnjnfjn">
                 <div className="menfd">
-                    Biswayan Mazumder
+                    {firstname} {lastname}
                 </div>
                 <div className="hehfhejfe">
-                    Super Administrator
+                    Administrator
                 </div>
             </div>
             <div className="jjnjnjnv">
