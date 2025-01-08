@@ -134,10 +134,12 @@ body{
   position: relative;
   left:40px;
   display: flex;
-  justify-content: start;
+  justify-content: space-between;
   align-items: center;
   top: 30%;
   font-weight: 600;
+  flex-direction: row;
+  width: 95%;
 }
 .hehfhejfe{
   position: relative;

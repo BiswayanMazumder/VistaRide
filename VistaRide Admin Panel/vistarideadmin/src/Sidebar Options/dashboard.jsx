@@ -4,7 +4,7 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, onSnapshot, getDoc, doc } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 // Firebase config
 const firebaseConfig = {
     apiKey: "AIzaSyA5h_ElqdgLrs6lXLgwHOfH9Il5W7ARGiI",
@@ -23,49 +23,49 @@ const auth = getAuth(app);
 export default function Dashboard() {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [currentLocation, setCurrentLocation] = useState(null);
-        const [firstname,setFirstname]=useState('');
-        const [userid,setuserid] = useState('');
-        const [lastname,setLastname]=useState('');
-        useEffect(() => {
-            // Create an async function inside the useEffect
-            const checkUserAuthState = async () => {
-              onAuthStateChanged(auth, async (user) => {
+    const [firstname, setFirstname] = useState('');
+    const [userid, setuserid] = useState('');
+    const [lastname, setLastname] = useState('');
+    useEffect(() => {
+        // Create an async function inside the useEffect
+        const checkUserAuthState = async () => {
+            onAuthStateChanged(auth, async (user) => {
                 if (user) {
-                  // User is signed in
-                  const uid = user.uid;
-                  setuserid(uid)
-                  const userDocRef = doc(db, "Admin Details", uid);
-                  
-                  try {
-                    const userDocSnapshot = await getDoc(userDocRef);
-                    if (userDocSnapshot.exists()) {
-                      // Handle the user document snapshot
-                      const userData = userDocSnapshot.data();
-                    //   console.log('User Data:', userData);
-                    setFirstname(userData.firstName);
-                    setLastname(userData.lastName);
-                    
-                    } else {
-                      console.log('No such document!');
+                    // User is signed in
+                    const uid = user.uid;
+                    setuserid(uid)
+                    const userDocRef = doc(db, "Admin Details", uid);
+
+                    try {
+                        const userDocSnapshot = await getDoc(userDocRef);
+                        if (userDocSnapshot.exists()) {
+                            // Handle the user document snapshot
+                            const userData = userDocSnapshot.data();
+                            //   console.log('User Data:', userData);
+                            setFirstname(userData.firstName);
+                            setLastname(userData.lastName);
+
+                        } else {
+                            console.log('No such document!');
+                        }
+                    } catch (error) {
+                        console.error("Error fetching document:", error);
                     }
-                  } catch (error) {
-                    console.error("Error fetching document:", error);
-                  }
                 } else {
-                  // User is signed out
-                  window.location.replace('/');
+                    // User is signed out
+                    window.location.replace('/');
                 }
-              });
-            };
-          
-            // Call the async function
-            checkUserAuthState();
-          
-            // Optionally, you can clean up if needed
-            return () => {
-              // Cleanup if needed
-            };
-          }, []);
+            });
+        };
+
+        // Call the async function
+        checkUserAuthState();
+
+        // Optionally, you can clean up if needed
+        return () => {
+            // Cleanup if needed
+        };
+    }, []);
     const [mapContainerStyle, setMapContainerStyle] = useState({
         width: '100%',
         height: '100%',
@@ -321,75 +321,84 @@ export default function Dashboard() {
         riderName,
         travelDistance,
         travelTime
-      ) {
+    ) {
         // Create a new jsPDF instance
         const doc = new jsPDF();
-      
+
         // Receipt header
         doc.setFontSize(16);
         doc.text('VistaRide Receipt', 10, 10);
-      
+
         // Receipt body
         doc.setFontSize(14);
         doc.text(`Thanks for riding, ${riderName}`, 10, 30);
         doc.setFontSize(12);
         doc.text("We're glad to have you as a VistaRide Rewards Gold Member.", 10, 40);
-      
+
         // Utility function for text wrapping
         function splitTextToFit(text, width) {
-          return doc.splitTextToSize(text, width);
+            return doc.splitTextToSize(text, width);
         }
-      
+
         // Ride Details
         doc.setFontSize(12);
         doc.text('Cab Category:', 10, 60);
         doc.text(cabCategory, 80, 60);
-        
+
         doc.text('Booking ID:', 10, 70);
         doc.text(bookingId, 80, 70);
-      
+
         doc.text('Pickup Location:', 10, 80);
         const pickupLocationLines = splitTextToFit(pickupLocation, 180); // 180 is the max width
         doc.text(pickupLocationLines, 80, 80);
-      
+
         doc.text('Drop Location:', 10, 100);
         const dropLocationLines = splitTextToFit(dropLocation, 180); // 180 is the max width
         doc.text(dropLocationLines, 80, 100);
-      
+
         doc.text('Driver Name:', 10, 120);
         doc.text(driverName, 80, 120);
-      
+
         doc.text('Rider Name:', 10, 130);
         doc.text(riderName, 80, 130);
-      
+
         doc.text('Travel Distance:', 10, 140);
         doc.text(travelDistance, 80, 140);
-      
+
         doc.text('Travel Time:', 10, 150);
         doc.text(travelTime, 80, 150);
-      
+
         // Fare
         doc.setFontSize(12);
         doc.text('Total Fare:', 10, 160);
         doc.text(`₹${fare}`, 80, 160);
-      
+
         // Separate rides with a line
         doc.setLineWidth(0.5);
         doc.line(10, 170, 200, 170); // Draw a line after the details
-      
+
         // Save the PDF with booking ID as filename
         doc.save(`${bookingId}_receipt.pdf`);
-      }
-      
+    }
+
     const mapCenter = currentLocation;
     return (
         <div className='webbody' style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', overflowY: 'scroll', overflowX: 'hidden' }}>
             <div className="fnjnfjn">
                 <div className="menfd">
                     {firstname} {lastname}
+                    <div style={{cursor:'pointer'}} onClick={async()=>{
+                        await signOut(auth);
+                        window.location.replace('/');
+                    }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="black">
+                        <path d="M12 2C12.55 2 13 2.45 13 3V12C13 12.55 12.55 13 12 13C11.45 13 11 12.55 11 12V3C11 2.45 11.45 2 12 2ZM12 22C6.48 22 2 17.52 2 12C2 9.13 3.16 6.52 5 4.72C5.39 4.35 6.02 4.38 6.41 4.78C6.79 5.18 6.77 5.81 6.37 6.19C4.87 7.54 4 9.67 4 12C4 16.41 7.59 20 12 20C16.41 20 20 16.41 20 12C20 9.67 19.13 7.54 17.63 6.19C17.23 5.81 17.21 5.18 17.59 4.78C17.98 4.38 18.61 4.35 19 4.72C20.84 6.52 22 9.13 22 12C22 17.52 17.52 22 12 22Z" />
+                    </svg>
+                    </div>
+
                 </div>
                 <div className="hehfhejfe">
-                    {userid=='6lpidsQ8s1PJyFo20kPSgm3okXG3'?'Super Administrator':'Administrator'}
+                    {userid == '6lpidsQ8s1PJyFo20kPSgm3okXG3' ? 'Super Administrator' : 'Administrator'}
                 </div>
             </div>
             <div className="jjnjnjnv">
@@ -527,8 +536,8 @@ export default function Dashboard() {
                                                 {/* <td style={{ padding: '10px 20px', wordWrap: 'break-word' }}>{ride['Booking Time']}</td> */}
                                                 {/* <td style={{ padding: '10px 20px', wordWrap: 'break-word' }}>{ride['Audio Recording']}</td> */}
                                                 <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', fontWeight: '600' }}>₹{ride['Fare']}</td>
-                                                <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px',cursor:'pointer' }}>
-                                                    <div onClick={() => createReceipt(ride['Cab Category'],ride['Booking ID'],ride['Pickup Location'],ride['Drop Location'],ride['Fare'],drivernames[index],ridernames[index],ride['Travel Distance'],ride['Travel Time'])} style={{cursor:'pointer'}}>View</div>
+                                                <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', cursor: 'pointer' }}>
+                                                    <div onClick={() => createReceipt(ride['Cab Category'], ride['Booking ID'], ride['Pickup Location'], ride['Drop Location'], ride['Fare'], drivernames[index], ridernames[index], ride['Travel Distance'], ride['Travel Time'])} style={{ cursor: 'pointer' }}>View</div>
                                                 </td>
                                             </tr>
                                         ))}
