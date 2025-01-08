@@ -88,9 +88,22 @@ export default function AdminPage() {
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{admins['firstName']}</td>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{admins['lastName']}</td>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{admins['email']}</td>
-                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}><div style={{ marginTop: '5px' }} onClick={() => {
-                                        ;
-                                    }}>Reset Password</div></td>
+                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}><div
+                                        style={{ marginTop: '5px', cursor: 'pointer' }}
+                                        onClick={() => {
+                                            console.log("Clicked on reset password for:", admins['email']);
+                                            sendPasswordResetEmail(auth, admins['email'])
+                                                .then(() => {
+                                                    console.log("Password reset email sent successfully.");
+                                                })
+                                                .catch((error) => {
+                                                    console.error("Error sending password reset email:", error.message, error.code);
+                                                });
+                                        }}
+                                    >
+                                        Reset Password
+                                    </div>
+                                    </td>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{admins['emailVerified'] ? 'Yes' : 'No'}</td>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}><div style={{ cursor: 'pointer', display: 'flex', flexDirection: 'row', gap: '10px', fontSize: '10px' }} onClick={() => updateAdminApproval(admins['admin'], admins['uid'])}>
                                         {!admins['admin'] ? (<img src='https://cdn-icons-png.flaticon.com/512/190/190411.png' height={20} width={20} />) : (<img src='   https://cdn-icons-png.flaticon.com/512/1828/1828843.png '
