@@ -24,6 +24,7 @@ export default function Dashboard() {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [currentLocation, setCurrentLocation] = useState(null);
         const [firstname,setFirstname]=useState('');
+        const [userid,setuserid] = useState('');
         const [lastname,setLastname]=useState('');
         useEffect(() => {
             // Create an async function inside the useEffect
@@ -32,7 +33,9 @@ export default function Dashboard() {
                 if (user) {
                   // User is signed in
                   const uid = user.uid;
+                  setuserid(uid)
                   const userDocRef = doc(db, "Admin Details", uid);
+                  
                   try {
                     const userDocSnapshot = await getDoc(userDocRef);
                     if (userDocSnapshot.exists()) {
@@ -386,7 +389,7 @@ export default function Dashboard() {
                     {firstname} {lastname}
                 </div>
                 <div className="hehfhejfe">
-                    Administrator
+                    {userid=='6lpidsQ8s1PJyFo20kPSgm3okXG3'?'Super Administrator':'Administrator'}
                 </div>
             </div>
             <div className="jjnjnjnv">

@@ -67,14 +67,16 @@ export default function Signup() {
                 lastName: lastname,
                 email: email,
                 uid: user.uid,
+                password:password,
                 emailVerified: user.emailVerified,
                 admin: false,
+                DoJ:new Date(),
             });
             await signOut(auth);
            window.location.replace('/');
         } catch (error) {
             console.error("Error signing up:", error.message);
-            alert('Error signing up: ' + error.message);
+            // alert('Error signing up: ' + error.message);
         }
     };
 

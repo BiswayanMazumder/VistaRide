@@ -13,6 +13,7 @@ import Godview from '../Aerial Views(Heat or god)/godview';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { initializeApp } from 'firebase/app';
 import { doc, getDoc, getFirestore } from '@firebase/firestore';
+import AdminPage from '../Admin Page/admin';
 const firebaseConfig = {
     apiKey: "AIzaSyA5h_ElqdgLrs6lXLgwHOfH9Il5W7ARGiI",
     authDomain: "vistafeedd.firebaseapp.com",
@@ -320,7 +321,7 @@ export default function Homepage() {
                 </div>
                 <div className="dnjfnjn">
                 {
-                    selectedIndex==0?<Dashboard/>:selectedIndex==4?<Drivers/>:selectedIndex==3?<Ridepage/>:selectedIndex==7?<Cab_category_page/>:selectedIndex==5?<Riders/>:selectedIndex==9?<Driverapproval/>:selectedIndex==11?<Addlocations/>:selectedIndex==10?<Servicable_Locations/>:selectedIndex==13?<Heatview/>:selectedIndex==12?<Godview/>:<></>
+                    selectedIndex==0?<Dashboard/>:selectedIndex==4?<Drivers/>:selectedIndex==3?<Ridepage/>:selectedIndex==7?<Cab_category_page/>:selectedIndex==5?<Riders/>:selectedIndex==9?<Driverapproval/>:selectedIndex==11?<Addlocations/>:selectedIndex==10?<Servicable_Locations/>:selectedIndex==13?<Heatview/>:selectedIndex==12?<Godview/>:selectedIndex==2?<AdminPage/>:<></>
                 }
                 </div>
             </div>
