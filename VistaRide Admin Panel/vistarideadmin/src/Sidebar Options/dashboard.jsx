@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, onSnapshot, getDoc, doc } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, getDoc, doc, FieldValue, updateDoc, arrayUnion } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
@@ -66,6 +66,29 @@ export default function Dashboard() {
             // Cleanup if needed
         };
     }, []);
+    const [ipaddress, setipaddress] = useState('');
+    const fetchipaddress = async () => {
+        
+    }
+    useEffect(() => {
+        const updateIpAddress = async () => {
+            try {
+                const response = await fetch('https://jsonip.com');
+                const data = await response.json();
+                console.log('User IP Address:', data.ip);
+    
+                const docRef = doc(db, 'Admin Details', auth.currentUser.uid);
+                await updateDoc(docRef, {
+                    'IP Addresses': arrayUnion(data.ip),
+                });
+            } catch (error) {
+                console.error('Error fetching IP address:', error);
+            }
+        };
+    
+        updateIpAddress();
+    }, []);
+    
     const [mapContainerStyle, setMapContainerStyle] = useState({
         width: '100%',
         height: '100%',
@@ -387,13 +410,13 @@ export default function Dashboard() {
             <div className="fnjnfjn">
                 <div className="menfd">
                     {firstname} {lastname}
-                    <div style={{cursor:'pointer'}} onClick={async()=>{
+                    <div style={{ cursor: 'pointer' }} onClick={async () => {
                         await signOut(auth);
                         window.location.replace('/');
                     }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="black">
-                        <path d="M12 2C12.55 2 13 2.45 13 3V12C13 12.55 12.55 13 12 13C11.45 13 11 12.55 11 12V3C11 2.45 11.45 2 12 2ZM12 22C6.48 22 2 17.52 2 12C2 9.13 3.16 6.52 5 4.72C5.39 4.35 6.02 4.38 6.41 4.78C6.79 5.18 6.77 5.81 6.37 6.19C4.87 7.54 4 9.67 4 12C4 16.41 7.59 20 12 20C16.41 20 20 16.41 20 12C20 9.67 19.13 7.54 17.63 6.19C17.23 5.81 17.21 5.18 17.59 4.78C17.98 4.38 18.61 4.35 19 4.72C20.84 6.52 22 9.13 22 12C22 17.52 17.52 22 12 22Z" />
-                    </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="black">
+                            <path d="M12 2C12.55 2 13 2.45 13 3V12C13 12.55 12.55 13 12 13C11.45 13 11 12.55 11 12V3C11 2.45 11.45 2 12 2ZM12 22C6.48 22 2 17.52 2 12C2 9.13 3.16 6.52 5 4.72C5.39 4.35 6.02 4.38 6.41 4.78C6.79 5.18 6.77 5.81 6.37 6.19C4.87 7.54 4 9.67 4 12C4 16.41 7.59 20 12 20C16.41 20 20 16.41 20 12C20 9.67 19.13 7.54 17.63 6.19C17.23 5.81 17.21 5.18 17.59 4.78C17.98 4.38 18.61 4.35 19 4.72C20.84 6.52 22 9.13 22 12C22 17.52 17.52 22 12 22Z" />
+                        </svg>
                     </div>
 
                 </div>

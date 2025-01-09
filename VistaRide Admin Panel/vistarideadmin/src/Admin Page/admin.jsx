@@ -35,6 +35,7 @@ export default function AdminPage() {
             }
         });
     });
+
     const [admins, setadmins] = useState([]);
     useEffect(() => {
         const unsubscribe = onSnapshot(
