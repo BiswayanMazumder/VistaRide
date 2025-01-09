@@ -43,7 +43,7 @@ export default function AdminPage() {
                 const adminList = snapshot.docs
                     .map((doc) => doc.data())
                     .filter(
-                        (admin) => admin['uid'] != '6lpidsQ8s1PJyFo20kPSgm3okXG3'
+                        (admin) => admin['uid'] != '6lpidsQ8s1PJyFo20kPSgm3okXG3' && admin['uid'] != auth.currentUser.uid
                     );
 
                 setadmins(adminList);

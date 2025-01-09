@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { initializeApp, getApps } from 'firebase/app';
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
-import { getAuth, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 
 // Firebase config
 const firebaseConfig = {
@@ -28,7 +28,7 @@ const auth = getAuth(app);
 export default function Loginpage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-
+            // Create an async function inside the useEffect);
     useEffect(() => {
         document.title = 'VistaRide Corporate';
     }, []);
@@ -40,6 +40,18 @@ export default function Loginpage() {
     const handlePasswordChange = (e) => {
         setPassword(e.target.value);
     };
+    // useEffect(() => {
+    //     onAuthStateChanged(auth, async (user) => {
+    //         if (user) {
+    //             // User is signed in
+    //             const uid = user.uid;
+    //             window.location.replace('/home');
+    //         } else {
+    //             // User is signed out
+    //             window.location.replace('/');
+    //         }
+    //     });
+    // })
     const [error,seterror]=useState('');
     const handleSubmit = async (e) => {
         // e.preventDefault();
