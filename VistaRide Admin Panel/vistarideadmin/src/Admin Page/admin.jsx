@@ -79,6 +79,7 @@ export default function AdminPage() {
                                 <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Password</th>
                                 <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Email Verified</th>
                                 <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Administrator</th>
+                                <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>IP Logged In</th>
                                 <th style={{ fontWeight: '300', padding: '10px -10px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Date Of Signup</th>
                             </tr>
                         </thead>
@@ -136,6 +137,7 @@ export default function AdminPage() {
                                         </div>
                                     )}
                                     </td>
+                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{admins['IP Addresses']}</td>
                                     <td
                                         style={{
                                             padding: '10px 20px',
