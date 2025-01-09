@@ -3,7 +3,7 @@ import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
-import { getAuth, onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
 // Firebase config
 const firebaseConfig = {
     apiKey: "AIzaSyA5h_ElqdgLrs6lXLgwHOfH9Il5W7ARGiI",
@@ -77,7 +77,7 @@ export default function AdminPage() {
                                 <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Last Name</th>
                                 <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Email</th>
                                 <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Password</th>
-                                <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Email Verified</th>
+                                {/* <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Email Verified</th> */}
                                 <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Administrator</th>
                                 <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>IP Logged In</th>
                                 <th style={{ fontWeight: '300', padding: '10px -10px', wordWrap: 'break-word', textAlign: 'left', border: '1px solid #e0e0e0' }}>Date Of Signup</th>
@@ -106,7 +106,19 @@ export default function AdminPage() {
                                         Reset Password
                                     </div>
                                     </td>
-                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{admins['emailVerified'] ? 'Yes' : 'No'}</td>
+                                    {/* <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}><div
+                                        style={{ marginTop: '5px', cursor: 'pointer' }}
+                                        onClick={() => {
+                                            console.log("Clicked on reset password for:", admins['email']);
+                                            sendEmailVerification(auth, admins['email'])
+                                                .then(() => {
+                                                    // Email verification sent!
+                                                    // ...
+                                                });
+                                        }}
+                                    >
+                                        {admins['emailVerified'] ? 'Yes' : 'No'}
+                                    </div></td> */}
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{admins['uid'] !== auth.currentUser.uid && (
                                         <div
                                             style={{
