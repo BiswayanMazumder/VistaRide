@@ -145,7 +145,7 @@ export default function AdminPage() {
                                                     alt="Disapprove Admin"
                                                 />
                                             )}
-                                            {admins['admin'] ? 'Disapprove Admin' : 'Approve Admin'}
+                                            {admins['admin'] ? 'Remove as Admin' : 'Approve Admin'}
                                         </div>
                                     )}
                                     </td>
