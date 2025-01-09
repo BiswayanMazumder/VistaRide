@@ -54,11 +54,38 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     }
   }
+  List<String> citySelectedList = [];
+  Future<void> fetchservicablecities() async {
+    final prefs=await SharedPreferences.getInstance();
+    try {
+      // Get the Firestore instance
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
 
+      // Fetch all documents from the Servicable Locations collection
+      QuerySnapshot querySnapshot =
+      await firestore.collection('Servicable Locations').get();
+
+      // Extract the citySelected fields from each document
+      List<String> cities = querySnapshot.docs
+          .map((doc) => doc['citySelected'] as String)
+          .toList();
+
+      // Update the state with the fetched cities
+      setState(() {
+        citySelectedList = cities;
+      });
+      prefs.setStringList('Cities Available', cities);
+      if (kDebugMode) {
+        print('Cities Available: ${prefs.getStringList('Cities Available')}');
+      }
+    } catch (e) {
+      print("Error fetching cities: $e");
+    }
+  }
   @override
   void initState() {
     super.initState();
-
+    fetchservicablecities();
     // Check if user is logged in
     if (_auth.currentUser != null) {
       // If the user is logged in, fetch the ride details

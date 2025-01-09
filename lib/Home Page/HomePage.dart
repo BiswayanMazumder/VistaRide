@@ -87,8 +87,8 @@ class _HomePageState extends State<HomePage> {
           if (!isDriverOnline) {
             setState(() {
               _markers.removeWhere(
-                    (marker) =>
-                marker.markerId.value.startsWith('driver_') &&
+                (marker) =>
+                    marker.markerId.value.startsWith('driver_') &&
                     marker.markerId.value == 'driver_${doc.id}',
               );
             });
@@ -129,11 +129,11 @@ class _HomePageState extends State<HomePage> {
             // Add a marker for this driver
             driverMarkers.add(
               Marker(
-                markerId:
-                MarkerId('driver_${doc.id}'), // Unique ID for driver markers
+                markerId: MarkerId(
+                    'driver_${doc.id}'), // Unique ID for driver markers
                 icon: carIcon,
-                position: LatLng(
-                    double.parse(driverLatitude), double.parse(driverLongitude)),
+                position: LatLng(double.parse(driverLatitude),
+                    double.parse(driverLongitude)),
               ),
             );
           }
@@ -143,7 +143,7 @@ class _HomePageState extends State<HomePage> {
           driversnearme = nearbyDrivers; // Update the state with nearby drivers
           // Remove all driver markers first
           _markers.removeWhere(
-                  (marker) => marker.markerId.value.startsWith('driver_'));
+              (marker) => marker.markerId.value.startsWith('driver_'));
           // Add the updated driver markers
           _markers.addAll(driverMarkers);
         });
@@ -170,7 +170,6 @@ class _HomePageState extends State<HomePage> {
       }
     });
   }
-
 
   double _calculateDistance(
       double lat1, double lon1, double lat2, double lon2) {
@@ -218,6 +217,17 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  List<String> citySelectedList = [];
+  Future<void> getservicablecities() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      citySelectedList = prefs.getStringList('Cities Available') ?? [];
+    });
+    if (kDebugMode) {
+      print("Fetched Cities ${citySelectedList}");
+    }
+  }
+
   late Timer _timertofetch;
   @override
   void initState() {
@@ -227,12 +237,14 @@ class _HomePageState extends State<HomePage> {
     checkPlatform();
     fetchactiveride();
     fetchdrivers();
+    getservicablecities();
   }
-  bool _addressliked=false;
-  bool isandroid=false;
-  bool isios=true;
-  void checkPlatform()async{
-    final prefs=await SharedPreferences.getInstance();
+
+  bool _addressliked = false;
+  bool isandroid = false;
+  bool isios = true;
+  void checkPlatform() async {
+    final prefs = await SharedPreferences.getInstance();
     if (Platform.isAndroid || Platform.isWindows || Platform.isLinux) {
       prefs.setBool('Android', true);
       if (kDebugMode) {
@@ -250,9 +262,12 @@ class _HomePageState extends State<HomePage> {
       }
     }
   }
-  String city='';
+
+  String city = '';
+  bool iscityservicable = true;
   // Function to get the current location using Geolocator
   Future<void> _getCurrentLocation() async {
+    await getservicablecities();
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     // Check if the user has granted location permission
     LocationPermission permission = await Geolocator.requestPermission();
@@ -282,8 +297,22 @@ class _HomePageState extends State<HomePage> {
             '${placemark.street}, ${placemark.thoroughfare}, ${placemark.subLocality}, '
             '${placemark.locality},${placemark.administrativeArea}, ${placemark.postalCode} , ${placemark.country}'; // Format the address as needed
         _locationcontroller.text = locationName;
+
+        if (kDebugMode) {
+          print('Locality ${placemarks[0]}');
+        }
         prefs.setString('Locality', placemark.locality!);
       });
+      if (citySelectedList.contains(prefs.getString('Locality')!)) {
+        setState(() {
+          iscityservicable = true;
+        });
+      } else {
+        setState(() {
+          iscityservicable = false;
+        });
+      }
+      print('City Available $iscityservicable');
     }
 
     print('Latitude ${position.latitude} Long ${position.latitude}');
@@ -305,8 +334,10 @@ class _HomePageState extends State<HomePage> {
       CameraUpdate.newLatLng(_currentLocation),
     );
   }
+
   Future<void> _fetchWeather(double latitude, double longitude) async {
-    final apiKey = Environment.WeatherAPI; // Replace with your OpenWeatherMap API key
+    final apiKey =
+        Environment.WeatherAPI; // Replace with your OpenWeatherMap API key
     final url =
         'https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric';
 
@@ -323,7 +354,7 @@ class _HomePageState extends State<HomePage> {
         // Extract weather information
         String description = weatherData['weather'][0]['main'];
         double temperature = weatherData['main']['temp'];
-        final prefs=await SharedPreferences.getInstance();
+        final prefs = await SharedPreferences.getInstance();
         prefs.setDouble('Weather Temperature', temperature);
         prefs.setString('Weather Condition', description);
         if (kDebugMode) {
@@ -338,7 +369,8 @@ class _HomePageState extends State<HomePage> {
       } else {
         // If the response code is not 200, print the error
         if (kDebugMode) {
-          print('Error: Failed to load weather data. Status Code: ${response.statusCode}');
+          print(
+              'Error: Failed to load weather data. Status Code: ${response.statusCode}');
         }
       }
     } catch (e) {
@@ -354,12 +386,12 @@ class _HomePageState extends State<HomePage> {
       }
     }
   }
+
   @override
   void dispose() {
     // TODO: implement dispose
     _timertofetch.cancel();
     super.dispose();
-
   }
 
   // Called when the map is created
@@ -415,7 +447,8 @@ class _HomePageState extends State<HomePage> {
       );
     }
   }
-  bool isposteropen=true;
+
+  bool isposteropen = true;
   List carcategoryimages = [
     'https://olawebcdn.com/images/v1/cabs/sl/ic_mini.png',
     'https://olawebcdn.com/images/v1/cabs/sl/ic_prime.png',
@@ -430,7 +463,6 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       body: Stack(
         children: [
-
           GoogleMap(
             initialCameraPosition: CameraPosition(
               target: _currentLocation,
@@ -441,274 +473,328 @@ class _HomePageState extends State<HomePage> {
             zoomGesturesEnabled: true,
             zoomControlsEnabled: false,
             buildingsEnabled: true,
+            trafficEnabled: true,
             myLocationEnabled: true, // Show the user's location as a blue dot
             myLocationButtonEnabled: false, // Disable the default button
           ),
 
-          Positioned(
-            top: 40,
-            left: 75,
-            child: Container(
-              height: 50,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-              ),
-              width: MediaQuery.sizeOf(context).width - 140,
-              child: TextField(
-                controller: _locationcontroller,
-                decoration: const InputDecoration(
-                  // hintText: 'Search for a location',
-                  // suffixIcon: InkWell(
-                  //   onTap: ()async{
-                  //     setState(() {
-                  //       islikedlocation = !islikedlocation;
-                  //     });
-                  //     if(islikedlocation){
-                  //       await _firestore.collection('Liked Addresses').doc(_auth.currentUser!.uid).set(
-                  //           {
-                  //             'Addresses':FieldValue.arrayUnion([_locationcontroller.text])
-                  //           },SetOptions(merge: true));
-                  //     }
-                  //     if(!islikedlocation){
-                  //       await _firestore.collection('Liked Addresses').doc(_auth.currentUser!.uid).update(
-                  //           {
-                  //             'Addresses':FieldValue.arrayRemove([_locationcontroller.text])
-                  //           });
-                  //     }
-                  //   },
-                  //   child: Icon(
-                  //     islikedlocation ? Icons.favorite : Icons.favorite_border,
-                  //     color: islikedlocation ? Colors.red : Colors.black,
-                  //   ),
-                  // ),
-                  border: InputBorder.none, // Removes the bottom underline
-                  contentPadding:
-                      EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-                ),
-                onSubmitted: (value) {
-                  // Trigger location search when user submits text
-                  _searchLocation(value);
-                },
-              ),
-            ),
-          ),
-          Positioned(
-              top: 100,
-              left: 75,
-              child: InkWell(
-                onTap: () async {
-                  if (kDebugMode) {
-                    print('Clicked');
-                  }
-                  final SharedPreferences prefs =
-                      await SharedPreferences.getInstance();
-                  prefs.setString('location', locationName);
-
-                  if (kDebugMode) {
-                    print(prefs.getDouble('location longitude'));
-                  }
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => Pickupandroplocation(),
-                      ));
-                },
-                child: Container(
+          iscityservicable
+              ? Positioned(
+                  top: 40,
+                  left: 75,
+                  child: Container(
                     height: 50,
-                    width: MediaQuery.sizeOf(context).width - 140,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: Colors.white,
-                      border: Border.all(color: Colors.white),
-                      borderRadius: const BorderRadius.all(Radius.circular(10)),
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
                     ),
-                    child: Row(
-                      children: [
-                        const SizedBox(
-                          width: 10,
+                    width: MediaQuery.sizeOf(context).width - 140,
+                    child: TextField(
+                      controller: _locationcontroller,
+                      decoration: const InputDecoration(
+                        // hintText: 'Search for a location',
+                        // suffixIcon: InkWell(
+                        //   onTap: ()async{
+                        //     setState(() {
+                        //       islikedlocation = !islikedlocation;
+                        //     });
+                        //     if(islikedlocation){
+                        //       await _firestore.collection('Liked Addresses').doc(_auth.currentUser!.uid).set(
+                        //           {
+                        //             'Addresses':FieldValue.arrayUnion([_locationcontroller.text])
+                        //           },SetOptions(merge: true));
+                        //     }
+                        //     if(!islikedlocation){
+                        //       await _firestore.collection('Liked Addresses').doc(_auth.currentUser!.uid).update(
+                        //           {
+                        //             'Addresses':FieldValue.arrayRemove([_locationcontroller.text])
+                        //           });
+                        //     }
+                        //   },
+                        //   child: Icon(
+                        //     islikedlocation ? Icons.favorite : Icons.favorite_border,
+                        //     color: islikedlocation ? Colors.red : Colors.black,
+                        //   ),
+                        // ),
+                        border:
+                            InputBorder.none, // Removes the bottom underline
+                        contentPadding:
+                            EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+                      ),
+                      onSubmitted: (value) {
+                        // Trigger location search when user submits text
+                        _searchLocation(value);
+                      },
+                    ),
+                  ),
+                )
+              : Container(),
+
+          iscityservicable
+              ? Positioned(
+                  top: 100,
+                  left: 75,
+                  child: InkWell(
+                    onTap: () async {
+                      if (kDebugMode) {
+                        print('Clicked');
+                      }
+                      final SharedPreferences prefs =
+                          await SharedPreferences.getInstance();
+                      prefs.setString('location', locationName);
+
+                      if (kDebugMode) {
+                        print(prefs.getDouble('location longitude'));
+                      }
+                      iscityservicable
+                          ? Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => Pickupandroplocation(),
+                              ))
+                          : Container();
+                    },
+                    child: Container(
+                        height: 50,
+                        width: MediaQuery.sizeOf(context).width - 140,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(color: Colors.white),
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(10)),
                         ),
-                        const Icon(
-                          Icons.search,
-                          color: Colors.green,
-                        ),
-                        const SizedBox(
-                          width: 10,
-                        ),
-                        Text(
-                          'Search for a destination',
-                          style: GoogleFonts.poppins(
-                              color: Colors.grey,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w400),
-                        )
-                      ],
-                    )),
-              )),
-          issidebaropened? Positioned(
-              top: 0,
-              left: 0,
-              child: GestureDetector(
-                onHorizontalDragEnd: (details) {
-                  if (details.primaryVelocity! < 0) {
-                    // If velocity is negative, it means a swipe left
-                    setState(() {
-                      issidebaropened=false;
-                    });
-                    if (kDebugMode) {
-                      print('Closed');
-                    }
-                  }
-                },
-                child: Container(
-                  height: MediaQuery.sizeOf(context).height,
-                  width: MediaQuery.sizeOf(context).width / 1.5,
-                  color: Colors.white,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 20.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(
-                          height: 40,
-                        ),
-                        Row(
+                        child: Row(
                           children: [
-                            CircleAvatar(
-                              radius: 25,
-                              backgroundImage: NetworkImage(profilepic),
+                            const SizedBox(
+                              width: 10,
                             ),
+                            const Icon(
+                              Icons.search,
+                              color: Colors.green,
+                            ),
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            Text(
+                              'Search for a destination',
+                              style: GoogleFonts.poppins(
+                                  color: Colors.grey,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w400),
+                            )
+                          ],
+                        )),
+                  ))
+              : Container(),
+          issidebaropened
+              ? Positioned(
+                  top: 0,
+                  left: 0,
+                  child: GestureDetector(
+                    onHorizontalDragEnd: (details) {
+                      if (details.primaryVelocity! < 0) {
+                        // If velocity is negative, it means a swipe left
+                        setState(() {
+                          issidebaropened = false;
+                        });
+                        if (kDebugMode) {
+                          print('Closed');
+                        }
+                      }
+                    },
+                    child: Container(
+                      height: MediaQuery.sizeOf(context).height,
+                      width: MediaQuery.sizeOf(context).width / 1.5,
+                      color: Colors.white,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 20.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(
+                              height: 40,
+                            ),
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 25,
+                                  backgroundImage: NetworkImage(profilepic),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(
+                              height: 20,
+                            ),
+                            InkWell(
+                              onTap: () {},
+                              child: Text(
+                                'My Profile',
+                                style: GoogleFonts.poppins(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 20,
+                            ),
+                            InkWell(
+                              onTap: () {},
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.person,
+                                    color: Colors.green,
+                                  ),
+                                  const SizedBox(
+                                    width: 8,
+                                  ),
+                                  Text(
+                                    'My Profile',
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 20,
+                            ),
+                            InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => MyTrips(),
+                                    ));
+                                setState(() {
+                                  issidebaropened = false;
+                                });
+                              },
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.history,
+                                    color: Colors.green,
+                                  ),
+                                  const SizedBox(
+                                    width: 8,
+                                  ),
+                                  Text(
+                                    'History',
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 20,
+                            ),
+                            InkWell(
+                              onTap: () async {
+                                final prefs =
+                                    await SharedPreferences.getInstance();
+                                prefs.setBool('Apply Promo', false);
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => PromoCodes(
+                                        ridepage: false,
+                                      ),
+                                    ));
+                              },
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.discount,
+                                    color: Colors.green,
+                                  ),
+                                  const SizedBox(
+                                    width: 8,
+                                  ),
+                                  Text(
+                                    'Promos',
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 20,
+                            ),
+                            InkWell(
+                              onTap: () async {
+                                await _auth.signOut();
+                                Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => LoginPage(),
+                                    ));
+                              },
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.logout,
+                                    color: Colors.red,
+                                  ),
+                                  const SizedBox(
+                                    width: 8,
+                                  ),
+                                  Text(
+                                    'Logout',
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
                           ],
                         ),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        InkWell(
-                          onTap: (){},
-                          child: Text('My Profile',style: GoogleFonts.poppins(
-                            color: Colors.black,
-                            fontWeight: FontWeight.w600,
-                          ),),
-                        ),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        InkWell(
-                          onTap: (){},
-                          child: Row(
-                            children: [
-                              const Icon(Icons.person,color: Colors.green,),
-                              const SizedBox(
-                                width: 8,
-                              ),
-                              Text('My Profile',style: GoogleFonts.poppins(
-                                color: Colors.black,
-                                fontWeight: FontWeight.w600,
-                              ),),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        InkWell(
-                          onTap: (){
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => MyTrips(),));
-                            setState(() {
-                              issidebaropened=false;
-                            });
-                          },
-                          child: Row(
-                            children: [
-                              const Icon(Icons.history,color: Colors.green,),
-                              const SizedBox(
-                                width: 8,
-                              ),
-                              Text('History',style: GoogleFonts.poppins(
-                                color: Colors.black,
-                                fontWeight: FontWeight.w600,
-                              ),),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        InkWell(
-                          onTap: ()async{
-                            final prefs=await SharedPreferences.getInstance();
-                            prefs.setBool('Apply Promo', false);
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => PromoCodes(
-                              ridepage: false,
-                            ),));
-                          },
-                          child: Row(
-                            children: [
-                              const Icon(Icons.discount,color: Colors.green,),
-                              const SizedBox(
-                                width: 8,
-                              ),
-                              Text('Promos',style: GoogleFonts.poppins(
-                                color: Colors.black,
-                                fontWeight: FontWeight.w600,
-                              ),),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        InkWell(
-                          onTap: ()async{
-                            await _auth.signOut();
-                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginPage(),));
-                          },
-                          child: Row(
-                            children: [
-                              const Icon(Icons.logout,color: Colors.red,),
-                              const SizedBox(
-                                width: 8,
-                              ),
-                              Text('Logout',style: GoogleFonts.poppins(
-                                color: Colors.black,
-                                fontWeight: FontWeight.w600,
-                              ),),
-                            ],
-                          ),
-                        )
-                      ],
+                      ),
                     ),
+                  ))
+              : Container(),
+          !issidebaropened
+              ? Positioned(
+                  top: 48,
+                  left: 20,
+                  child: Row(
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            issidebaropened = !issidebaropened;
+                          });
+                          // _getCurrentLocation();
+                          if (kDebugMode) {
+                            print('Sidebar $issidebaropened');
+                          }
+                        },
+                        child: Container(
+                          height: 40,
+                          width: 40,
+                          decoration: const BoxDecoration(
+                            color: Colors.yellow,
+                            borderRadius: BorderRadius.all(Radius.circular(50)),
+                          ),
+                          child: const Icon(Icons.menu, color: Colors.black),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              )
-          ):Container(),
-          !issidebaropened? Positioned(
-            top: 48,
-            left: 20,
-            child: Row(
-              children: [
-                InkWell(
-                  onTap: () {
-                    setState(() {
-                      issidebaropened = !issidebaropened;
-                    });
-                    if (kDebugMode) {
-                      print('Sidebar $issidebaropened');
-                    }
-                  },
-                  child: Container(
-                    height: 40,
-                    width: 40,
-                    decoration: const BoxDecoration(
-                      color: Colors.yellow,
-                      borderRadius: BorderRadius.all(Radius.circular(50)),
-                    ),
-                    child: const Icon(Icons.menu, color: Colors.black),
-                  ),
-                ),
-              ],
-            ),
-          ):Container(),
+                )
+              : Container(),
           Positioned(
             top: 45,
             left: MediaQuery.sizeOf(context).width - 50,
@@ -782,6 +868,47 @@ class _HomePageState extends State<HomePage> {
           //   )
           //     ),
           // ),
+          iscityservicable
+              ? Container()
+              : Positioned(
+                  bottom: 0,
+                  child: Container(
+                    color: Colors.white,
+                    height: 200,
+                    width: MediaQuery.sizeOf(context).width,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const SizedBox(
+                              width: 20,
+                            ),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text("Sorry we don't serve this\nlocation",style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w600,fontSize: 18
+                                ),),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                Text("Our services are currently not available\nin this city",style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w400,fontSize: 12,color: Colors.grey
+                                ),),
+                              ],
+                            ),
+                            const SizedBox(
+                              width: 30,
+                            ),
+                            const Image(image: NetworkImage('https://static.thenounproject.com/png/539209-200.png'),height: 50,width: 50,)
+                          ],
+                        ),
+
+                      ],
+                    ),
+                  )),
           Positioned(
             bottom: 20,
             right: 20,

@@ -33,12 +33,22 @@ class _PickupandroplocationState extends State<Pickupandroplocation> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String profilePic = '';
-
+  List<String> citySelectedList = [];
+  Future<void> getservicablecities()async{
+    final prefs=await SharedPreferences.getInstance();
+    setState(() {
+      citySelectedList=prefs.getStringList('Cities Available')??[];
+    });
+    if (kDebugMode) {
+      print("Fetched Cities ${citySelectedList}");
+    }
+  }
   @override
   void initState() {
     super.initState();
     _getCurrentLocation();
     initialisesharedpref();
+    getservicablecities();
   }
 
   // Fetch current location
