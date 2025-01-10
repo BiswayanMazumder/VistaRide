@@ -492,36 +492,48 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
     super.dispose();
   }
 
-  List cabpriceextended = [50, 200, 500, 0, 1000,10];
+  List cabpriceextended = [50, 200, 500, 0, 1000,10,];
   List carcategoryimages = [
-    'https://olawebcdn.com/images/v1/cabs/sl/ic_mini.png',
-    'https://olawebcdn.com/images/v1/cabs/sl/ic_prime.png',
-    'https://olawebcdn.com/images/v1/cabs/sl/ic_suv.png',
-    'https://olawebcdn.com/images/v1/cabs/sl/ic_kp.png',
-    'https://d1a3f4spazzrp4.cloudfront.net/car-types/haloProductImages/v1.1/Black_Premium_Driver_Red_Carpet.png',
-    'https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1648431773/assets/1d/db8c56-0204-4ce4-81ce-56a11a07fe98/original/Uber_Auto_558x372_pixels_Desktop.png'
+    // 'https://olawebcdn.com/images/v1/cabs/sl/ic_mini.png',
+    // 'https://olawebcdn.com/images/v1/cabs/sl/ic_prime.png',
+    // 'https://olawebcdn.com/images/v1/cabs/sl/ic_suv.png',
+    // 'https://olawebcdn.com/images/v1/cabs/sl/ic_kp.png',
+    // 'https://d1a3f4spazzrp4.cloudfront.net/car-types/haloProductImages/v1.1/Black_Premium_Driver_Red_Carpet.png',
+    // 'https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1648431773/assets/1d/db8c56-0204-4ce4-81ce-56a11a07fe98/original/Uber_Auto_558x372_pixels_Desktop.png'
   ];
-  List cabcategorynames = ['Mini', 'Prime', 'SUV', 'Non AC Taxi', 'LUX','Auto'];
+  List cabcategorynames = [];
   List cabcategorydescription = [
-    'Highly Discounted fare',
-    'Spacious sedans, top drivers',
-    'Spacious SUVs',
-    '',
-    'Our most luxurious ride',
-    'Affordable autos for trips'
+    // 'Highly Discounted fare',
+    // 'Spacious sedans, top drivers',
+    // 'Spacious SUVs',
+    // '',
+    // 'Our most luxurious ride',
+    // 'Affordable autos for trips'
   ];
   bool isLoading=true;
   List cabpricesmultiplier = [];
   void getfare()async{
+    List IosPrice=[];
+    List AndroidPrice=[];
     final prefs=await SharedPreferences.getInstance();
+    setState(() {
+      cabcategorynames=prefs.getStringList('cabcategories')??[];
+      cabcategorydescription=prefs.getStringList('CabDescriptions')??[];
+      carcategoryimages=prefs.getStringList('cabcategoriesimages')??[];
+      IosPrice=prefs.getStringList('IosPrice')??[];
+      AndroidPrice=prefs.getStringList('androidPrice')??[];
+    });
+    if (kDebugMode) {
+      print('Cab Category $cabcategorydescription');
+    }
     if(prefs.getBool('Apple')==true){
       setState(() {
-        cabpricesmultiplier=[40, 44, 70, 20, 104,35];
+        cabpricesmultiplier=IosPrice.map((e) => int.parse(e)).toList();
       });
     }
     else if(prefs.getBool('Android')==true){
       setState(() {
-        cabpricesmultiplier=[36, 40, 65, 15, 100,30];
+        cabpricesmultiplier=AndroidPrice.map((e) => int.parse(e)).toList();
       });
     }
     setState(() {
@@ -1226,7 +1238,7 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                                       double fare = weathercondition == 'Rain'
                                           ? ((distanceValue.floor().toDouble() *
                                                   cabpricesmultiplier[index]) +
-                                              cabpriceextended[index])
+                                              50)
                                           : (distanceValue.floor().toDouble() *
                                               cabpricesmultiplier[index]);
 
@@ -1304,7 +1316,7 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                                           fontWeight: FontWeight.w600),
                                     ):  weathercondition == 'Rain'
                                           ? Text(
-                                              '₹${(double.parse(DistanceTravel.replaceAll(RegExp(r'[^0-9.]'), '')).floor() * cabpricesmultiplier[index]) + cabpriceextended[index]}',
+                                              '₹${(double.parse(DistanceTravel.replaceAll(RegExp(r'[^0-9.]'), '')).floor() * cabpricesmultiplier[index]) + 50}',
                                               style: GoogleFonts.poppins(
                                                   fontWeight: FontWeight.w600),
                                             )

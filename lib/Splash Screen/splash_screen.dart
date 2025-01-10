@@ -55,6 +55,57 @@ class _SplashScreenState extends State<SplashScreen> {
     }
   }
   List<String> citySelectedList = [];
+  List<int> AndroidPrice=[];
+  List<int> IoSPrice=[];
+  List<String> cabcategories=[];
+  List<String> Cabcategoriesimages=[];
+  List <String> CabDescriptions=[];
+  Future<void> fetchcabcategories() async {
+    List cabCategories = [];
+    List androidPrice = [];
+    List iosPrice = [];
+    List cabCategoryAvailable = [];
+    List cabCategoryImages = [];
+    List cabddescription=[];
+    final docsnap = await _firestore.collection('Cab Categories').doc('Category Details').get();
+    if (docsnap.exists) {
+      setState(() {
+        cabCategoryAvailable = docsnap.data()?['Cab Category Status'];
+        cabCategories = docsnap.data()?['Cab Category Name'];
+        iosPrice = docsnap.data()?['Cab Multipliers Apple'];
+        androidPrice = docsnap.data()?['Cab Multipliers Android'];
+        cabCategoryImages = docsnap.data()?['Cab Category Images'];
+        cabddescription=docsnap.data()?['Cab Category Description'];
+      });
+    }
+
+    for (int i = 0; i < cabCategoryAvailable.length; i++) {
+      if (cabCategoryAvailable[i] == true) {
+        setState(() {
+          cabcategories.add(cabCategories[i]);
+          IoSPrice.add(iosPrice[i]);
+          AndroidPrice.add(androidPrice[i]);
+          Cabcategoriesimages.add(cabCategoryImages[i]);
+          CabDescriptions.add(cabddescription[i]);
+        });
+      }
+    }
+
+    // Now save the data into SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+
+    // Save Lists in SharedPreferences
+    prefs.setStringList('cabcategories', cabcategories);
+    prefs.setStringList('IosPrice', IoSPrice.map((e) => e.toString()).toList());
+    prefs.setStringList('androidPrice', AndroidPrice.map((e) => e.toString()).toList());
+    prefs.setStringList('cabcategoriesimages', Cabcategoriesimages);
+    prefs.setStringList('CabDescriptions', CabDescriptions);
+
+    if (kDebugMode) {
+      print('Cab Details saved in SharedPreferences: ${cabcategories}, ${IoSPrice}, ${androidPrice}, ${Cabcategoriesimages}');
+    }
+  }
+
   Future<void> fetchservicablecities() async {
     final prefs=await SharedPreferences.getInstance();
     try {
@@ -86,6 +137,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     fetchservicablecities();
+    fetchcabcategories();
     // Check if user is logged in
     if (_auth.currentUser != null) {
       // If the user is logged in, fetch the ride details
