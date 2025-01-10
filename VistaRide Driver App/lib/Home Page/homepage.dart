@@ -16,6 +16,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image/image.dart' as img;
 import 'package:http/http.dart' as http;
+import 'package:vistaridedriver/Blocked%20Driver%20Pages/blockeddriver.dart';
 import 'package:vistaridedriver/Environment%20Files/.env.dart';
 import 'package:vistaridedriver/Login%20Pages/login_page.dart';
 import 'package:vistaridedriver/Ride%20Details/ridedetails.dart';
@@ -465,6 +466,9 @@ class _HomePageState extends State<HomePage> {
           setState(() {
             isDriverBlocked = data['Blocked'];
           });
+          if(isDriverBlocked){
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const BlockedDriver(),));
+          }
           if (kDebugMode) {
             print('Block Status updated: $isDriverBlocked');
           }
