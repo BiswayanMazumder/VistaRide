@@ -213,7 +213,7 @@ class _HomePageState extends State<HomePage> {
         .doc(_auth.currentUser!.uid)
         .snapshots()
         .listen((snapshot) async {
-      if (snapshot.exists) {
+      if (snapshot.exists && !isDriverBlocked ) {
         String? rideId = snapshot.data()?['Ride Requested'];
 
         if (rideId != null && rideId.isNotEmpty) {
@@ -451,6 +451,28 @@ class _HomePageState extends State<HomePage> {
   double _toRadians(double degree) {
     return degree * pi / 180;
   }
+  late StreamSubscription<DocumentSnapshot<Map<String, dynamic>>> _driverBlockedListener;
+  bool isDriverBlocked=false;
+  void listenToDriverBlockedStatus() {
+    _driverBlockedListener = _firestore
+        .collection('VistaRide Driver Details')
+        .doc(_auth.currentUser!.uid)
+        .snapshots()
+        .listen((DocumentSnapshot<Map<String, dynamic>> docsnap) {
+      if (docsnap.exists) {
+        final data = docsnap.data();
+        if (data != null && data.containsKey('Blocked')) {
+          setState(() {
+            isDriverBlocked = data['Blocked'];
+          });
+          if (kDebugMode) {
+            print('Block Status updated: $isDriverBlocked');
+          }
+        }
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -460,6 +482,7 @@ class _HomePageState extends State<HomePage> {
     notificationService.setupInteractMessage(context);
     FCMService.firebaseInit();
     fetchuserdetails();
+    listenToDriverBlockedStatus();
     _getCurrentLocation();
     listenForRideRequest();
     fetchactiverides();
@@ -495,6 +518,7 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     _rideRequestListener?.cancel();
     _timetofetch.cancel();
+    _driverBlockedListener.cancel();
     super.dispose();
   }
 
@@ -580,7 +604,7 @@ class _HomePageState extends State<HomePage> {
                         });
                       }
                     },
-                    child: CircleAvatar(
+                    child:isDriverBlocked?Container(): CircleAvatar(
                       radius: 40,
                       backgroundColor: isonline ? Colors.red : Colors.blue,
                       child: Center(
