@@ -25,7 +25,7 @@ export default function Drivers() {
 
     const updateDriverApproval = async (isApproved, driverID) => {
         const docRef = doc(db, 'VistaRide Driver Details', driverID);
-        await updateDoc(docRef, { Blocked: !isApproved });
+        await updateDoc(docRef, { Blocked: !isApproved,'Driver Online':isApproved });
     };
 
     useEffect(() => {
