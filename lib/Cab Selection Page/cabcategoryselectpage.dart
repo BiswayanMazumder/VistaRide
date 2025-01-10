@@ -1193,7 +1193,7 @@ class _CabSelectAndPriceState extends State<CabSelectAndPrice> {
                     ),
                     Expanded(
                         child: ListView.builder(
-                      itemCount:double.parse(DistanceTravel.replaceAll(RegExp(r'[^0-9.]'), '')).floor()<=15? carcategoryimages.length:carcategoryimages.length-1,
+                      itemCount:carcategoryimages.length,
                       itemBuilder: (context, index) {
                         return Column(
                           mainAxisAlignment: MainAxisAlignment.start,
