@@ -172,7 +172,6 @@ export default function CabBookingLaptop() {
 
     useEffect(() => {
         setDirections(null);
-
         if (selectedPickupLocation && selectedDropLocation) {
             const directionsService = new window.google.maps.DirectionsService();
 
@@ -392,6 +391,22 @@ export default function CabBookingLaptop() {
         console.log("Document successfully updated!");
 
     };
+    const [location, setLocation] = useState([]);
+    useEffect(() => {
+        const unsubscribe = onSnapshot(
+            collection(db, 'Servicable Locations'),
+            (snapshot) => {
+                const locationlist = snapshot.docs.map((doc) => doc.data());
+                setLocation(locationlist);
+                // console.log("Location List: ", locationlist);
+            },
+            (error) => {
+                console.error('Error fetching drivers: ', error);
+            }
+        );
+
+        return () => unsubscribe();
+    }, []);
     const removeridfromdriver = async (rideId) => {
         for (let i = 0; i < drivers.length; i++) {
             // Get the document reference for the driver
@@ -784,7 +799,7 @@ export default function CabBookingLaptop() {
 
                         {/* Render markers for each nearby driver */}
                         {markers.map((driver) => {
-                            const categoryIndex = cabcategorynames.indexOf(driver.category); // Find the index of the category
+                            const categoryIndex = currentCabDetails['Cab Category Name'].indexOf(driver.category); // Find the index of the category
                             const iconUrl = currentCabDetails['Cab Category Images'][index]; // Get the corresponding icon or a default one if not found
 
                             return (
