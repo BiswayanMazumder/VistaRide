@@ -785,7 +785,7 @@ export default function CabBookingLaptop() {
                         {/* Render markers for each nearby driver */}
                         {markers.map((driver) => {
                             const categoryIndex = cabcategorynames.indexOf(driver.category); // Find the index of the category
-                            const iconUrl = categoryIndex === 4 ? 'https://d1a3f4spazzrp4.cloudfront.net/car-types/map70px/map-black.png' : 'https://d1a3f4spazzrp4.cloudfront.net/car-types/map70px/product/map-uberx.png'; // Get the corresponding icon or a default one if not found
+                            const iconUrl = currentCabDetails['Cab Category Images'][index]; // Get the corresponding icon or a default one if not found
 
                             return (
                                 <Marker
