@@ -68,7 +68,7 @@ export default function Service_category_details() {
                     </Link>
 
                 </div>
-                <br /><br />
+                <div className="divider"></div>
                 <div className="jnjnkf">
                     {categorynames.map((name, index) => (
                         <div className="nefnnvjfvn" key={index}>
