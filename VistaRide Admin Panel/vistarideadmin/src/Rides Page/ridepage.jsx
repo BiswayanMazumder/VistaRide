@@ -158,8 +158,8 @@ export default function Ridepage() {
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{drivercontact[index]}</td>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{ride['Pickup Location']}</td>
                                     <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', border: '1px solid #e0e0e0' }}>{ride['Drop Location']}</td>
-                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', color: ride['Ride Accepted'] ? 'green' : !ride['Ride Accepted'] && ride['Ride Completed'] ? 'green' : 'red', border: '1px solid #e0e0e0' }}>
-                                        {ride['Ride Accepted'] ? 'Ongoing' : !ride['Ride Accepted'] && ride['Ride Completed'] ? 'Completed' : 'Cancelled'}
+                                    <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', color: ride['Ride Accepted'] ? 'green' : !ride['Ride Accepted'] && ride['Ride Completed'] ? 'red' : 'green', border: '1px solid #e0e0e0' }}>
+                                        {ride['Ride Accepted'] ? 'Ongoing' : !ride['Ride Accepted'] && ride['Ride Completed'] ? 'Cancelled' : 'Completed'}
                                         <br></br><br />
                                          {ride['Ride Accepted']?(<a href={`/track/${ride['Booking ID']}`} onClick={localStorage.setItem('rideID',ride['Booking ID'])} target="_blank">Track Ride</a>):<></>}
                                     </td>
