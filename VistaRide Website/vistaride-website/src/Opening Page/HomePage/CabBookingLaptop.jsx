@@ -40,6 +40,26 @@ export default function CabBookingLaptop() {
         'https://olawebcdn.com/images/v1/cabs/sl/ic_kp.png',
         'https://d1a3f4spazzrp4.cloudfront.net/car-types/haloProductImages/v1.1/Black_Premium_Driver_Red_Carpet.png'
     ];
+    const [currentCabDetails, setCurrentCabDetails] = useState([]);
+    useEffect(() => {
+        const unsubscribe = onSnapshot(
+            collection(db, 'Cab Categories'),
+            (snapshot) => {
+                const data = snapshot.docs.map(doc => doc.data())[0]; // Assuming only one document
+                const filteredData = {
+                    "Cab Multipliers Android": data["Cab Multipliers Android"].filter((_, index) => data["Cab Category Status"][index]),
+                    "Cab Category Name": data["Cab Category Name"].filter((_, index) => data["Cab Category Status"][index]),
+                    "Cab Multipliers Apple": data["Cab Multipliers Apple"].filter((_, index) => data["Cab Category Status"][index]),
+                    "Cab Category Description": data["Cab Category Description"].filter((_, index) => data["Cab Category Status"][index]),
+                    "Cab Category Images": data["Cab Category Images"].filter((_, index) => data["Cab Category Status"][index]),
+                };
+                // console.log('Filtered data:', filteredData);
+                setCurrentCabDetails(filteredData);
+            }
+        );
+
+        return () => unsubscribe();
+    }, []);
     const [user, setUser] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
