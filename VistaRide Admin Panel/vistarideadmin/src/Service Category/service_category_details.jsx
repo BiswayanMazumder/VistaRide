@@ -41,7 +41,7 @@ export default function Service_category_details() {
 
         return () => unsubscribe();
     }, []);
-
+    
     const handleToggleChange = async (checked, index) => {
         const updatedStatus = [...categorystatus];
         updatedStatus[0][index] = checked; // Update status at the specific index

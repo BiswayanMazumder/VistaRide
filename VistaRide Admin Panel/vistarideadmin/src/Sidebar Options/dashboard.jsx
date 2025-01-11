@@ -68,7 +68,7 @@ export default function Dashboard() {
     }, []);
     const [ipaddress, setipaddress] = useState('');
     const fetchipaddress = async () => {
-        
+
     }
     useEffect(() => {
         const updateIpAddress = async () => {
@@ -76,7 +76,7 @@ export default function Dashboard() {
                 const response = await fetch('https://jsonip.com');
                 const data = await response.json();
                 console.log('User IP Address:', data.ip);
-    
+
                 const docRef = doc(db, 'Admin Details', auth.currentUser.uid);
                 await updateDoc(docRef, {
                     'IP Addresses': arrayUnion(data.ip),
@@ -85,10 +85,61 @@ export default function Dashboard() {
                 console.error('Error fetching IP address:', error);
             }
         };
-    
+
         updateIpAddress();
     }, []);
-    
+    const sendridedetailstowithr = async (body, email) => {
+        fetch('http://localhost:8080/send-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email: email,
+                body: body,
+            }),
+        })
+            .then((response) => response.json())
+            .then((data) => console.log(data))
+            .catch((error) => console.error('Error:', error));
+    };
+
+    const handleSendClick = (emailid, ridername, cabcategory, bookingid, pickupLocation, dropLocation, fare, drivername, traveldistance, traveltime) => {
+        // Email recipient (rider's email)
+        const email = emailid; // Replace with the actual rider's email address
+
+        // Constructing a professional email body with proper formatting
+        const body = `
+          
+
+Dear ${ridername},
+
+Thank you for booking your ride with VistaRide! Below are the details of your booked ride:
+
+Cab Category: ${cabcategory}
+Booking ID: ${bookingid}
+Pickup Location: ${pickupLocation}
+Drop Location: ${dropLocation}
+Fare: ${fare}
+Driver Name: ${drivername}
+Travel Distance: ${traveldistance}
+Travel Time: ${traveltime}
+If you have any questions or need assistance, please don't hesitate to contact our support team.
+
+We wish you a pleasant and safe journey!
+
+Best regards,
+VistaRide Support
+support@vistaride.com
+        `;
+
+        // Call the function to send email with the formatted body
+        sendridedetailstowithr(body, email);
+    };
+
+    // In your JSX, attach the handleSendClick to the onClick event
+
+
     const [mapContainerStyle, setMapContainerStyle] = useState({
         width: '100%',
         height: '100%',
@@ -184,6 +235,7 @@ export default function Dashboard() {
     const [totalrides, settotalrides] = useState([]);
     const [drivernames, setDrivernames] = useState([]); // Store driver details in an array
     const [ridernames, setridernames] = useState([]);
+    const [rideremail, setrideremail] = useState([]);
     useEffect(() => {
         const unsubscribe = onSnapshot(
             collection(db, 'Ride Details'),
@@ -201,6 +253,7 @@ export default function Dashboard() {
                 const driverNamesArray = []; // Initialize an empty array for storing driver names
                 const driverMap = {}; // Object to map driverId to driverName
                 const riderNamesArray = []; // Initialize an empty array for storing driver names
+                const riderEmailArray = []; // Initialize an empty array for storing
                 const riderMap = {}; // Object to map driverId to driverName
                 rideslist.forEach(async (ride) => {
                     const driverId = ride['Driver ID'];
@@ -212,7 +265,6 @@ export default function Dashboard() {
 
                             if (driverDocSnap.exists()) {
                                 const driverData = driverDocSnap.data();
-
                                 const driverName = driverData['Name']; // Assuming the driver's name is stored in the 'Name' field
                                 driverNamesArray.push(driverName);
                                 // Store driver name in the map
@@ -238,13 +290,15 @@ export default function Dashboard() {
 
                             if (driverDocSnap.exists()) {
                                 const driverData = driverDocSnap.data();
-
-                                const riderName = driverData['User Name']; // Assuming the driver's name is stored in the 'Name' field
+                                const riderEmail=driverData['Email Address'];
+                                const riderName = driverData['User Name']; // Assuming the driver's name is stored in the 'Name' fi
+                                riderEmailArray.push(riderEmail);
                                 riderNamesArray.push(riderName);
                                 // Store driver name in the map
                                 riderMap[riderID] = riderName;
                                 // console.log('Driver Data', driverNamesArray);
                                 // Once all names are fetched, update the state
+                                setrideremail(riderEmailArray);
                                 setridernames(riderNamesArray);
                             } else {
                                 console.log('No such driver found for ID:', riderID);
@@ -544,7 +598,7 @@ export default function Dashboard() {
                                             {/* <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left' }}>Booking Time</th> */}
                                             {/* <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left' }}>Audio Recording</th> */}
                                             <th style={{ fontWeight: '300', padding: '10px 20px', wordWrap: 'break-word', textAlign: 'left' }}>Fare</th>
-                                            <th style={{ fontWeight: '300', padding: '10px -10px', wordWrap: 'break-word', textAlign: 'left' }}>View Invoice</th>
+                                            <th style={{ fontWeight: '300', padding: '10px -10px', wordWrap: 'break-word', textAlign: 'left' }}>Send Invoice</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -560,7 +614,8 @@ export default function Dashboard() {
                                                 {/* <td style={{ padding: '10px 20px', wordWrap: 'break-word' }}>{ride['Audio Recording']}</td> */}
                                                 <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', fontWeight: '600' }}>₹{ride['Fare']}</td>
                                                 <td style={{ padding: '10px 20px', wordWrap: 'break-word', fontSize: '12px', cursor: 'pointer' }}>
-                                                    <div onClick={() => createReceipt(ride['Cab Category'], ride['Booking ID'], ride['Pickup Location'], ride['Drop Location'], ride['Fare'], drivernames[index], ridernames[index], ride['Travel Distance'], ride['Travel Time'])} style={{ cursor: 'pointer' }}>View</div>
+                                                {/* handleSendClick = (emailid, ridername, cabcategory, bookingid, pickupLocation, dropLocation, fare, drivername, traveldistance, traveltime)  */}
+                                                    <div onClick={() => handleSendClick(rideremail[index], ridernames[index], ride['Cab Category'], ride['Booking ID'], ride['Pickup Location'], ride['Drop Location'], ride['Fare'], drivernames[index], ride['Travel Distance'], ride['Travel Time'])} style={{ cursor: 'pointer' }}>Send</div>
                                                 </td>
                                             </tr>
                                         ))}

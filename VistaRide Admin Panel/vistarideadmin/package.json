@@ -5,7 +5,9 @@
   "dependencies": {
     "@firebase/firestore": "^4.7.5",
     "@react-google-maps/api": "^2.20.5",
+    "axios": "^1.7.9",
     "chart.js": "^4.4.7",
+    "cors": "^2.8.5",
     "cra-template": "1.2.0",
     "firebase": "^11.1.0",
     "jspdf": "^2.5.2",
@@ -13,6 +15,7 @@
     "pdf-lib": "^1.17.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-otp-input": "^3.1.1",
     "react-router-dom": "^7.1.1",
     "react-scripts": "5.0.1",
     "react-switch": "^7.1.0",
