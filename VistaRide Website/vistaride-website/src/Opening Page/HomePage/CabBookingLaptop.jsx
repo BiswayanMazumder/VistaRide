@@ -53,7 +53,7 @@ export default function CabBookingLaptop() {
                     "Cab Category Description": data["Cab Category Description"].filter((_, index) => data["Cab Category Status"][index]),
                     "Cab Category Images": data["Cab Category Images"].filter((_, index) => data["Cab Category Status"][index]),
                 };
-                // console.log('Filtered data:', filteredData);
+                console.log('Filtered data:', filteredData);
                 setCurrentCabDetails(filteredData);
             }
         );
@@ -416,20 +416,21 @@ export default function CabBookingLaptop() {
         const randomotp = Math.floor(1000 + Math.random() * 9000);
         const docref = doc(db, "Ride Details", rideId.toString()); // Define docRef outside of the try-);
         let Fare = (localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 10)
-            ? (parseFloat(cabmultiplier[index]) * parseFloat(distanceAndTime.distance)) + cabpriceextended[index]
-            : (parseFloat(cabmultiplier[index]) * parseFloat(distanceAndTime.distance));
+            ? (parseFloat(currentCabDetails['Cab Multipliers Apple'][index]) * parseFloat(distanceAndTime.distance)) + currentCabDetails['Cab Multipliers Apple'][index]
+            : (parseFloat(currentCabDetails['Cab Multipliers Apple'][index]) * parseFloat(distanceAndTime.distance));
         // Ensure the Fare is sent as a double:
         Fare = Number(Fare.toFixed(2));
         try {
             // Write the initial ride details to Firestore
             await setDoc(docref, {
-                'Cab Category': cabcategorynames[index],
+                'Cab Category': currentCabDetails['Cab Category Name'][index],
                 "Pickup Latitude": parseFloat(selectedPickupLocation.lat),
                 "Pick Longitude": parseFloat(selectedPickupLocation.lng),
                 "Drop Latitude": parseFloat(selectedDropLocation.lat),
                 "Drop Longitude": parseFloat(selectedDropLocation.lng),
                 "Booking ID": rideId,
-                "Cash Payment":true,
+                "Cash Payment": true,
+                'Ride Owner':auth.currentUser.uid,
                 // "Booking Owner": user,
                 "Ride OTP": randomotp,
                 "Pickup Location": pickupLocation,
@@ -671,7 +672,7 @@ export default function CabBookingLaptop() {
                                 </div>
                             </div> : <div>
                                 <div className="fgfhhggh">
-                                    <img src={carcategoryimages[index]} alt="" style={{ marginLeft: '35px' }} />
+                                    <img src={currentCabDetails['Cab Category Images'][index]} alt="" style={{ marginLeft: '35px' }} width={'420px'}/>
                                 </div>
                                 <div className="ghgggfg">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" data-baseweb="icon"><title>search</title><path fill-rule="evenodd" clip-rule="evenodd" d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm5-2a5 5 0 1 1-10 0 5 5 0 0 1 10 0Z" fill="currentColor"></path></svg>
@@ -683,7 +684,7 @@ export default function CabBookingLaptop() {
                                 </div>
                                 <div className="ghgggfg" style={{ marginTop: '50px' }}>
                                     <img src='https://tb-static.uber.com/prod/wallet/icons/cash_3x.png' alt="" style={{ width: '30px', height: '30px' }} />
-                                    ₹{localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 10 ? (cabmultiplier[index] * parseInt(distanceAndTime.distance) + cabpriceextended[index]) : (cabmultiplier[index] * parseInt(distanceAndTime.distance))}
+                                    ₹{localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 10 ? (currentCabDetails['Cab Multipliers Apple'][index]* parseInt(distanceAndTime.distance) + currentCabDetails['Cab Multipliers Apple'][index]) : (currentCabDetails['Cab Multipliers Apple'][index] * parseInt(distanceAndTime.distance))}
                                 </div>
                                 <Link style={{ textDecoration: 'none', color: 'white' }}>
                                     <div className="jjfnvjnf" style={{ backgroundColor: 'black', width: '90%', marginLeft: '5%', marginBottom: '20px', marginTop: '20px' }}
@@ -728,7 +729,7 @@ export default function CabBookingLaptop() {
 
                                         }
                                     }}>
-                                    Request {cabcategorynames[index]}
+                                    Request {currentCabDetails['Cab Category Name'][index]}
                                 </div>
                             </div>
                             <div className="jnjvnjv">
@@ -737,118 +738,36 @@ export default function CabBookingLaptop() {
                             <div className="jnjvnjv" style={{ fontSize: '20px', }}>
                                 Recommended
                             </div>
-                            <Link style={{ textDecoration: 'none', color: 'black' }}>
-                                <div className="erhfrj" style={{ border: index === 0 ? '2px solid black' : 'white' }} onClick={() => {
-                                    fetchDrivers(cabcategorynames[0])
-                                    setindex(0)
-                                }
-                                }>
-                                    <div className="jjnvjfnv">
-                                        <img src={carcategoryimages[0]} alt="" style={{ width: '100px', height: '100px' }} />
-                                        <div className="jfnv">
-                                            {cabcategorynames[0]}
-                                            <div className="jnvn">
-                                                {cabcategorydescription[0]}
+                            {
+                                currentCabDetails['Cab Category Description'].map((description, index) => (
+                                    <div className="jnjvnjv" key={index}>
+                                        <Link style={{ textDecoration: 'none', color: 'black' }}>
+                                            <div className="erhfrj"  onClick={() => {
+                                                fetchDrivers(currentCabDetails['Cab Category Name'][index])
+                                                setindex(index)
+                                            }
+                                            }>
+                                                <div className="jjnvjfnv">
+                                                    <img src={currentCabDetails['Cab Category Images'][index]} alt="" style={{ width: '100px', height: '100px' }} />
+                                                    <div className="jfnv" style={{marginLeft:'5px'}}>
+                                                        {currentCabDetails['Cab Category Name'][index]}
+                                                        <div className="jnvn" style={{marginLeft:'5px'}}>
+                                                            {currentCabDetails['Cab Category Description'][index]}
+                                                        </div>
+                                                        <div className="jnvn" style={{marginLeft:'5px'}}>
+                                                            {localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 10 ? 'Prices are higher than usual' : ''}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
+                                                    ₹{localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 10 ? (currentCabDetails['Cab Multipliers Apple'][index] * parseInt(distanceAndTime.distance) + currentCabDetails['Cab Multipliers Apple'][index]) : currentCabDetails['Cab Multipliers Apple'][index] * parseInt(distanceAndTime.distance)}
+                                                </div>
                                             </div>
-                                            <div className="jnvn">
-                                                {localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 10 ? 'Prices are higher than usual' : ''}
-                                            </div>
-                                        </div>
+                                        </Link>
                                     </div>
-                                    <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
-                                        ₹{localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 10 ? (cabmultiplier[0] * parseInt(distanceAndTime.distance) + cabpriceextended[0]) : cabmultiplier[0] * parseInt(distanceAndTime.distance)}
-                                    </div>
+                                ))
+                            }
 
-                                </div>
-                            </Link>
-                            <Link style={{ textDecoration: 'none', color: 'black' }}>
-                                <div className="erhfrj" style={{ border: index === 1 ? '2px solid black' : 'white' }} onClick={() => {
-                                    setindex(1)
-                                    fetchDrivers(cabcategorynames[1])
-                                }}>
-                                    <div className="jjnvjfnv">
-                                        <img src={carcategoryimages[1]} alt="" style={{ width: '100px', height: '100px' }} />
-                                        <div className="jfnv">
-                                            {cabcategorynames[1]}
-                                            <div className="jnvn">
-                                                {cabcategorydescription[1]}
-                                            </div>
-                                            <div className="jnvn">
-                                                {localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 10 ? 'Prices are higher than usual' : ''}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
-                                        ₹{localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 10 ? (cabmultiplier[1] * parseInt(distanceAndTime.distance) + cabpriceextended[1]) : cabmultiplier[1] * parseInt(distanceAndTime.distance)}
-                                    </div>
-                                </div>
-                            </Link>
-                            <Link style={{ textDecoration: 'none', color: 'black' }}>
-                                <div className="erhfrj" style={{ border: index === 2 ? '2px solid black' : 'white' }} onClick={() => {
-                                    setindex(2)
-                                    fetchDrivers(cabcategorynames[2])
-                                }}>
-                                    <div className="jjnvjfnv">
-                                        <img src={carcategoryimages[2]} alt="" style={{ width: '100px', height: '100px' }} />
-                                        <div className="jfnv">
-                                            {cabcategorynames[2]}
-                                            <div className="jnvn">
-                                                {cabcategorydescription[2]}
-                                            </div>
-                                            <div className="jnvn">
-                                                {localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 10 ? 'Prices are higher than usual' : ''}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
-                                        ₹{localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 10 ? (cabmultiplier[2] * parseInt(distanceAndTime.distance) + cabpriceextended[2]) : cabmultiplier[2] * parseInt(distanceAndTime.distance)}
-                                    </div>
-                                </div>
-                            </Link>
-                            <Link style={{ textDecoration: 'none', color: 'black' }}>
-                                <div className="erhfrj" style={{ border: index === 3 ? '2px solid black' : 'white', marginTop: '20px' }} onClick={() => {
-                                    setindex(3)
-                                    fetchDrivers(cabcategorynames[3])
-                                }}>
-                                    <div className="jjnvjfnv">
-                                        <img src={carcategoryimages[3]} alt="" style={{ width: '100px', height: '100px' }} />
-                                        <div className="jfnv">
-                                            {cabcategorynames[3]}
-                                            <div className="jnvn">
-                                                {cabcategorydescription[3]}
-                                            </div>
-                                            {/* <div className="jnvn">
-                                                {localStorage.getItem('Weather Condition')=='Haze' || drivers.length<10?'Prices are higher than usual':''}
-                                            </div> */}
-                                        </div>
-                                    </div>
-                                    <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
-                                        ₹{cabmultiplier[3] * parseInt(distanceAndTime.distance)}
-                                    </div>
-                                </div>
-                            </Link>
-                            <Link style={{ textDecoration: 'none', color: 'black' }}>
-                                <div className="erhfrj" style={{ marginBottom: '110px', border: index === 4 ? '2px solid black' : 'white', marginTop: '20px' }} onClick={() => {
-                                    setindex(4)
-                                    fetchDrivers(cabcategorynames[4])
-                                }}>
-                                    <div className="jjnvjfnv">
-                                        <img src={carcategoryimages[4]} alt="" style={{ width: '100px', height: '100px' }} />
-                                        <div className="jfnv">
-                                            {cabcategorynames[4]}
-                                            <div className="jnvn">
-                                                {cabcategorydescription[4]}
-                                            </div>
-                                            <div className="jnvn">
-                                                {localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 10 ? 'Prices are higher than usual' : ''}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="erhbfr" style={{ fontWeight: 'bolder', marginRight: '20px', fontSize: '20px' }}>
-                                        ₹{localStorage.getItem('Weather Condition') == 'Haze' || drivers.length < 10 ? (cabmultiplier[4] * parseInt(distanceAndTime.distance) + cabpriceextended[4]) : cabmultiplier[4] * parseInt(distanceAndTime.distance)}
-                                    </div>
-                                </div>
-                            </Link>
                         </div> : <></>
                     }
                 </div>

@@ -178,7 +178,7 @@ export default function LandingPage_Laptop() {
 
     const [user, setUser] = useState(null);
     const [error, setError] = useState(null);
-
+    
     const handleLogin = async () => {
         try {
             const result = await signInWithPopup(auth, googleProvider);
