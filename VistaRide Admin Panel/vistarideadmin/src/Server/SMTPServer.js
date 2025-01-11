@@ -20,7 +20,7 @@ app.post('/send-email', (req, res) => {
     service: 'gmail',
     auth: {
       user: "biswayanmazumder77@gmail.com",
-      pass: "password"
+      pass: "kserrzawgqcqzhgn"
     },
   });
 
