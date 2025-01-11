@@ -76,8 +76,8 @@ export default function Cab_category_page() {
             cabcategorydesc[0].push(categorydesc);
             cabcategoryname[0].push(categoryname);
             cabcategorystatus[0].push(false);
-            cabmultiplierandroid[0].push(parseInt(cabmultiplierandroid[0]));
-            cabmultiplierios[0].push(parseInt(cabmultiplierios[0]));
+            cabmultiplierandroid[0].push(parseInt(pricemultand));
+            cabmultiplierios[0].push(parseInt(pricemultapple));
             // console.log(cabcategorydesc[0], cabcategoryimg, cabcategoryname, cabcategorystatus);
             const categorydocref = doc(db, 'Cab Categories', 'Category Details');
             await updateDoc(categorydocref, {
