@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "135592115838",
+    "project_id": "synergy-0",
+    "storage_bucket": "synergy-0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:135592115838:android:1ec8b3386ec32134c5e22f",
+        "android_client_info": {
+          "package_name": "com.example.pingstar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCwKL0Sf0bw_-FgwtJWQ18cam2q6vQeqkE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
